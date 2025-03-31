@@ -1,3 +1,4 @@
+// This is a sample. It will be replaced with the actual code. 
 import { Dispatch, SetStateAction, useState } from "react";
 
 const DarkModeToggle = ({ isDarkMode, setIsDarkMode }: { 
