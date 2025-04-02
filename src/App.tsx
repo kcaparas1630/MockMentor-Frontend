@@ -1,11 +1,21 @@
-import { Button } from "@/Components/ui/button"
+import { useState } from "react";
+import SignUpForm from "./Components/Auth/SignUpForm";
+import { Container, ThemeToggle } from "./StyledApp";
 
 function App() {
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-svh">
-      <Button variant="outline">Click me</Button>
-    </div>
-  )
+    <Container isDarkMode={isDarkMode}>
+      <ThemeToggle
+        isDarkMode={isDarkMode}
+        onClick={() => setIsDarkMode(!isDarkMode)}
+      >
+        {isDarkMode ? "Light Mode" : "Dark Mode"}
+      </ThemeToggle>
+      <SignUpForm isDarkMode={isDarkMode} />
+    </Container>
+  );
 }
 
-export default App
+export default App;
