@@ -10,8 +10,6 @@ COPY . .
 RUN npm install && \
     npm run build
 
-
-
 # Expose a port (adjust if your app uses a different one)
 EXPOSE 5173
 
