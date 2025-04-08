@@ -5,7 +5,10 @@ on:
     branches: [ main ]
     
 jobs: 
+  call-build:
+    uses: ./.github/workflows/build.yaml
   push:
+    needs: call-build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -20,9 +23,6 @@ jobs:
       
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-east1-docker.pkg.dev
-
-      - name: Build Docker image
-        run: docker build -t us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest -f build.yaml .
 
       - name: Push Docker Image
         run: docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
