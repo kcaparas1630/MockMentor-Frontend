@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run dev
+    container_name: ai-frontend
+    develop:
+      watch:
+        - action: sync
+          path: ./src
+          target: /app
+          ignore: [node_modules]
+    ports: [5173:5173]
