@@ -6,12 +6,13 @@ const SignUpContainer = styled.div`
   width: 100%;
   max-width: 400px;
   padding: 1.5rem;
+  border: 3px solid #E4E4E7;
   background-color: #FFFFFF;
   border-radius: 0.625rem;
   box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
 
-  @media (max-width: 640px) {
-    max-width: 100%;
+  @media (min-width: 1024px) {
+    max-width: 500px;
     padding: 1rem;
   }
 `;
@@ -88,7 +89,7 @@ const ErrorMessage = styled.div`
   color: red;
   font-size: 0.8rem;
   margin-top: 0.25rem;
-  white-space: pre-line;
+  white-space: pre-line
 `;
 
 const Divider = styled.div`

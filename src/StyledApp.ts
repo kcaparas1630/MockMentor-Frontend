@@ -6,6 +6,12 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  width: 100vw;
+  background-color: #e5e5f7;
+  opacity: 0.8;
+  background-image: linear-gradient(#71717a 1px, transparent 1px),
+    linear-gradient(to right, #71717a 1px, #e5e5f7 1px);
+  background-size: 20px 20px;
 `;
 
 const ThemeToggle = styled.button`
@@ -14,8 +20,8 @@ const ThemeToggle = styled.button`
   right: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
-  border: 1px solid #E4E4E7;
-  background-color: #FFFFFF;
+  border: 1px solid #e4e4e7;
+  background-color: #ffffff;
   color: #000000;
   cursor: pointer;
   font-size: 0.875rem;
