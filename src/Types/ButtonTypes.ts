@@ -9,7 +9,7 @@ interface ButtonProps {
     color: ButtonColorTypes;
     size: ButtonSizeTypes;
     type: ButtonTypes;
-    handleClick: () => void;
+    handleClick?: () => void;
     children?: React.ReactNode;
 }
 
