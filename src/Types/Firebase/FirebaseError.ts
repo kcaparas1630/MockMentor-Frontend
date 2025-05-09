@@ -10,6 +10,7 @@ interface FirebaseAuthError extends Error {
     message: string;
 }
 // type guard to check if the error is a FirebaseAuthError
+// can't use error: FirebaseAuthError directly because typescript doesn't check for type in compilation.
 const isFirebaseAuthError = (error: unknown): error is FirebaseAuthError => {
     return (
         error instanceof Error &&
