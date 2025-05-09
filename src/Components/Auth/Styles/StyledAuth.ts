@@ -4,20 +4,21 @@ const SignUpContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 400px;
+  max-width: 300px;
   padding: 1.5rem;
-  background-color: #FFFFFF;
+  border: 3px solid #ffffff;
+  background-color: #E4E4E7;
   border-radius: 0.625rem;
   box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
 
-  @media (max-width: 640px) {
-    max-width: 100%;
+  @media (min-width: 1024px) {
+    max-width: 500px;
     padding: 1rem;
   }
 `;
 
 const Title = styled.h2`
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
   color: #000000;
@@ -26,7 +27,7 @@ const Title = styled.h2`
 const Description = styled.p`
   font-size: 0.875rem;
   margin-bottom: 1.5rem;
-  color: #71717A;
+  color:#444449;
 `;
 
 const Form = styled.form`
@@ -43,7 +44,7 @@ const InputGroup = styled.div`
 
 const SignInLink = styled.a`
   font-size: 0.875rem;
-  color: #A1A1AA;
+  color:#444449;
   text-align: center;
   margin-top: 1rem;
 
@@ -88,6 +89,7 @@ const ErrorMessage = styled.div`
   color: red;
   font-size: 0.8rem;
   margin-top: 0.25rem;
+  white-space: pre-line
 `;
 
 const Divider = styled.div`
@@ -95,7 +97,7 @@ const Divider = styled.div`
   align-items: center;
   text-align: center;
   margin: 1rem 0;
-  color: #A1A1AA;
+  color: #444449;
   font-size: 0.875rem;
 
   &::before,

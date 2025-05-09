@@ -11,6 +11,7 @@ interface ButtonProps {
     type: ButtonTypes;
     handleClick?: () => void;
     children?: React.ReactNode;
+    disabled?: boolean;
 }
 
 export default ButtonProps;
