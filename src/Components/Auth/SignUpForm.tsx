@@ -3,27 +3,32 @@ import {
   Title,
   Description,
   Form,
-  InputGroup,
-  Label,
-  Input,
   SignInLink,
   GoogleButton,
   Divider,
+  InputGroup,
+  ErrorMessage,
 } from "./Styles/StyledAuth";
-import { useState, ChangeEvent } from "react";
-import Button from "../../Commons/Button";
+import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
-import IsDarkMode from "@/Types/IsDarkMode";
+import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
+import SignUpProps from "@/Types/Login/SignUpProps";
+import SignUpSchema from "./Schema/SignupSchema";
+import { yupResolver } from '@hookform/resolvers/yup';
+import ReusableInput from "../../Commons/ReuasbleInputField";
 
-const SignUpForm = ({
-  isDarkMode,
-}: IsDarkMode) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    //TODO: Implement sign up logic
+const SignUpForm = () => {
+  
+  const formData: SignUpProps = { email: '', password: '' };
+  const methods = useForm<SignUpProps>({
+    resolver: yupResolver(SignUpSchema),
+    defaultValues: formData,
+  })
+  const onSubmit: SubmitHandler<SignUpProps> = async (data) => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    console.log(data); // TODO: Implement sign up mutation.
   };
 
   const handleGoogleSignIn = () => {
@@ -31,64 +36,39 @@ const SignUpForm = ({
   };
 
   return (
-    <SignUpContainer isDarkMode={isDarkMode}>
-      <Title isDarkMode={isDarkMode}>Create an account</Title>
-      <Description isDarkMode={isDarkMode}>
+    <SignUpContainer>
+      <Title>Create an account</Title>
+      <Description>
         Enter your email below to create your account
       </Description>
-      <Form onSubmit={handleSubmit}>
-        <InputGroup>
-          <Label isDarkMode={isDarkMode} htmlFor="email">
-            Email
-          </Label>
-          <Input
-            isDarkMode={isDarkMode}
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
-            required
-          />
-        </InputGroup>
-        <InputGroup>
-          <Label isDarkMode={isDarkMode} htmlFor="password">
-            Password
-          </Label>
-          <Input
-            isDarkMode={isDarkMode}
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
-            required
-          />
-        </InputGroup>
-        <Button
-          isDarkMode={isDarkMode}
-          type="submit"
-          color="primary"
-          size="lg"
-          handleClick={() => {}}
+      <FormProvider {...methods}>
+        <Form onSubmit={methods.handleSubmit(onSubmit)}>
+          <InputGroup>
+            <ReusableInput name="email" type="email" placeholder="Email" label="Email" />
+            {methods.formState.errors.email && <ErrorMessage>{methods.formState.errors.email.message}</ErrorMessage>}
+          </InputGroup>
+          <InputGroup>
+            <ReusableInput name="password" type="password" placeholder="Password" label="Password" />
+            {methods.formState.errors.password && <ErrorMessage>{methods.formState.errors.password.message}</ErrorMessage>}
+          </InputGroup>
+          <ReusableButton
+            type="submit"
+            color="primary"
+            size="lg"
         >
           Sign Up with Email
-        </Button>
-      </Form>
-      <Divider isDarkMode={isDarkMode}>or continue with</Divider>
+        </ReusableButton>
+        </Form>
+      </FormProvider>
+      <Divider>or continue with</Divider>
       <GoogleButton
         type="button"
-        isDarkMode={isDarkMode}
         onClick={handleGoogleSignIn}
       >
         <GoogleIcon />
         Sign in with Google
       </GoogleButton>
-      <SignInLink isDarkMode={isDarkMode}>
+      <SignInLink>
         Already have an account? <span>Sign in</span>
       </SignInLink>
     </SignUpContainer>
