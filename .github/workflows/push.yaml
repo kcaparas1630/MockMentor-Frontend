@@ -22,11 +22,14 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
         
+      - name: Set image tag variable
+        run: echo "IMAGE_TAG=us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend" >> $GITHUB_ENV
+        
       - name: Build Docker image
-        run: docker buildx build --platform linux/amd64 -f Dockerfile.prod --build-arg VITE_MODE=production -t us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:latest .
+        run: docker buildx build --platform linux/amd64 -f Dockerfile.prod --build-arg VITE_MODE=production -t ${IMAGE_TAG}:latest .
 
       - name: Push Docker Images
         run: |
-          docker push us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:latest
-          docker tag us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:latest us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}
-          docker push us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}
+          docker push ${IMAGE_TAG}:latest
+          docker tag ${IMAGE_TAG}:latest ${IMAGE_TAG}:${{ github.sha }}
+          docker push ${IMAGE_TAG}:${{ github.sha }}
