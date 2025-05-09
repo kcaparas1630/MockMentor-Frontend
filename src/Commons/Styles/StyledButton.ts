@@ -6,20 +6,20 @@ const StyledButton = styled.button<ButtonProps>`
   padding: 0.625rem;
   border-radius: 0.375rem;
   border: none;
-  background-color: ${({ color, isDarkMode }) => {
+  background-color: ${({ color }) => {
     switch (color) {
       case "primary":
-        return isDarkMode ? "#EBEBEB" : "#252525";
+        return "#252525";
       case "secondary":
-        return isDarkMode ? "#444444" : "#F7F7F7";
+        return "#F7F7F7";
     }
   }};
-  color: ${({ color, isDarkMode}) => {
+  color: ${({ color }) => {
     switch (color) {
       case "primary":
-        return isDarkMode ? "#252525" : "#FBFBFB";
+        return "#FBFBFB";
       case "secondary":
-        return isDarkMode ? "#FBFBFB" : "#252525";
+        return "#252525";
         
     }
   }};
@@ -34,7 +34,7 @@ const StyledButton = styled.button<ButtonProps>`
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px ${({ isDarkMode }) => isDarkMode ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.3)"};
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
   }
 
   &:disabled {
