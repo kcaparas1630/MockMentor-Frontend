@@ -12,7 +12,7 @@ COPY . .
 # Build the application
 ARG VITE_MODE=production
 ENV NODE_ENV=production
-RUN npm run build -- --mode ${VITE_MODE}
+RUN npm run build -- --mode $VITE_MODE
 
 # Stage 2: Create the production image
 FROM nginx:alpine
