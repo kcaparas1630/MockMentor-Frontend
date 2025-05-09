@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   SignUpContainer,
   Title,
@@ -6,65 +7,106 @@ import {
   SignInLink,
   GoogleButton,
   Divider,
-  InputGroup,
   ErrorMessage,
 } from "./Styles/StyledAuth";
 import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
-import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
-import SignUpProps from "@/Types/Login/SignUpProps";
-import SignUpSchema from "./Schema/SignupSchema";
-import { yupResolver } from '@hookform/resolvers/yup';
+import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
 import ReusableInput from "../../Commons/ReuasbleInputField";
+import { auth } from "../../Firebase/FirebaseAuth";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 
 const SignUpForm = () => {
-  
-  const formData: SignUpProps = { email: '', password: '' };
-  const methods = useForm<SignUpProps>({
-    resolver: yupResolver(SignUpSchema),
-    defaultValues: formData,
-  })
-  const onSubmit: SubmitHandler<SignUpProps> = async (data) => {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 3000);
-    });
-    console.log(data); // TODO: Implement sign up mutation.
-  };
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleGoogleSignIn = () => {
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setAuthError(null);
+
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+      console.log("User created successfully");
+      // will create an error type for the error
+    } catch (error: unknown) {
+      if (isFirebaseAuthError(error)) {
+        // handle specific firebase errors
+        if (error.code === "auth/email-already-in-use") {
+          setAuthError("Email already in use");
+        } else if (error.code === "auth/invalid-email") {
+          setAuthError("Invalid email address");
+        } else if (error.code === "auth/weak-password") {
+          setAuthError("Password must be at least 6 characters long");
+        } else {
+          setAuthError(
+            error.message || "Failed to create account. Please try again."
+          );
+        }
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleGoogleSignIn = async () => {
     //TODO: Implement Google sign in logic
+    setIsLoading(true);
+    setAuthError(null);
+
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      console.log("User signed in with Google");
+    } catch (error: unknown) {
+      if (isFirebaseAuthError(error)) {
+        setAuthError(error.message);
+      } else {
+        setAuthError("Failed to sign in with Google. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SignUpContainer>
       <Title>Create an account</Title>
-      <Description>
-        Enter your email below to create your account
-      </Description>
-      <FormProvider {...methods}>
-        <Form onSubmit={methods.handleSubmit(onSubmit)}>
-          <InputGroup>
-            <ReusableInput name="email" type="email" placeholder="Email" label="Email" />
-            {methods.formState.errors.email && <ErrorMessage>{methods.formState.errors.email.message}</ErrorMessage>}
-          </InputGroup>
-          <InputGroup>
-            <ReusableInput name="password" type="password" placeholder="Password" label="Password" />
-            {methods.formState.errors.password && <ErrorMessage>{methods.formState.errors.password.message}</ErrorMessage>}
-          </InputGroup>
-          <ReusableButton
-            type="submit"
-            color="primary"
-            size="lg"
+      <Description>Enter your email below to create your account</Description>
+      <Form onSubmit={handleSignUp}>
+        <ReusableInput
+          type="email"
+          placeholder="Email"
+          label="Email"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <ReusableInput
+          type="password"
+          placeholder="Password"
+          label="Password"
+          name="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {authError && <ErrorMessage>{authError}</ErrorMessage>}
+        <ReusableButton
+          type="submit"
+          color="primary"
+          size="lg"
+          disabled={isLoading}
         >
-          Sign Up with Email
+          {isLoading ? "Creating Account..." : "Sign Up with Email"}
         </ReusableButton>
-        </Form>
-      </FormProvider>
+      </Form>
       <Divider>or continue with</Divider>
-      <GoogleButton
-        type="button"
-        onClick={handleGoogleSignIn}
-      >
+      <GoogleButton type="button" onClick={handleGoogleSignIn}>
         <GoogleIcon />
         Sign in with Google
       </GoogleButton>
