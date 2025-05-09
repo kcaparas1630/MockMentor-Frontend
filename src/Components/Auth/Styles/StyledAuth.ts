@@ -35,6 +35,12 @@ const Form = styled.form`
   gap: 1rem;
 `;
 
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
 const SignInLink = styled.a`
   font-size: 0.875rem;
   color: #A1A1AA;
@@ -78,6 +84,12 @@ const GoogleButton = styled.button`
   }
 `;
 
+const ErrorMessage = styled.div`
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+`;
+
 const Divider = styled.div`
   display: flex;
   align-items: center;
@@ -107,7 +119,9 @@ export {
   Title,
   Description,
   Form,
+  InputGroup,
   SignInLink,
   GoogleButton,
   Divider,
+  ErrorMessage,
 };

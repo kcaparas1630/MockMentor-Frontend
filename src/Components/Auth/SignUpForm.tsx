@@ -6,6 +6,8 @@ import {
   SignInLink,
   GoogleButton,
   Divider,
+  InputGroup,
+  ErrorMessage,
 } from "./Styles/StyledAuth";
 import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
@@ -41,8 +43,14 @@ const SignUpForm = () => {
       </Description>
       <FormProvider {...methods}>
         <Form onSubmit={methods.handleSubmit(onSubmit)}>
-          <ReusableInput name="email" type="email" placeholder="Email" label="Email" />
-          <ReusableInput name="password" type="password" placeholder="Password" label="Password" />
+          <InputGroup>
+            <ReusableInput name="email" type="email" placeholder="Email" label="Email" />
+            {methods.formState.errors.email && <ErrorMessage>{methods.formState.errors.email.message}</ErrorMessage>}
+          </InputGroup>
+          <InputGroup>
+            <ReusableInput name="password" type="password" placeholder="Password" label="Password" />
+            {methods.formState.errors.password && <ErrorMessage>{methods.formState.errors.password.message}</ErrorMessage>}
+          </InputGroup>
           <ReusableButton
             type="submit"
             color="primary"
