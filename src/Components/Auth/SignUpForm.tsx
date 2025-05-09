@@ -37,16 +37,23 @@ const SignUpForm = () => {
       // will create an error type for the error
     } catch (error: unknown) {
       if (isFirebaseAuthError(error)) {
-        // handle specific firebase errors
         if (error.code === "auth/email-already-in-use") {
           setAuthError("Email already in use");
         } else if (error.code === "auth/invalid-email") {
           setAuthError("Invalid email address");
-        } else if (error.code === "auth/weak-password") {
-          setAuthError("Password must be at least 8 characters long");
+        } else if (error.code === "auth/password-does-not-meet-requirements") {
+          setAuthError(
+            "Password must: \n" +
+            "• Contain at least 8 characters\n" +
+            "• Include an uppercase character\n" +
+            "• Include a numeric character\n" +
+            "• Include a special character"
+          );
         } else {
-          setAuthError("Failed to create account. Please try again.");
+          setAuthError(`${error.message || "Failed to create account. Please try again."}`);
         }
+      } else {
+        setAuthError("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -63,9 +70,14 @@ const SignUpForm = () => {
       console.log("User signed in with Google");
     } catch (error: unknown) {
       if (isFirebaseAuthError(error)) {
-        setAuthError(error.message);
+        if (error.code === "auth/popup-closed-by-user") {
+          setAuthError("Authentication was cancelled");
+        }
+         else {
+          setAuthError("Failed to sign in with Google. Please try again.");
+        }
       } else {
-        setAuthError("Failed to sign in with Google. Please try again.");
+        setAuthError("An unexpected error occurred. Please try again.");
       }
     } finally {
       setIsLoading(false);

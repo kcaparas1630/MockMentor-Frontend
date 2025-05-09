@@ -1,9 +1,10 @@
 type FirebaseAuthErrorCodes = 
     | 'auth/email-already-in-use'
     | 'auth/invalid-email'
-    | 'auth/weak-password'
+    | 'auth/password-does-not-meet-requirements'
     | 'auth/user-not-found'
     | 'auth/too-many-requests'
+    | 'auth/popup-closed-by-user'
 
 interface FirebaseAuthError extends Error {
     code: FirebaseAuthErrorCodes;

@@ -88,6 +88,7 @@ const ErrorMessage = styled.div`
   color: red;
   font-size: 0.8rem;
   margin-top: 0.25rem;
+  white-space: pre-line;
 `;
 
 const Divider = styled.div`
