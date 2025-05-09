@@ -23,7 +23,9 @@ jobs:
         run: gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
         
       - name: Build Docker image
-        run: docker build -t us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest .
-     
-      - name: Push Docker Image
-        run: docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
+        run: docker build --build-arg VITE_MODE=prod -t us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:latest .
+
+      - name: Push Docker Images
+        run: |
+          docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
+          docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}
