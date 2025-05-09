@@ -6,12 +6,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAAVcbBH_B0b8PF6-B-RJ5uL6DPZVPeUqg",
-  authDomain: "mockmentor-prod.firebaseapp.com",
-  projectId: "mockmentor-prod",
-  storageBucket: "mockmentor-prod.firebasestorage.app",
-  messagingSenderId: "419904984919",
-  appId: "1:419904984919:web:2fe18777c1784a14641012"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase
