@@ -7,9 +7,8 @@ const Button = ({
   type,
   handleClick,
   children,
-  isDarkMode,
 }: ButtonProps) => (
-  <StyledButton isDarkMode={isDarkMode} handleClick={handleClick} color={color} size={size} type={type}>
+  <StyledButton handleClick={handleClick} color={color} size={size} type={type}>
     {children}
   </StyledButton>
 );

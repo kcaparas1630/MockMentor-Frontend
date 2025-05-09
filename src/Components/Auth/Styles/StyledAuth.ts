@@ -1,13 +1,12 @@
-import IsDarkMode from "@/Types/IsDarkMode";
 import styled from "@emotion/styled";
 
-const SignUpContainer = styled.div<IsDarkMode>`
+const SignUpContainer = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 400px;
   padding: 1.5rem;
-  background-color: ${({ isDarkMode }) => (isDarkMode ? "#1C1C1C" : "#FFFFFF")};
+  background-color: #FFFFFF;
   border-radius: 0.625rem;
   box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
 
@@ -17,17 +16,17 @@ const SignUpContainer = styled.div<IsDarkMode>`
   }
 `;
 
-const Title = styled.h2<IsDarkMode>`
+const Title = styled.h2`
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
-  color: ${({ isDarkMode }) => (isDarkMode ? "#FFFFFF" : "#000000")};
+  color: #000000;
 `;
 
-const Description = styled.p<IsDarkMode>`
+const Description = styled.p`
   font-size: 0.875rem;
   margin-bottom: 1.5rem;
-  color: ${({ isDarkMode }) => (isDarkMode ? "#A1A1AA" : "#71717A")};
+  color: #71717A;
 `;
 
 const Form = styled.form`
@@ -42,44 +41,41 @@ const InputGroup = styled.div`
   gap: 0.5rem;
 `;
 
-const Label = styled.label<IsDarkMode>`
+const Label = styled.label`
   font-size: 0.875rem;
   font-weight: 500;
-  color: ${({ isDarkMode }) => (isDarkMode ? "#E4E4E7" : "#27272A")};
+  color: #27272A;
 `;
 
-const Input = styled.input<IsDarkMode>`
+const Input = styled.input`
   width: 95.5%;
   padding: 0.5rem;
   border-radius: 0.375rem;
-  border: 1px solid
-    ${({ isDarkMode }) => (isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#E4E4E7")};
-  background-color: ${({ isDarkMode }) => (isDarkMode ? "#27272A" : "#FFFFFF")};
-  color: ${({ isDarkMode }) => (isDarkMode ? "#FFFFFF" : "#000000")};
+  border: 1px solid #E4E4E7;
+  background-color: #FFFFFF;
+  color: #000000;
   font-size: 0.875rem;
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &:focus {
     outline: none;
-    border-color: ${({ isDarkMode }) => (isDarkMode ? "#A1A1AA" : "#71717A")};
-    box-shadow: 0 0 0 2px
-      ${({ isDarkMode }) =>
-        isDarkMode ? "rgba(161, 161, 170, 0.3)" : "rgba(113, 113, 122, 0.3)"};
+    border-color: #A1A1AA;
+    box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.3);
   }
 
   &::placeholder {
-    color: ${({ isDarkMode }) => (isDarkMode ? "#71717A" : "#A1A1AA")};
+    color: #A1A1AA;
   }
 `;
 
-const SignInLink = styled.a<IsDarkMode>`
+const SignInLink = styled.a`
   font-size: 0.875rem;
-  color: ${({ isDarkMode }) => (isDarkMode ? "#A1A1AA" : "#71717A")};
+  color: #A1A1AA;
   text-align: center;
   margin-top: 1rem;
 
   span {
-    color: ${({ isDarkMode }) => (isDarkMode ? "#FFFFFF" : "#000000")};
+    color: #000000;
     text-decoration: underline;
     cursor: pointer;
 
@@ -89,14 +85,13 @@ const SignInLink = styled.a<IsDarkMode>`
   }
 `;
 
-const GoogleButton = styled.button<IsDarkMode>`
+const GoogleButton = styled.button`
   width: 100%;
   padding: 0.625rem;
   border-radius: 0.375rem;
-  border: 1px solid
-    ${({ isDarkMode }) => (isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#E4E4E7")};
-  background-color: ${({ isDarkMode }) => (isDarkMode ? "#27272A" : "#FFFFFF")};
-  color: ${({ isDarkMode }) => (isDarkMode ? "#FFFFFF" : "#000000")};
+  border: 1px solid #E4E4E7;
+  background-color: #FFFFFF;
+  color: #000000;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
@@ -107,33 +102,28 @@ const GoogleButton = styled.button<IsDarkMode>`
   gap: 0.5rem;
 
   &:hover {
-    background-color: ${({ isDarkMode }) =>
-      isDarkMode ? "#323232" : "#F9F9F9"};
+    background-color: #F9F9F9;
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px
-      ${({ isDarkMode }) =>
-        isDarkMode ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.3)"};
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
   }
 `;
 
-const Divider = styled.div<IsDarkMode>`
+const Divider = styled.div`
   display: flex;
   align-items: center;
   text-align: center;
   margin: 1rem 0;
-  color: ${({ isDarkMode }) => (isDarkMode ? "#A1A1AA" : "#71717A")};
+  color: #A1A1AA;
   font-size: 0.875rem;
 
   &::before,
   &::after {
     content: "";
     flex: 1;
-    border-bottom: 1px solid
-      ${({ isDarkMode }) =>
-        isDarkMode ? "rgba(255, 255, 255, 0.1)" : "#E4E4E7"};
+    border-bottom: 1px solid #E4E4E7;
   }
 
   &::before {

@@ -13,11 +13,8 @@ import {
 import { useState, ChangeEvent } from "react";
 import Button from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
-import IsDarkMode from "@/Types/IsDarkMode";
 
-const SignUpForm = ({
-  isDarkMode,
-}: IsDarkMode) => {
+const SignUpForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -31,18 +28,17 @@ const SignUpForm = ({
   };
 
   return (
-    <SignUpContainer isDarkMode={isDarkMode}>
-      <Title isDarkMode={isDarkMode}>Create an account</Title>
-      <Description isDarkMode={isDarkMode}>
+    <SignUpContainer>
+      <Title>Create an account</Title>
+      <Description>
         Enter your email below to create your account
       </Description>
       <Form onSubmit={handleSubmit}>
         <InputGroup>
-          <Label isDarkMode={isDarkMode} htmlFor="email">
+          <Label htmlFor="email">
             Email
           </Label>
           <Input
-            isDarkMode={isDarkMode}
             id="email"
             type="email"
             placeholder="name@example.com"
@@ -54,11 +50,10 @@ const SignUpForm = ({
           />
         </InputGroup>
         <InputGroup>
-          <Label isDarkMode={isDarkMode} htmlFor="password">
+          <Label htmlFor="password">
             Password
           </Label>
           <Input
-            isDarkMode={isDarkMode}
             id="password"
             type="password"
             placeholder="Enter your password"
@@ -70,7 +65,6 @@ const SignUpForm = ({
           />
         </InputGroup>
         <Button
-          isDarkMode={isDarkMode}
           type="submit"
           color="primary"
           size="lg"
@@ -79,16 +73,15 @@ const SignUpForm = ({
           Sign Up with Email
         </Button>
       </Form>
-      <Divider isDarkMode={isDarkMode}>or continue with</Divider>
+      <Divider>or continue with</Divider>
       <GoogleButton
         type="button"
-        isDarkMode={isDarkMode}
         onClick={handleGoogleSignIn}
       >
         <GoogleIcon />
         Sign in with Google
       </GoogleButton>
-      <SignInLink isDarkMode={isDarkMode}>
+      <SignInLink>
         Already have an account? <span>Sign in</span>
       </SignInLink>
     </SignUpContainer>
