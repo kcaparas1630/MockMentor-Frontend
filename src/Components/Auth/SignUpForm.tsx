@@ -43,7 +43,7 @@ const SignUpForm = () => {
         } else if (error.code === "auth/invalid-email") {
           setAuthError("Invalid email address");
         } else if (error.code === "auth/weak-password") {
-          setAuthError("Password must be at least 6 characters long");
+          setAuthError("Password must be at least 8 characters long");
         } else {
           setAuthError("Failed to create account. Please try again.");
         }
