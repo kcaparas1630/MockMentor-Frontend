@@ -24,7 +24,7 @@ jobs:
         
       - name: Build Docker image
         run: |
-          docker build -f Dockerfile.prod \
+          docker buildx build --platform linux/amd64 -f Dockerfile.prod \
             --build-arg VITE_MODE=production \
             -t us-east1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-interview-frontend/ai-interview-frontend:latest \
             .
