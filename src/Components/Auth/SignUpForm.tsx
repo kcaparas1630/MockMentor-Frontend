@@ -45,9 +45,7 @@ const SignUpForm = () => {
         } else if (error.code === "auth/weak-password") {
           setAuthError("Password must be at least 6 characters long");
         } else {
-          setAuthError(
-            error.message || "Failed to create account. Please try again."
-          );
+          setAuthError("Failed to create account. Please try again.");
         }
       }
     } finally {
