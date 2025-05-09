@@ -3,24 +3,30 @@ import {
   Title,
   Description,
   Form,
-  InputGroup,
-  Label,
-  Input,
   SignInLink,
   GoogleButton,
   Divider,
 } from "./Styles/StyledAuth";
-import { useState, ChangeEvent } from "react";
-import Button from "../../Commons/Button";
+import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
+import { SubmitHandler, useForm, FormProvider } from 'react-hook-form';
+import SignUpProps from "@/Types/Login/SignUpProps";
+import SignUpSchema from "./Schema/SignupSchema";
+import { yupResolver } from '@hookform/resolvers/yup';
+import ReusableInput from "../../Commons/ReuasbleInputField";
 
 const SignUpForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    //TODO: Implement sign up logic
+  
+  const formData: SignUpProps = { email: '', password: '' };
+  const methods = useForm<SignUpProps>({
+    resolver: yupResolver(SignUpSchema),
+    defaultValues: formData,
+  })
+  const onSubmit: SubmitHandler<SignUpProps> = async (data) => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, 3000);
+    });
+    console.log(data); // TODO: Implement sign up mutation.
   };
 
   const handleGoogleSignIn = () => {
@@ -33,46 +39,19 @@ const SignUpForm = () => {
       <Description>
         Enter your email below to create your account
       </Description>
-      <Form onSubmit={handleSubmit}>
-        <InputGroup>
-          <Label htmlFor="email">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
-            required
-          />
-        </InputGroup>
-        <InputGroup>
-          <Label htmlFor="password">
-            Password
-          </Label>
-          <Input
-            id="password"
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
-            required
-          />
-        </InputGroup>
-        <Button
-          type="submit"
-          color="primary"
-          size="lg"
-          handleClick={() => {}}
+      <FormProvider {...methods}>
+        <Form onSubmit={methods.handleSubmit(onSubmit)}>
+          <ReusableInput name="email" type="email" placeholder="Email" label="Email" />
+          <ReusableInput name="password" type="password" placeholder="Password" label="Password" />
+          <ReusableButton
+            type="submit"
+            color="primary"
+            size="lg"
         >
           Sign Up with Email
-        </Button>
-      </Form>
+        </ReusableButton>
+        </Form>
+      </FormProvider>
       <Divider>or continue with</Divider>
       <GoogleButton
         type="button"

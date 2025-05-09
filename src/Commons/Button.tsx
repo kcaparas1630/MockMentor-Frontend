@@ -1,7 +1,7 @@
 import StyledButton from "./Styles/StyledButton";
 import ButtonProps from "@/Types/ButtonTypes";
 
-const Button = ({
+const ReusableButton = ({
   color,
   size,
   type,
@@ -13,4 +13,4 @@ const Button = ({
   </StyledButton>
 );
 
-export default Button;
+export default ReusableButton;
