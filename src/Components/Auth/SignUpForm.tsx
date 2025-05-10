@@ -19,6 +19,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
+import { ToastContainer, toast } from 'react-toastify';
 
 const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -33,7 +34,7 @@ const SignUpForm = () => {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      console.log("User created successfully");
+      toast.success("User created successfully")
       // will create an error type for the error
     } catch (error: unknown) {
       if (isFirebaseAuthError(error)) {
@@ -86,6 +87,7 @@ const SignUpForm = () => {
 
   return (
     <SignUpContainer>
+      <ToastContainer />
       <Title>Create an account</Title>
       <Description>Enter your email below to create your account</Description>
       <Form onSubmit={handleSignUp}>
