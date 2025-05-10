@@ -24,6 +24,11 @@ jobs:
         
       - name: Build Docker image
         run: docker build -t us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest .
-     
+
+      - name: Debug Cloud
+        run: |
+          gcloud auth list
+          gcloud config list
+
       - name: Push Docker Image
         run: docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
