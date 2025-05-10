@@ -32,3 +32,14 @@ jobs:
 
       - name: Push Docker Image
         run: docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
+        run: |
+          docker build -f Dockerfile.prod \
+            --build-arg VITE_MODE=production \
+            -t us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest \
+            .
+
+      - name: Push Docker Images
+        run: |
+          docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
+          docker tag us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}
+          docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}

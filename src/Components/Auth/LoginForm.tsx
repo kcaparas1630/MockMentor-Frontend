@@ -20,39 +20,30 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
-import { ToastContainer, toast } from 'react-toastify';
 
-const SignUpForm = () => {
+const LoginForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setAuthError(null);
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      toast.success("User created successfully")
+      console.log("User created successfully");
       // will create an error type for the error
     } catch (error: unknown) {
       if (isFirebaseAuthError(error)) {
-        if (error.code === "auth/email-already-in-use") {
-          setAuthError("Email already in use");
-        } else if (error.code === "auth/invalid-email") {
-          setAuthError("Invalid email address");
-        } else if (error.code === "auth/password-does-not-meet-requirements") {
-          setAuthError(
-            "Password must: \n" +
-            "• Contain at least 8 characters\n" +
-            "• Include an uppercase character\n" +
-            "• Include a numeric character\n" +
-            "• Include a special character"
-          );
+        if (error.code === "auth/user-not-found") {
+          setAuthError("Email or password is incorrect.");
         } else {
-          setAuthError(`${error.message || "Failed to create account. Please try again."}`);
+          setAuthError(
+            `${error.message || "Failed to find account. Please try again."}`
+          );
         }
       } else {
         setAuthError("An unexpected error occurred. Please try again.");
@@ -74,8 +65,7 @@ const SignUpForm = () => {
       if (isFirebaseAuthError(error)) {
         if (error.code === "auth/popup-closed-by-user") {
           setAuthError("Authentication was cancelled");
-        }
-         else {
+        } else {
           setAuthError("Failed to sign in with Google. Please try again.");
         }
       } else {
@@ -88,10 +78,9 @@ const SignUpForm = () => {
 
   return (
     <SignUpContainer>
-      <ToastContainer />
-      <Title>Create an account</Title>
-      <Description>Enter your email below to create your account</Description>
-      <Form onSubmit={handleSignUp}>
+      <Title>Login to your account</Title>
+      <Description>Enter your email below to login to your account</Description>
+      <Form onSubmit={handleLogIn}>
         <ReusableInput
           type="email"
           placeholder="Email"
@@ -115,7 +104,7 @@ const SignUpForm = () => {
           size="lg"
           disabled={isLoading}
         >
-          {isLoading ? "Creating Account..." : "Sign Up with Email"}
+          {isLoading ? "Logging in..." : "Sign In with Email"}
         </ReusableButton>
       </Form>
       <Divider>or continue with</Divider>
@@ -124,10 +113,10 @@ const SignUpForm = () => {
         Sign in with Google
       </GoogleButton>
       <SignInLink>
-        Already have an account? <StyledLink to="/login">Sign in</StyledLink>
+        Don't have an account? <StyledLink to="/SignUp">Sign Up</StyledLink>
       </SignInLink>
     </SignUpContainer>
   );
 };
 
-export default SignUpForm;
+export default LoginForm;
