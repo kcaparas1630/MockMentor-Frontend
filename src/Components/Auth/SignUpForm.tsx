@@ -8,6 +8,7 @@ import {
   GoogleButton,
   Divider,
   ErrorMessage,
+  StyledLink,
 } from "./Styles/StyledAuth";
 import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
@@ -123,7 +124,7 @@ const SignUpForm = () => {
         Sign in with Google
       </GoogleButton>
       <SignInLink>
-        Already have an account? <span>Sign in</span>
+        Already have an account? <StyledLink to="/login">Sign in</StyledLink>
       </SignInLink>
     </SignUpContainer>
   );
