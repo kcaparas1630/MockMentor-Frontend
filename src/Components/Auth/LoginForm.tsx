@@ -77,8 +77,8 @@ const LoginForm = () => {
 
   return (
     <SignUpContainer>
-      <Title>Create an account</Title>
-      <Description>Enter your email below to create your account</Description>
+      <Title>Login to your account</Title>
+      <Description>Enter your email below to login to your account</Description>
       <Form onSubmit={handleLogIn}>
         <ReusableInput
           type="email"
