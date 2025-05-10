@@ -1,4 +1,5 @@
 import styled from "@emotion/styled";
+import { Link } from "@tanstack/react-router";
 
 const SignUpContainer = styled.div`
   display: flex;
@@ -42,20 +43,20 @@ const InputGroup = styled.div`
   gap: 0.5rem;
 `;
 
-const SignInLink = styled.a`
+const SignInLink = styled.p`
   font-size: 0.875rem;
   color:#444449;
   text-align: center;
   margin-top: 1rem;
+`;
 
-  span {
-    color: #000000;
-    text-decoration: underline;
-    cursor: pointer;
+const StyledLink = styled(Link)`
+  color: #000000;
+  text-decoration: underline;
+  cursor: pointer;
 
-    &:hover {
-      opacity: 0.8;
-    }
+  &:hover {
+    opacity: 0.8;
   }
 `;
 
@@ -126,4 +127,5 @@ export {
   GoogleButton,
   Divider,
   ErrorMessage,
+  StyledLink,
 };
