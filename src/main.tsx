@@ -14,8 +14,6 @@ declare module '@tanstack/react-router' {
     router: typeof router
   }
 }
-// Log the env variables. need to see if they are being passed correctly
-console.log(import.meta.env);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
