@@ -4,11 +4,6 @@ import { getAuth } from "firebase/auth";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-// Add this before initializing Firebase
-console.log("Firebase config keys available:", Object.keys(import.meta.env)
-  .filter(key => key.startsWith('VITE_FIREBASE'))
-  .join(', '));
-
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
