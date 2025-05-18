@@ -1,4 +1,4 @@
-# AI Interview Frontend
+# MockMentor Frontend
 
 A modern, containerized React frontend for the Interview AI Helper, built with Vite, TypeScript, and Firebase integration.
 
