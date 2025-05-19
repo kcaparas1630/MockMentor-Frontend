@@ -15,12 +15,9 @@ import GoogleIcon from "../../Assets/GoogleIcon";
 import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
 import ReusableInput from "../../Commons/ReuasbleInputField";
 import { auth } from "../../Firebase/FirebaseAuth";
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-import { ToastContainer, toast } from 'react-toastify';
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { ToastContainer, toast } from "react-toastify";
+import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -35,7 +32,7 @@ const SignUpForm = () => {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      toast.success("User created successfully")
+      toast.success("User created successfully");
       // will create an error type for the error
     } catch (error: unknown) {
       if (isFirebaseAuthError(error)) {
@@ -46,37 +43,15 @@ const SignUpForm = () => {
         } else if (error.code === "auth/password-does-not-meet-requirements") {
           setAuthError(
             "Password must: \n" +
-            "• Contain at least 8 characters\n" +
-            "• Include an uppercase character\n" +
-            "• Include a numeric character\n" +
-            "• Include a special character"
+              "• Contain at least 8 characters\n" +
+              "• Include an uppercase character\n" +
+              "• Include a numeric character\n" +
+              "• Include a special character"
           );
         } else {
-          setAuthError(`${error.message || "Failed to create account. Please try again."}`);
-        }
-      } else {
-        setAuthError("An unexpected error occurred. Please try again.");
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const handleGoogleSignIn = async () => {
-    //TODO: Implement Google sign in logic
-    setIsLoading(true);
-    setAuthError(null);
-
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      console.log("User signed in with Google");
-    } catch (error: unknown) {
-      if (isFirebaseAuthError(error)) {
-        if (error.code === "auth/popup-closed-by-user") {
-          setAuthError("Authentication was cancelled");
-        }
-         else {
-          setAuthError("Failed to sign in with Google. Please try again.");
+          setAuthError(
+            `${error.message || "Failed to create account. Please try again."}`
+          );
         }
       } else {
         setAuthError("An unexpected error occurred. Please try again.");
@@ -119,7 +94,10 @@ const SignUpForm = () => {
         </ReusableButton>
       </Form>
       <Divider>or continue with</Divider>
-      <GoogleButton type="button" onClick={handleGoogleSignIn}>
+      <GoogleButton
+        type="button"
+        onClick={() => handleGoogleSignIn({ setIsLoading, setAuthError })}
+      >
         <GoogleIcon />
         Sign in with Google
       </GoogleButton>
