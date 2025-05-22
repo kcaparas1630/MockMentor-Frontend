@@ -15,11 +15,25 @@ import GoogleIcon from "../../Assets/GoogleIcon";
 import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
 import ReusableInput from "../../Commons/ReuasbleInputField";
 import { auth } from "../../Firebase/FirebaseAuth";
-import {
-  createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+// will change
+const loginUser = async (credentials: { email: string, password: string }) => {
+  const { email, password } = credentials;
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  const idToken = await userCredential.user.getIdToken();
+  
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
+    headers: {
+      Authorization: `Bearer ${idToken}`
+    }
+  })
+  const user = response.data;
+  console.log(user);
+  return user;
+}
 
 const LoginForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -27,16 +41,12 @@ const LoginForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleLogIn = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setAuthError(null);
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log("User created successfully");
-      // will create an error type for the error
-    } catch (error: unknown) {
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: () => {
+      console.log("login successful");
+    },
+    onError: (error: unknown) => {
       if (isFirebaseAuthError(error)) {
         if (error.code === "auth/user-not-found") {
           setAuthError("Email or password is incorrect.");
@@ -48,32 +58,31 @@ const LoginForm = () => {
       } else {
         setAuthError("An unexpected error occurred. Please try again.");
       }
-    } finally {
+    },
+    onSettled: () => {
       setIsLoading(false);
     }
-  };
-  const handleGoogleSignIn = async () => {
-    //TODO: Implement Google sign in logic
-    setIsLoading(true);
-    setAuthError(null);
+  })
 
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      console.log("User signed in with Google");
-    } catch (error: unknown) {
+  const googleSignInMutation = useMutation({
+    mutationFn: handleGoogleSignIn,
+    onSuccess: () => {
+      //TODO: redirect to dashboard.
+    },
+    onError: (error: unknown) => {
       if (isFirebaseAuthError(error)) {
-        if (error.code === "auth/popup-closed-by-user") {
-          setAuthError("Authentication was cancelled");
-        } else {
-          setAuthError("Failed to sign in with Google. Please try again.");
-        }
+        setAuthError(error.message);
       } else {
         setAuthError("An unexpected error occurred. Please try again.");
       }
-    } finally {
-      setIsLoading(false);
     }
+  })
+
+  const handleLogIn = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setAuthError(null);
+    mutation.mutate({ email, password });
   };
 
   return (
@@ -108,9 +117,17 @@ const LoginForm = () => {
         </ReusableButton>
       </Form>
       <Divider>or continue with</Divider>
-      <GoogleButton type="button" onClick={handleGoogleSignIn}>
-        <GoogleIcon />
-        Sign in with Google
+      <GoogleButton
+        type="button"
+        onClick={() => googleSignInMutation.mutate()}
+        disabled={googleSignInMutation.isPending}
+      >
+        {googleSignInMutation.isPending ? "Signing in with Google..." : (
+          <>
+            <GoogleIcon />
+            Sign in with Google
+          </>
+        )}
       </GoogleButton>
       <SignInLink>
         Don't have an account? <StyledLink to="/SignUp">Sign Up</StyledLink>
