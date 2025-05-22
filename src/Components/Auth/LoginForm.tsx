@@ -25,7 +25,7 @@ const loginUser = async (credentials: { email: string, password: string }) => {
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
   const idToken = await userCredential.user.getIdToken();
   
-  const response = await axios.get('https://ai-interview-typescript-server-244697793005.us-east1.run.app:3000/api/user', {
+  const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
     headers: {
       Authorization: `Bearer ${idToken}`
     }
@@ -61,6 +61,20 @@ const LoginForm = () => {
     },
     onSettled: () => {
       setIsLoading(false);
+    }
+  })
+
+  const googleSignInMutation = useMutation({
+    mutationFn: handleGoogleSignIn,
+    onSuccess: () => {
+      //TODO: redirect to dashboard.
+    },
+    onError: (error: unknown) => {
+      if (isFirebaseAuthError(error)) {
+        setAuthError(error.message);
+      } else {
+        setAuthError("An unexpected error occurred. Please try again.");
+      }
     }
   })
 
@@ -105,10 +119,15 @@ const LoginForm = () => {
       <Divider>or continue with</Divider>
       <GoogleButton
         type="button"
-        onClick={() => handleGoogleSignIn({ setIsLoading, setAuthError })}
+        onClick={() => googleSignInMutation.mutate()}
+        disabled={googleSignInMutation.isPending}
       >
-        <GoogleIcon />
-        Sign in with Google
+        {googleSignInMutation.isPending ? "Signing in with Google..." : (
+          <>
+            <GoogleIcon />
+            Sign in with Google
+          </>
+        )}
       </GoogleButton>
       <SignInLink>
         Don't have an account? <StyledLink to="/SignUp">Sign Up</StyledLink>

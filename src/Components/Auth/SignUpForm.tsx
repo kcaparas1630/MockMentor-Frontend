@@ -18,6 +18,7 @@ import { auth } from "../../Firebase/FirebaseAuth";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
+import { useMutation } from "@tanstack/react-query";
 
 const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -29,6 +30,7 @@ const SignUpForm = () => {
     e.preventDefault();
     setIsLoading(true);
     setAuthError(null);
+    //TODO: create a mutation for the sign up
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
@@ -61,6 +63,19 @@ const SignUpForm = () => {
     }
   };
 
+  const googleSignInMutation = useMutation({
+    mutationFn: handleGoogleSignIn,
+    onSuccess: () => {
+      //TODO: redirect to dashboard.
+    },
+    onError: (error: unknown) => {
+      if (isFirebaseAuthError(error)) {
+        setAuthError(error.message);
+      } else {
+        setAuthError("An unexpected error occurred. Please try again.");
+      }
+    }
+  })
   return (
     <SignUpContainer>
       <ToastContainer />
@@ -96,10 +111,15 @@ const SignUpForm = () => {
       <Divider>or continue with</Divider>
       <GoogleButton
         type="button"
-        onClick={() => handleGoogleSignIn({ setIsLoading, setAuthError })}
+        onClick={() => googleSignInMutation.mutate()}
+        disabled={googleSignInMutation.isPending}
       >
-        <GoogleIcon />
-        Sign in with Google
+        {googleSignInMutation.isPending ? "Signing in with Google..." : (
+          <>
+            <GoogleIcon />
+            Sign in with Google
+          </>
+        )}
       </GoogleButton>
       <SignInLink>
         Already have an account? <StyledLink to="/login">Sign in</StyledLink>
