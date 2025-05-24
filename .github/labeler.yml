@@ -1,6 +1,6 @@
 frontend:
   - changed-files:
-      - any-glob-to-any-file: 'src/frontend/*'
+      - any-glob-to-any-file: 'src/**'
 
 documentation:
   - changed-files:
