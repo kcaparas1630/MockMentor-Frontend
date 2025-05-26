@@ -58,5 +58,5 @@ jobs:
         uses: google-github-actions/deploy-cloudrun@v2
         with:
           service: 'mockmentor-frontend-dev'
-          image: 'us-east1-docker.pkg.dev/mockmentor-460805/ai-interview-frontend/mockmentor-frontend-dev:latest'
+          image: 'us-east1-docker.pkg.dev/mockmentor-460805/ai-interview-frontend/ai-interview-frontend:latest'
           region: 'us-east1'
