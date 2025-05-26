@@ -44,19 +44,19 @@ jobs:
             --build-arg VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }} \
             --build-arg VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }} \
             --build-arg VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }} \
-            -t us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest \
+            -t us-east1-docker.pkg.dev/mockmentor-460805/mockmentor-frontend-dev/mockmentor-frontend-dev:latest \
             .
             
       - name: Push Docker Images
         run: |
-          docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest
-          docker tag us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}
-          docker push us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:${{ github.sha }}
+          docker push us-east1-docker.pkg.dev/mockmentor-460805/mockmentor-frontend-dev/mockmentor-frontend-dev:latest
+          docker tag us-east1-docker.pkg.dev/mockmentor-460805/mockmentor-frontend-dev/mockmentor-frontend-dev:latest us-east1-docker.pkg.dev/mockmentor-460805/mockmentor-frontend-dev/mockmentor-frontend-dev:${{ github.sha }}
+          docker push us-east1-docker.pkg.dev/mockmentor-460805/mockmentor-frontend-dev/mockmentor-frontend-dev:${{ github.sha }}
       
       - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: 'ai-interview-frontend'
-          image: 'us-east1-docker.pkg.dev/terraform-practice-455719/ai-interview-frontend/ai-interview-frontend:latest'
+          service: 'mockmentor-frontend-dev'
+          image: 'us-east1-docker.pkg.dev/mockmentor-460805/mockmentor-frontend-dev/mockmentor-frontend-dev:latest'
           region: 'us-east1'
