@@ -14,8 +14,6 @@ import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
 import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
 import ReusableInput from "../../Commons/ReuasbleInputField";
-import { auth } from "../../Firebase/FirebaseAuth";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation } from "@tanstack/react-query";
@@ -23,18 +21,12 @@ import axios from "axios";
 
 
 const registerUser = async (credentials: { email: string, password: string }) => {
-  const { email, password } = credentials;
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  const idToken = await userCredential.user.getIdToken();
-  const response = await axios.post(`${import.meta.env.VITE_API_URL}/create-user`, {
-    email,
-  }, {
-    headers: {
-      Authorization: `Bearer ${idToken}`
-    }
-  });
-  return response.data;
+    const { email, password } = credentials;
+    const response = await axios.post("http://localhost:3000/api/create-user", {email, password});
+   
+    return response.data;
 }
+
 const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -47,6 +39,7 @@ const SignUpForm = () => {
       toast.success("User created successfully");
     },
     onError: (error: unknown) => {
+      // TODO: handle error from backend.
       if (isFirebaseAuthError(error)) {
         if (error.code === "auth/email-already-in-use") {
           setAuthError("Email already in use");
