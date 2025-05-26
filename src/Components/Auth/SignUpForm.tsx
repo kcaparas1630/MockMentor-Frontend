@@ -14,11 +14,18 @@ import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
 import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
 import ReusableInput from "../../Commons/ReuasbleInputField";
-import { auth } from "../../Firebase/FirebaseAuth";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ToastContainer, toast } from "react-toastify";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+
+
+const registerUser = async (credentials: { email: string, password: string }) => {
+    const { email, password } = credentials;
+    const response = await axios.post("http://localhost:3000/api/create-user", {email, password});
+   
+    return response.data;
+}
 
 const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -26,17 +33,13 @@ const SignUpForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setAuthError(null);
-    //TODO: create a mutation for the sign up
-
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
+  const mutation = useMutation({
+    mutationFn: registerUser,
+    onSuccess: () => {
       toast.success("User created successfully");
-      // will create an error type for the error
-    } catch (error: unknown) {
+    },
+    onError: (error: unknown) => {
+      // TODO: handle error from backend.
       if (isFirebaseAuthError(error)) {
         if (error.code === "auth/email-already-in-use") {
           setAuthError("Email already in use");
@@ -58,10 +61,11 @@ const SignUpForm = () => {
       } else {
         setAuthError("An unexpected error occurred. Please try again.");
       }
-    } finally {
+    },
+    onSettled: () => {
       setIsLoading(false);
     }
-  };
+  })
 
   const googleSignInMutation = useMutation({
     mutationFn: handleGoogleSignIn,
@@ -76,6 +80,13 @@ const SignUpForm = () => {
       }
     }
   })
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setAuthError(null);
+    mutation.mutate({ email, password });
+  }
   return (
     <SignUpContainer>
       <ToastContainer />

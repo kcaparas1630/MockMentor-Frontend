@@ -31,7 +31,6 @@ const loginUser = async (credentials: { email: string, password: string }) => {
     }
   })
   const user = response.data;
-  console.log(user);
   return user;
 }
 
