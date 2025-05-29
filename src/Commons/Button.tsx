@@ -9,7 +9,7 @@ const ReusableButton = ({
   children,
   disabled,
 }: ButtonProps) => (
-  <StyledButton handleClick={handleClick} color={color} size={size} type={type} disabled={disabled}>
+  <StyledButton onClick={handleClick} color={color} size={size} type={type} disabled={disabled}>
     {children}
   </StyledButton>
 );
