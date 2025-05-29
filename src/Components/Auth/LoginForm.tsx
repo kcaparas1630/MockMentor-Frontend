@@ -19,7 +19,8 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-// will change
+import { useNavigate } from "@tanstack/react-router";
+
 const loginUser = async (credentials: { email: string, password: string }) => {
   const { email, password } = credentials;
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -40,10 +41,12 @@ const LoginForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const navigate = useNavigate();
+
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: () => {
-      console.log("login successful");
+      navigate({ to: "/profile-create" });
     },
     onError: (error: unknown) => {
       if (isFirebaseAuthError(error)) {
@@ -66,7 +69,7 @@ const LoginForm = () => {
   const googleSignInMutation = useMutation({
     mutationFn: handleGoogleSignIn,
     onSuccess: () => {
-      //TODO: redirect to dashboard.
+      navigate({ to: "/profile-create" });
     },
     onError: (error: unknown) => {
       if (isFirebaseAuthError(error)) {
