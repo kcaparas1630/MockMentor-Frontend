@@ -30,6 +30,8 @@ const JobRoleInput = ({ profileData, setProfileData }: ViewProps) => {
     )
 }
 
+// TODO: Add Analytics for the profile creator. (Where did the user discover the app?, etc.)
+
 const ProfileCreator = () => {
     const { users, isPending, isError } = GetUserQuery();
     const [view, setView] = useState<string>("name");
