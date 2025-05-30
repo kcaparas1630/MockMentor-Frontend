@@ -5,8 +5,12 @@ const ProfileContainer = styled.section`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
+    min-width: 100vw;
     width: 100vw;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
 `;
 
 const Form = styled.form`
