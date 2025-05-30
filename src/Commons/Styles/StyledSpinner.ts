@@ -10,6 +10,11 @@ const Spinner = styled.div`
   box-sizing: border-box;
   animation: rotation 1s linear infinite;
 
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    border: 3px solid #2C2F33;
+  }
+
   @keyframes rotation {
     0% {
       transform: rotate(0deg);
