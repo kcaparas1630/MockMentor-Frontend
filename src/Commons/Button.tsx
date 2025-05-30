@@ -5,11 +5,11 @@ const ReusableButton = ({
   color,
   size,
   type,
-  handleClick,
+  onClick,
   children,
   disabled,
 }: ButtonProps) => (
-  <StyledButton onClick={handleClick} color={color} size={size} type={type} disabled={disabled}>
+  <StyledButton onClick={onClick} color={color} size={size} type={type} disabled={disabled}>
     {children}
   </StyledButton>
 );
