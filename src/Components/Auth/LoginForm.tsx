@@ -13,7 +13,7 @@ import {
 import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
 import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
-import ReusableInput from "../../Commons/ReuasbleInputField";
+import ReusableInput from "../../Commons/ReusableInputField";
 import { auth } from "../../Firebase/FirebaseAuth";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
