@@ -1,5 +1,5 @@
 import { InputGroup, ProfileContainer } from "./Styles/StyledProfile"
-import ReusableInput from "../../Commons/ReuasbleInputField"
+import ReusableInput from "../../Commons/ReusableInputField"
 import { useState } from "react";
 import { GetUserQuery, UpdateUser }
  from "../../Hooks/UserHooks";
@@ -17,15 +17,23 @@ const NameInput = ({ setView, profileData, setProfileData }: ViewProps) => {
     return (
         <InputGroup>
             <ReusableInput name="name" type="text" placeholder="Name" label="Name" value={profileData.profile.name} onChange={(e) => setProfileData({ ...profileData, profile: { ...profileData.profile, name: e.target.value } })} />
-            <ReusableButton type="submit" color="primary" size="lg" handleClick={() => setView && setView("jobRole")} disabled={false}>Next</ReusableButton>
+            <ReusableButton type="submit" color="primary" size="lg" onClick={() => setView && setView("jobRole")} disabled={false}>Next</ReusableButton>
         </InputGroup>
     )
 }
 const JobRoleInput = ({ profileData, setProfileData }: ViewProps) => {
+    const handleUpdateUser = async () => {
+        try {
+            await UpdateUser(profileData);
+            //TODO: move to next view
+        } catch (error) {
+            console.error("Error updating user:", error);
+        }
+    }
     return (
         <InputGroup>
             <ReusableInput name="jobRole" type="text" placeholder="Job Role" label="Job Role" value={profileData.profile.jobRole} onChange={(e) => setProfileData({ ...profileData, profile: { ...profileData.profile, jobRole: e.target.value } })} />
-            <ReusableButton type="submit" color="primary" size="lg" handleClick={() => UpdateUser(profileData)} disabled={false}>Next</ReusableButton>
+            <ReusableButton type="submit" color="primary" size="lg" onClick={handleUpdateUser} disabled={false}>Next</ReusableButton>
         </InputGroup>
     )
 }
