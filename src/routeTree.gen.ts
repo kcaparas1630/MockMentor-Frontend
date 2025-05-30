@@ -11,11 +11,18 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as ProfileCreateImport } from './routes/profile-create'
 import { Route as LoginImport } from './routes/login'
 import { Route as SignUpImport } from './routes/SignUp'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const ProfileCreateRoute = ProfileCreateImport.update({
+  id: '/profile-create',
+  path: '/profile-create',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const LoginRoute = LoginImport.update({
   id: '/login',
@@ -60,6 +67,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
+    '/profile-create': {
+      id: '/profile-create'
+      path: '/profile-create'
+      fullPath: '/profile-create'
+      preLoaderRoute: typeof ProfileCreateImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -69,12 +83,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/SignUp': typeof SignUpRoute
   '/login': typeof LoginRoute
+  '/profile-create': typeof ProfileCreateRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/SignUp': typeof SignUpRoute
   '/login': typeof LoginRoute
+  '/profile-create': typeof ProfileCreateRoute
 }
 
 export interface FileRoutesById {
@@ -82,14 +98,15 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/SignUp': typeof SignUpRoute
   '/login': typeof LoginRoute
+  '/profile-create': typeof ProfileCreateRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/SignUp' | '/login'
+  fullPaths: '/' | '/SignUp' | '/login' | '/profile-create'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/SignUp' | '/login'
-  id: '__root__' | '/' | '/SignUp' | '/login'
+  to: '/' | '/SignUp' | '/login' | '/profile-create'
+  id: '__root__' | '/' | '/SignUp' | '/login' | '/profile-create'
   fileRoutesById: FileRoutesById
 }
 
@@ -97,12 +114,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SignUpRoute: typeof SignUpRoute
   LoginRoute: typeof LoginRoute
+  ProfileCreateRoute: typeof ProfileCreateRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SignUpRoute: SignUpRoute,
   LoginRoute: LoginRoute,
+  ProfileCreateRoute: ProfileCreateRoute,
 }
 
 export const routeTree = rootRoute
@@ -117,7 +136,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/SignUp",
-        "/login"
+        "/login",
+        "/profile-create"
       ]
     },
     "/": {
@@ -128,6 +148,9 @@ export const routeTree = rootRoute
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/profile-create": {
+      "filePath": "profile-create.tsx"
     }
   }
 }
