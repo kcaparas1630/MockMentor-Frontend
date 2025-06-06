@@ -60,13 +60,12 @@ const LoginForm = () => {
   const [password, setPassword] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+  const { users } = GetUserQuery();
   const navigate = useNavigate();
  
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: () => {
-      const { users } = GetUserQuery();
       if (users?.profile?.name && users?.profile?.jobRole) {
         // TODO: navigate to dashboard.
         // navigate({ to: "/dashboard" });
@@ -86,7 +85,7 @@ const LoginForm = () => {
   const googleSignInMutation = useMutation({
     mutationFn: handleGoogleSignIn,
     onSuccess: () => {
-      const { users } = GetUserQuery();
+      
       if (users?.profile?.name && users?.profile?.jobRole) {
         // TODO: navigate to dashboard.
         // navigate({ to: "/dashboard" });
