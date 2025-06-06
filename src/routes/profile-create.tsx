@@ -1,11 +1,20 @@
 import { createRoute } from "@tanstack/react-router";
 import rootRoute from "./__root";
 import ProfileCreator from "../Components/Profile/ProfileCreator";
+// import { requireAuth } from "../utils/auth";
+import AuthGuard from "../Components/AuthGuard";
 
-// Create a signup route
+const ProtectedProfileCreate = () => {
+    return (
+        <AuthGuard>
+            <ProfileCreator />
+        </AuthGuard>
+    )
+}
+// Create a protected profile-create route
 export const Route = createRoute({
     path: '/profile-create',
-    component: ProfileCreator,
+    component: ProtectedProfileCreate,
     getParentRoute: () => rootRoute,
 });
 
