@@ -60,8 +60,7 @@ const FormContainer = styled.div`
   justify-content: center;
   width: min(90vw, 600px);
   height: min(70vh, 600px);
-  min-height: 40vw;
-  max-width: 90vw;
+  min-height: 400px;
   background-color: #fff;
   border-radius: 1rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
