@@ -23,6 +23,11 @@ const InputGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  width: 80vw;
+
+  @media (min-width: 1024px) {
+    width: 30vw;
+  }
 `;
 
 export { ProfileContainer, Form, InputGroup };

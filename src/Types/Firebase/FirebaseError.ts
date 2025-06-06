@@ -1,6 +1,6 @@
 type FirebaseAuthErrorCodes = 
     | 'auth/email-already-in-use'
-    | 'auth/invalid-email'
+    | 'auth/invalid-credential'
     | 'auth/password-does-not-meet-requirements'
     | 'auth/user-not-found'
     | 'auth/too-many-requests'
