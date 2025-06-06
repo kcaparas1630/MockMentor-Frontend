@@ -17,12 +17,12 @@ import ReusableInput from "../../Commons/ReusableInputField";
 import { auth } from "../../Firebase/FirebaseAuth";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
 import { GetUserQuery } from "../../Hooks/UserHooks";
 
-const loginUser = async (credentials: { email: string, password: string }) => {
+const loginUser = async (credentials: { email: string; password: string }) => {
   const { email, password } = credentials;
   // Step 1: Authenticate with Firebase (handle auth errors immediately)
   const idToken = await AuthenticateUser(email, password);
@@ -30,16 +30,20 @@ const loginUser = async (credentials: { email: string, password: string }) => {
   // Step 2: Fetch user data from API
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
     headers: {
-      Authorization: `Bearer ${idToken}`
-    }
-  })
+      Authorization: `Bearer ${idToken}`,
+    },
+  });
   const user = response.data;
   return user;
-}
+};
 
 const AuthenticateUser = async (email: string, password: string) => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
     const idToken = await userCredential.user.getIdToken();
     return idToken;
   } catch (error) {
@@ -51,22 +55,28 @@ const AuthenticateUser = async (email: string, password: string) => {
           throw new Error("An unexpected error occurred. Please try again.");
       }
     }
-    
   }
-}
+};
 
 const LoginForm = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { users } = GetUserQuery();
+  const { users, refetch, status } = GetUserQuery();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
- 
+
   const mutation = useMutation({
     mutationFn: loginUser,
-    onSuccess: () => {
-      if (users?.profile?.name && users?.profile?.jobRole) {
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      await refetch();
+      if (
+        status === "success" &&
+        users?.profile?.name &&
+        users?.profile?.jobRole
+      ) {
         // TODO: navigate to dashboard.
         // navigate({ to: "/dashboard" });
       } else {
@@ -79,14 +89,19 @@ const LoginForm = () => {
     },
     onSettled: () => {
       setIsLoading(false);
-    }
-  })
+    },
+  });
 
   const googleSignInMutation = useMutation({
     mutationFn: handleGoogleSignIn,
-    onSuccess: () => {
-      
-      if (users?.profile?.name && users?.profile?.jobRole) {
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      await refetch();
+      if (
+        status === "success" &&
+        users?.profile?.name &&
+        users?.profile?.jobRole
+      ) {
         // TODO: navigate to dashboard.
         // navigate({ to: "/dashboard" });
       } else {
@@ -99,8 +114,8 @@ const LoginForm = () => {
       } else {
         setAuthError("An unexpected error occurred. Please try again.");
       }
-    }
-  })
+    },
+  });
 
   const handleLogIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -146,7 +161,9 @@ const LoginForm = () => {
         onClick={() => googleSignInMutation.mutate()}
         disabled={googleSignInMutation.isPending}
       >
-        {googleSignInMutation.isPending ? "Signing in with Google..." : (
+        {googleSignInMutation.isPending ? (
+          "Signing in with Google..."
+        ) : (
           <>
             <GoogleIcon />
             Sign in with Google

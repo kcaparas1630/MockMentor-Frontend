@@ -49,6 +49,8 @@ const GetUserQuery = () => {
         data: users,
         isPending,
         isError,
+        refetch,
+        status,
     }: UseQueryResult<ProfileData, Error> = useQuery({
         queryKey: ['user'],
         queryFn: getUser,
@@ -58,6 +60,8 @@ const GetUserQuery = () => {
         users,
         isPending,
         isError,
+        refetch,
+        status,
     }
 }
 
