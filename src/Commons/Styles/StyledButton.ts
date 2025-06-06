@@ -5,6 +5,10 @@ const StyledButton = styled.button<ButtonProps>`
   width: ${({ size }) => size === "sm" ? "25%" : size === "md" ? "50%" : "100%"};
   padding: 0.625rem;
   border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   border: none;
   background-color: ${({ color }) => {
     switch (color) {
