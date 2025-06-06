@@ -47,7 +47,9 @@ const NameInput = ({
     setSteps(steps + 1);
   };
   const handleBack = () => {
-    setSteps(steps - 1);
+    if (steps > 1) {
+      setSteps(steps - 1);
+    }
   };
 
   return (
@@ -81,7 +83,7 @@ const NameInput = ({
           onClick={handleBack}
           disabled={steps === 1}
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={24} aria-hidden="true" />
           <span>Back</span>
         </ReusableButton>
         <ReusableButton
@@ -92,7 +94,7 @@ const NameInput = ({
           disabled={false}
         >
           <span>Next</span>
-          <ArrowRight size={24} />
+          <ArrowRight size={24} aria-hidden="true" />
         </ReusableButton>
       </ButtonGroup>
     </FormGroup>
@@ -160,7 +162,7 @@ const JobRoleInput = ({
           size="lg"
           onClick={handleBack}
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={24} aria-hidden="true" />
           <span>Back</span>
         </ReusableButton>
         <ReusableButton
@@ -171,7 +173,7 @@ const JobRoleInput = ({
           disabled={false}
         >
           <span>Complete</span>
-          <ArrowRight size={24} />
+          <ArrowRight size={24} aria-hidden="true" />
         </ReusableButton>
       </ButtonGroup>
     </FormGroup>
