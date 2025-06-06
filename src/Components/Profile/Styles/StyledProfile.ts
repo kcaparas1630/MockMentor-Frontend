@@ -1,6 +1,13 @@
 import styled from "@emotion/styled";
 import { keyframes } from "@emotion/react";
 
+const respectsReducedMotion = `
+  @media (prefers-reduced-motion: reduce) {
+    animation: none !important;
+    transition: none !important;
+  }
+`;
+
 // Animation keyframes
 const fadeIn = keyframes`
   0% {
@@ -51,8 +58,10 @@ const FormContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 90vw;
-  height: 70vh;
+  width: min(90vw, 600px);
+  height: min(70vh, 600px);
+  min-height: 40vw;
+  max-width: 90vw;
   background-color: #fff;
   border-radius: 1rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -61,9 +70,12 @@ const FormContainer = styled.div`
   animation: ${scaleIn} 0.4s ease-out;
 
   @media (min-width: 1024px) {
-    width: 40vw;
-    height: 40vh;
+    min-height: 30vw;
+    max-width: 40vw;
+    width: min(40vw, 600px);
+    height: min(40vh, 600px);
   }
+  ${respectsReducedMotion}
 `;
 
 const FormHeaderGroup = styled.div`
@@ -78,6 +90,7 @@ const FormHeader = styled.h1`
   text-align: center;
   margin: 0;
   animation: ${scaleIn} 0.4s ease-out;
+  ${respectsReducedMotion}
 `;
 const FormSubHeader = styled.h2`
   font-size: 1.2rem;
@@ -103,6 +116,7 @@ const ButtonGroup = styled.div`
   @media (min-width: 1024px) {
     flex-direction: row;
   }
+  ${respectsReducedMotion}
 `;
 
 const Form = styled.form`
@@ -115,12 +129,13 @@ const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  width: 80vw;
+  width: min(80vw, 400px);
   animation: ${fadeIn} 0.5s ease-out;
 
   @media (min-width: 1024px) {
-    width: 30vw;
+    width: min(30vw, 500px);
   }
+  ${respectsReducedMotion}
 `;
 const InputGroup = styled.div`
   display: flex;
@@ -147,6 +162,7 @@ const ProgressDot = styled.div<{ isActive: boolean }>`
   border-radius: 9999px;
   transition: all 0.3s ease;
   background-color: ${(props) => (props.isActive ? "#1f2937" : "#e5e7eb")};
+  ${respectsReducedMotion}
 `;
 
 export {
