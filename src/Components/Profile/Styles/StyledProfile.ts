@@ -51,14 +51,19 @@ const FormContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40vw;
-  height: 40vh;
+  width: 90vw;
+  height: 70vh;
   background-color: #fff;
   border-radius: 1rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   padding: 2rem;
   box-sizing: border-box;
   animation: ${scaleIn} 0.4s ease-out;
+
+  @media (min-width: 1024px) {
+    width: 40vw;
+    height: 40vh;
+  }
 `;
 
 const FormHeaderGroup = styled.div`
@@ -84,15 +89,19 @@ const FormSubHeader = styled.h2`
 
 const ButtonGroup = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 1rem;
-  
+
   button {
     transition: all 0.2s ease;
-    
+
     &:hover:not(:disabled) {
       animation: ${hoverScale} 0.2s ease forwards;
     }
+  }
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
   }
 `;
 
