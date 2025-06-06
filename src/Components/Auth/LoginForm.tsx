@@ -20,6 +20,7 @@ import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
+import { GetUserQuery } from "../../Hooks/UserHooks";
 
 const loginUser = async (credentials: { email: string, password: string }) => {
   const { email, password } = credentials;
@@ -59,13 +60,19 @@ const LoginForm = () => {
   const [password, setPassword] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { users } = GetUserQuery();
 
   const navigate = useNavigate();
-
+ 
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: () => {
-      navigate({ to: "/profile-create" });
+      if (users?.profile.name && users?.profile.jobRole) {
+        // TODO: navigate to dashboard.
+        // navigate({ to: "/dashboard" });
+      } else {
+        navigate({ to: "/profile-create" });
+      }
     },
     onError: (error: unknown) => {
       console.log(error);
