@@ -23,9 +23,10 @@ import { useNavigate } from "@tanstack/react-router";
 
 const loginUser = async (credentials: { email: string, password: string }) => {
   const { email, password } = credentials;
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  const idToken = await userCredential.user.getIdToken();
-  
+  // Step 1: Authenticate with Firebase (handle auth errors immediately)
+  const idToken = await AuthenticateUser(email, password);
+
+  // Step 2: Fetch user data from API
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
     headers: {
       Authorization: `Bearer ${idToken}`
@@ -33,6 +34,24 @@ const loginUser = async (credentials: { email: string, password: string }) => {
   })
   const user = response.data;
   return user;
+}
+
+const AuthenticateUser = async (email: string, password: string) => {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const idToken = await userCredential.user.getIdToken();
+    return idToken;
+  } catch (error) {
+    if (isFirebaseAuthError(error)) {
+      switch (error.code) {
+        case "auth/invalid-credential":
+          throw new Error("Email or password is incorrect.");
+        default:
+          throw new Error("An unexpected error occurred. Please try again.");
+      }
+    }
+    
+  }
 }
 
 const LoginForm = () => {
@@ -49,17 +68,8 @@ const LoginForm = () => {
       navigate({ to: "/profile-create" });
     },
     onError: (error: unknown) => {
-      if (isFirebaseAuthError(error)) {
-        if (error.code === "auth/user-not-found") {
-          setAuthError("Email or password is incorrect.");
-        } else {
-          setAuthError(
-            `${error.message || "Failed to find account. Please try again."}`
-          );
-        }
-      } else {
-        setAuthError("An unexpected error occurred. Please try again.");
-      }
+      console.log(error);
+      setAuthError(error instanceof Error ? error.message : String(error));
     },
     onSettled: () => {
       setIsLoading(false);
