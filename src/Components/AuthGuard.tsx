@@ -15,12 +15,16 @@ const AuthGuard = ({ children }: AuthGuardProps) => {
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
-            console.log("auth.currentUser", user);
             if (user) {
                 setAuthenticated(true);
             } else {
                 navigate({ to: '/login', replace: true });
             }
+            setLoading(false);
+        }, (error) => {
+            console.error("Error checking auth state:", error);
+            setAuthenticated(false);
+            navigate({ to: '/login', replace: true });
             setLoading(false);
         });
 
