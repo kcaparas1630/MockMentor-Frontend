@@ -12,20 +12,29 @@ import {
 } from "./Styles/StyledAuth";
 import ReusableButton from "../../Commons/Button";
 import GoogleIcon from "../../Assets/GoogleIcon";
-import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
 import ReusableInput from "../../Commons/ReusableInputField";
 import { ToastContainer, toast } from "react-toastify";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
+import {
+  SuccessResponse,
+  ErrorResponse,
+  UserRegistrationData,
+} from "../../Types/ApiResponse";
 
+const registerUser = async (credentials: {
+  email: string;
+  password: string;
+}) => {
+  const { email, password } = credentials;
+  const response = await axios.post("http://localhost:3000/api/create-user", {
+    email,
+    password,
+  });
 
-const registerUser = async (credentials: { email: string, password: string }) => {
-    const { email, password } = credentials;
-    const response = await axios.post("http://localhost:3000/api/create-user", {email, password});
-   
-    return response.data;
-}
+  return response.data;
+};
 
 const SignUpForm = () => {
   const [email, setEmail] = useState<string>("");
@@ -33,60 +42,41 @@ const SignUpForm = () => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const mutation = useMutation({
+  const mutation = useMutation<
+    SuccessResponse,
+    AxiosError<ErrorResponse>,
+    UserRegistrationData
+  >({
     mutationFn: registerUser,
     onSuccess: () => {
       toast.success("User created successfully");
     },
-    onError: (error: unknown) => {
-      // TODO: handle error from backend.
-      if (isFirebaseAuthError(error)) {
-        if (error.code === "auth/email-already-in-use") {
-          setAuthError("Email already in use");
-        } else if (error.code === "auth/invalid-email") {
-          setAuthError("Invalid email address");
-        } else if (error.code === "auth/password-does-not-meet-requirements") {
-          setAuthError(
-            "Password must: \n" +
-              "• Contain at least 8 characters\n" +
-              "• Include an uppercase character\n" +
-              "• Include a numeric character\n" +
-              "• Include a special character"
-          );
-        } else {
-          setAuthError(
-            `${error.message || "Failed to create account. Please try again."}`
-          );
-        }
-      } else {
-        setAuthError("An unexpected error occurred. Please try again.");
+    onError: (error) => {
+      if (error.response?.data.message) {
+        setAuthError(error.response?.data.message);
       }
     },
     onSettled: () => {
       setIsLoading(false);
-    }
-  })
+    },
+  });
 
   const googleSignInMutation = useMutation({
     mutationFn: handleGoogleSignIn,
     onSuccess: () => {
       //TODO: redirect to dashboard.
     },
-    onError: (error: unknown) => {
-      if (isFirebaseAuthError(error)) {
-        setAuthError(error.message);
-      } else {
-        setAuthError("An unexpected error occurred. Please try again.");
-      }
-    }
-  })
+    onError: (error) => {
+      setAuthError(error.message);
+    },
+  });
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setAuthError(null);
     mutation.mutate({ email, password });
-  }
+  };
   return (
     <SignUpContainer>
       <ToastContainer />
@@ -125,7 +115,9 @@ const SignUpForm = () => {
         onClick={() => googleSignInMutation.mutate()}
         disabled={googleSignInMutation.isPending}
       >
-        {googleSignInMutation.isPending ? "Signing in with Google..." : (
+        {googleSignInMutation.isPending ? (
+          "Signing in with Google..."
+        ) : (
           <>
             <GoogleIcon />
             Sign in with Google
