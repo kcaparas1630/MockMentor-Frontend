@@ -24,208 +24,143 @@ import {
   SettingsCardContent,
   ButtonContainer,
   StartInterviewButton,
+  MicTestContainer,
+  MicTestHeader,
+  MicTestTitle,
+  MicTestContent,
+  MicTestDescription,
+  MicTestControls,
+  MicTestButton,
+  AudioLevelContainer,
+  AudioLevelBar,
+  AudioLevelText,
 } from "./Styles/StyledVideoTestCard";
-
-interface MediaDeviceSupport {
-  hasCamera: boolean;
-  hasMicrophone: boolean;
-  hasMediaDevicesAPI: boolean;
-}
+import { useMediaDevices } from "../../Hooks/useMediaDevices";
+import { useMicTesting } from "../../Hooks/useMicTesting";
 
 const VideoTestCard: FC = () => {
+  // Use the custom hook for all media device logic
+  const {
+    videoEnabled,
+    audioEnabled,
+    streamReady,
+    isLoading,
+    error: mediaError,
+    deviceSupport,
+    permissionStatus,
+    streamRef,
+    toggleVideo,
+    toggleAudio,
+  } = useMediaDevices();
+
+  // Use the custom hook for microphone testing
+  const {
+    isMicTesting,
+    audioLevel,
+    error: micError,
+    startMicTest: startMicTestHook,
+    stopMicTest,
+  } = useMicTesting();
+
+  // Component-specific refs
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  
-  const [videoEnabled, setVideoEnabled] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [deviceSupport, setDeviceSupport] = useState<MediaDeviceSupport>({
-    hasCamera: false,
-    hasMicrophone: false,
-    hasMediaDevicesAPI: false,
-  });
-  const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'prompt' | 'unknown'>('unknown');
-  
+
   // Interview settings state
-  const [interviewType, setInterviewType] = useState('');
+  const [interviewType, setInterviewType] = useState("");
   // TODO: Add interview types to Database and fetch from there.
   const interviewTypes = [
-    { value: 'technical', label: 'Technical Interview' },
-    { value: 'behavioral', label: 'Behavioral Interview' },
-    { value: 'system-design', label: 'System Design' },
-    { value: 'coding-challenge', label: 'Coding Challenge' },
-    { value: 'hr-round', label: 'HR Round' },
+    { value: "technical", label: "Technical Interview" },
+    { value: "behavioral", label: "Behavioral Interview" },
+    { value: "system-design", label: "System Design" },
+    { value: "coding-challenge", label: "Coding Challenge" },
+    { value: "hr-round", label: "HR Round" },
   ];
 
-  // Check device support on component mount
-  useEffect(() => {
-    checkDeviceSupport();
-  }, []);
+  // Combine errors from both hooks
+  const error = mediaError || micError;
 
-  // Cleanup stream on unmount
-  useEffect(() => {
-    return () => {
-      stopStream();
-    };
-  }, []);
-
-  const checkDeviceSupport = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Check if MediaDevices API is supported
-      const hasMediaDevicesAPI = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
-      
-      if (!hasMediaDevicesAPI) {
-        setDeviceSupport({
-          hasCamera: false,
-          hasMicrophone: false,
-          hasMediaDevicesAPI: false,
-        });
-        setError("Your browser doesn't support camera/microphone access. Please use a modern browser.");
-        setIsLoading(false);
-        return;
-      }
-
-      // Enumerate available devices
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const hasCamera = devices.some(device => device.kind === 'videoinput');
-      const hasMicrophone = devices.some(device => device.kind === 'audioinput');
-
-      setDeviceSupport({
-        hasCamera,
-        hasMicrophone,
-        hasMediaDevicesAPI,
-      });
-
-      if (!hasCamera && !hasMicrophone) {
-        setError("No camera or microphone devices found. Please connect your devices and refresh the page.");
-      } else if (!hasCamera) {
-        setError("No camera found. Please connect your camera and refresh the page.");
-      } else if (!hasMicrophone) {
-        setError("No microphone found. Please connect your microphone and refresh the page.");
-      } else {
-        setError(null);
-      }
-    } catch (err) {
-      console.error('Error checking device support:', err);
-      setError("Unable to access camera/microphone. Please check your browser permissions.");
-    }
-    
-    setIsLoading(false);
-  };
-
-  const startStream = async () => {
-    if (!deviceSupport.hasMediaDevicesAPI) return;
-    
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const constraints: MediaStreamConstraints = {
-        video: deviceSupport.hasCamera && videoEnabled,
-        audio: deviceSupport.hasMicrophone && audioEnabled,
-      };
-
-      if (!constraints.video && !constraints.audio) {
-        setIsLoading(false);
-        return;
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      streamRef.current = stream;
-      
-      if (videoRef.current && constraints.video) {
-        videoRef.current.srcObject = stream;
-      }
-
-      setPermissionStatus('granted');
-    } catch (err) {
-      console.error('Error accessing media devices:', err);
-      const error = err as DOMException;
-      
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        setError("Camera/microphone access denied. Please allow permissions and try again.");
-        setPermissionStatus('denied');
-      } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-        setError("No camera/microphone found. Please connect your devices and try again.");
-      } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-        setError("Camera/microphone is already in use by another application.");
-      } else {
-        setError(`Unable to access camera/microphone: ${error.message || 'Unknown error'}`);
-      }
-      
-      // Reset toggles if stream failed
-      setVideoEnabled(false);
-      setAudioEnabled(false);
-    }
-    
-    setIsLoading(false);
-  };
-
-  const stopStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    if (videoRef.current) {
-      videoRef.current.srcObject = null;
-    }
-  };
-
-  const toggleVideo = async () => {
-    if (!deviceSupport.hasCamera) return;
-    
-    const newVideoState = !videoEnabled;
-    setVideoEnabled(newVideoState);
-    
-    if (newVideoState || audioEnabled) {
-      await startStream();
-    } else if (!audioEnabled) {
-      stopStream();
-    }
-  };
-
-  const toggleAudio = async () => {
+  // Wrapper function for mic testing that handles audio enabling
+  const startMicTest = async () => {
     if (!deviceSupport.hasMicrophone) return;
-    
-    const newAudioState = !audioEnabled;
-    setAudioEnabled(newAudioState);
-    
-    if (newAudioState || videoEnabled) {
-      await startStream();
-    } else if (!videoEnabled) {
-      stopStream();
+
+    // Ensure audio is enabled first
+    if (!audioEnabled) {
+      await toggleAudio();
+    }
+
+    // Wait for stream to be ready
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    // Start mic testing with the current stream
+    if (streamRef.current) {
+      await startMicTestHook(streamRef.current);
     }
   };
 
+  // Connect the media stream to the video element when both are ready
+  useEffect(() => {
+    if (videoRef.current && streamRef.current && videoEnabled && streamReady) {
+      // Set the stream as the source for the video element
+      videoRef.current.srcObject = streamRef.current;
+
+      // Start playing the video - catch errors in case autoplay is blocked
+      videoRef.current.play().catch((err) => {
+        console.error("Error playing video:", err);
+      });
+    }
+  }, [videoEnabled, streamReady, streamRef]);
+
+  // Auto-stop mic testing when audio is disabled
+  useEffect(() => {
+    if (!audioEnabled && isMicTesting) {
+      stopMicTest();
+    }
+  }, [audioEnabled, isMicTesting, stopMicTest]);
+
+  // Returns appropriate status message based on current state
   const getStatusMessage = () => {
     if (error) {
       return <StatusMessage type="error">{error}</StatusMessage>;
     }
-    
-    if (permissionStatus === 'granted' && (videoEnabled || audioEnabled)) {
-      return <StatusMessage type="success">Camera and microphone are working properly!</StatusMessage>;
+
+    if (permissionStatus === "granted" && (videoEnabled || audioEnabled)) {
+      return (
+        <StatusMessage type="success">
+          Camera and microphone are working properly!
+        </StatusMessage>
+      );
     }
-    
+
     if (!deviceSupport.hasMediaDevicesAPI) {
-      return <StatusMessage type="error">Your browser doesn't support camera/microphone access.</StatusMessage>;
+      return (
+        <StatusMessage type="error">
+          Your browser doesn't support camera/microphone access.
+        </StatusMessage>
+      );
     }
-    
+
     if (!deviceSupport.hasCamera && !deviceSupport.hasMicrophone) {
-      return <StatusMessage type="warning">No camera or microphone devices detected.</StatusMessage>;
+      return (
+        <StatusMessage type="warning">
+          No camera or microphone devices detected.
+        </StatusMessage>
+      );
     }
-    
-    return <StatusMessage type="info">Click the buttons below to test your camera and microphone.</StatusMessage>;
+
+    return (
+      <StatusMessage type="info">
+        Click the buttons below to test your camera and microphone.
+      </StatusMessage>
+    );
   };
 
   const handleStartInterview = () => {
-    console.log('Starting interview with:', { interviewType });
-    // Add your interview start logic here
+    console.log("Starting interview with:", { interviewType });
+    // navigate to interview page
+    //navigate("/interview");
   };
 
+  // Renders different video content based on current state
   const renderVideoContent = () => {
     if (isLoading) {
       return (
@@ -235,18 +170,23 @@ const VideoTestCard: FC = () => {
         </VideoPlaceholder>
       );
     }
-    
+
     if (videoEnabled && streamRef.current && deviceSupport.hasCamera) {
       return <VideoElement ref={videoRef} autoPlay muted playsInline />;
     }
-    
+
     return (
       <VideoPlaceholder>
-        {!deviceSupport.hasCamera ? 'No camera detected' : 
-         !videoEnabled ? 'Camera disabled' : 'Loading camera...'}
+        {!deviceSupport.hasCamera
+          ? "No camera detected"
+          : !videoEnabled
+            ? "Camera disabled"
+            : "Loading camera..."}
       </VideoPlaceholder>
     );
   };
+
+
 
   return (
     <Container>
@@ -265,10 +205,10 @@ const VideoTestCard: FC = () => {
                   disabled={!deviceSupport.hasCamera || isLoading}
                   onClick={toggleVideo}
                   title={
-                    !deviceSupport.hasCamera 
-                      ? "No camera available" 
-                      : videoEnabled 
-                        ? "Turn off camera" 
+                    !deviceSupport.hasCamera
+                      ? "No camera available"
+                      : videoEnabled
+                        ? "Turn off camera"
                         : "Turn on camera"
                   }
                 >
@@ -279,10 +219,10 @@ const VideoTestCard: FC = () => {
                   disabled={!deviceSupport.hasMicrophone || isLoading}
                   onClick={toggleAudio}
                   title={
-                    !deviceSupport.hasMicrophone 
-                      ? "No microphone available" 
-                      : audioEnabled 
-                        ? "Turn off microphone" 
+                    !deviceSupport.hasMicrophone
+                      ? "No microphone available"
+                      : audioEnabled
+                        ? "Turn off microphone"
                         : "Turn on microphone"
                   }
                 >
@@ -290,15 +230,56 @@ const VideoTestCard: FC = () => {
                 </ControlButton>
               </ControlsContainer>
             </VideoPreview>
+
+            {/* Microphone Test Section */}
+            <MicTestContainer>
+              <MicTestHeader>
+                <MicTestTitle>MIC TEST</MicTestTitle>
+              </MicTestHeader>
+              <MicTestContent>
+                <MicTestDescription>
+                  Having mic issues? Start a test and speak to see if your
+                  microphone is detecting your voice.
+                </MicTestDescription>
+                <MicTestControls>
+                  <MicTestButton
+                    onClick={isMicTesting ? stopMicTest : startMicTest}
+                    disabled={!deviceSupport.hasMicrophone || !audioEnabled}
+                    isRecording={isMicTesting}
+                  >
+                    {isMicTesting ? "Stop Testing" : "Start Testing"}
+                  </MicTestButton>
+                </MicTestControls>
+                {isMicTesting && audioEnabled && (
+                  <AudioLevelContainer>
+                    <AudioLevelBar level={audioLevel} />
+                    <AudioLevelText>
+                      {audioLevel > 0.1
+                        ? "Voice detected!"
+                        : "Speak to test your microphone..."}
+                    </AudioLevelText>
+                  </AudioLevelContainer>
+                )}
+              </MicTestContent>
+            </MicTestContainer>
+
             <InstructionsContainer>
-              <InstructionItem>Make sure your camera and microphone are working properly</InstructionItem>
-              <InstructionItem>Find a quiet, well-lit space for your interview</InstructionItem>
-              <InstructionItem>Check your internet connection is stable</InstructionItem>
-              <InstructionItem>Allow browser permissions when prompted</InstructionItem>
+              <InstructionItem>
+                Make sure your camera and microphone are working properly
+              </InstructionItem>
+              <InstructionItem>
+                Find a quiet, well-lit space for your interview
+              </InstructionItem>
+              <InstructionItem>
+                Check your internet connection is stable
+              </InstructionItem>
+              <InstructionItem>
+                Allow browser permissions when prompted
+              </InstructionItem>
             </InstructionsContainer>
           </CardContent>
         </Card>
-        
+
         {/* Interview Settings */}
         <InterviewSettingsContainer>
           <SettingsCard>
@@ -320,7 +301,11 @@ const VideoTestCard: FC = () => {
           <ButtonContainer>
             <StartInterviewButton
               onClick={handleStartInterview}
-              disabled={!interviewType || !deviceSupport.hasCamera || !deviceSupport.hasMicrophone}
+              disabled={
+                !interviewType ||
+                !deviceSupport.hasCamera ||
+                !deviceSupport.hasMicrophone
+              }
             >
               Start Interview
             </StartInterviewButton>

@@ -228,6 +228,140 @@ const StartInterviewButton = styled.button<{ disabled?: boolean }>`
   }
 `;
 
+// Microphone Test Styles
+const MicTestContainer = styled.div`
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+`;
+
+const MicTestHeader = styled.div`
+  margin-bottom: 0.75rem;
+`;
+
+const MicTestTitle = styled.h3`
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  letter-spacing: 0.05em;
+`;
+
+const MicTestContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const MicTestDescription = styled.p`
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const MicTestControls = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean }>`
+  background-color: ${props => 
+    props.disabled ? '#9ca3af' : 
+    props.isRecording ? '#dc2626' : '#3b82f6'};
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: ${props => 
+      props.isRecording ? '#b91c1c' : '#2563eb'};
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+`;
+
+const PlaybackButton = styled.button<{ disabled?: boolean }>`
+  background-color: ${props => props.disabled ? '#9ca3af' : '#059669'};
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  border: none;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #047857;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+`;
+
+const AudioLevelContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+`;
+
+const AudioLevelBar = styled.div<{ level: number }>`
+  flex: 1;
+  height: 0.25rem;
+  background-color: #e5e7eb;
+  border-radius: 0.125rem;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: ${props => Math.min(props.level * 100, 100)}%;
+    background-color: #3b82f6;
+    transition: width 0.1s ease;
+  }
+`;
+
+const AudioLevelText = styled.span`
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  min-width: fit-content;
+`;
+
+const TroubleshootingLink = styled.p`
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+
+  a {
+    color: #3b82f6;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      color: #2563eb;
+    }
+  }
+`;
+
 export {
   Container,
   GridContainer,
@@ -250,4 +384,16 @@ export {
   SettingsCardContent,
   ButtonContainer,
   StartInterviewButton,
+  MicTestContainer,
+  MicTestHeader,
+  MicTestTitle,
+  MicTestContent,
+  MicTestDescription,
+  MicTestControls,
+  MicTestButton,
+  PlaybackButton,
+  AudioLevelContainer,
+  AudioLevelBar,
+  AudioLevelText,
+  TroubleshootingLink,
 };
