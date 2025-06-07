@@ -11,12 +11,19 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as VideoTestImport } from './routes/video-test'
 import { Route as ProfileCreateImport } from './routes/profile-create'
 import { Route as LoginImport } from './routes/login'
 import { Route as SignUpImport } from './routes/SignUp'
 import { Route as IndexImport } from './routes/index'
 
 // Create/Update Routes
+
+const VideoTestRoute = VideoTestImport.update({
+  id: '/video-test',
+  path: '/video-test',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const ProfileCreateRoute = ProfileCreateImport.update({
   id: '/profile-create',
@@ -74,6 +81,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileCreateImport
       parentRoute: typeof rootRoute
     }
+    '/video-test': {
+      id: '/video-test'
+      path: '/video-test'
+      fullPath: '/video-test'
+      preLoaderRoute: typeof VideoTestImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -84,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/SignUp': typeof SignUpRoute
   '/login': typeof LoginRoute
   '/profile-create': typeof ProfileCreateRoute
+  '/video-test': typeof VideoTestRoute
 }
 
 export interface FileRoutesByTo {
@@ -91,6 +106,7 @@ export interface FileRoutesByTo {
   '/SignUp': typeof SignUpRoute
   '/login': typeof LoginRoute
   '/profile-create': typeof ProfileCreateRoute
+  '/video-test': typeof VideoTestRoute
 }
 
 export interface FileRoutesById {
@@ -99,14 +115,21 @@ export interface FileRoutesById {
   '/SignUp': typeof SignUpRoute
   '/login': typeof LoginRoute
   '/profile-create': typeof ProfileCreateRoute
+  '/video-test': typeof VideoTestRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/SignUp' | '/login' | '/profile-create'
+  fullPaths: '/' | '/SignUp' | '/login' | '/profile-create' | '/video-test'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/SignUp' | '/login' | '/profile-create'
-  id: '__root__' | '/' | '/SignUp' | '/login' | '/profile-create'
+  to: '/' | '/SignUp' | '/login' | '/profile-create' | '/video-test'
+  id:
+    | '__root__'
+    | '/'
+    | '/SignUp'
+    | '/login'
+    | '/profile-create'
+    | '/video-test'
   fileRoutesById: FileRoutesById
 }
 
@@ -115,6 +138,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   LoginRoute: typeof LoginRoute
   ProfileCreateRoute: typeof ProfileCreateRoute
+  VideoTestRoute: typeof VideoTestRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -122,6 +146,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   LoginRoute: LoginRoute,
   ProfileCreateRoute: ProfileCreateRoute,
+  VideoTestRoute: VideoTestRoute,
 }
 
 export const routeTree = rootRoute
@@ -137,7 +162,8 @@ export const routeTree = rootRoute
         "/",
         "/SignUp",
         "/login",
-        "/profile-create"
+        "/profile-create",
+        "/video-test"
       ]
     },
     "/": {
@@ -151,6 +177,9 @@ export const routeTree = rootRoute
     },
     "/profile-create": {
       "filePath": "profile-create.tsx"
+    },
+    "/video-test": {
+      "filePath": "video-test.tsx"
     }
   }
 }
