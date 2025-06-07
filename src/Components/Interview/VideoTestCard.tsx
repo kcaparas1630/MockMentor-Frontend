@@ -77,7 +77,7 @@ const VideoTestCard: FC = () => {
   ];
 
   // Combine errors from both hooks
-  const error = mediaError || micError;
+  const [error, setError] = useState<string | null>(mediaError || micError);
 
   // Wrapper function for mic testing that handles audio enabling
   const startMicTest = async () => {
@@ -113,8 +113,8 @@ const VideoTestCard: FC = () => {
       videoRef.current.srcObject = streamRef.current;
 
       // Start playing the video - catch errors in case autoplay is blocked
-      videoRef.current.play().catch((err) => {
-        console.error("Error playing video:", err);
+      videoRef.current.play().catch(() => {
+        setError("Video autoplay is blocked. Please click video to start playing.")
       });
     }
   }, [videoEnabled, streamReady, streamRef]);
