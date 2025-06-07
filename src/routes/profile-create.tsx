@@ -1,7 +1,6 @@
 import { createRoute } from "@tanstack/react-router";
 import rootRoute from "./__root";
 import ProfileCreator from "../Components/Profile/ProfileCreator";
-// import { requireAuth } from "../utils/auth";
 import AuthGuard from "../Components/AuthGuard";
 
 const ProtectedProfileCreate = () => {
