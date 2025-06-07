@@ -89,7 +89,16 @@ const VideoTestCard: FC = () => {
     }
 
     // Wait for stream to be ready
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    let attempts = 0;
+    const maxAttempts = 50;
+    while (!streamRef.current && attempts < maxAttempts) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      attempts++;
+    }
+    if (!streamRef.current) {
+      console.error("Stream not ready after timeout");
+      return;
+    }
 
     // Start mic testing with the current stream
     if (streamRef.current) {
