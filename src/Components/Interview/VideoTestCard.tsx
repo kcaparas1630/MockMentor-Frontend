@@ -1,6 +1,7 @@
 import { FC, useState, useEffect, useRef } from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
 import ReusableSelect from "../../Commons/Select";
+import LoadingSpinner from "../../Commons/Spinner";
 import {
   Container,
   GridContainer,
@@ -16,7 +17,6 @@ import {
   InstructionsContainer,
   InstructionItem,
   StatusMessage,
-  LoadingSpinner,
   InterviewSettingsContainer,
   SettingsCard,
   SettingsCardHeader,

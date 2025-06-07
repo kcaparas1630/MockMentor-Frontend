@@ -169,20 +169,6 @@ const StatusMessage = styled.div<{ type: 'error' | 'success' | 'warning' | 'info
   `}
 `;
 
-const LoadingSpinner = styled.div`
-  width: 2rem;
-  height: 2rem;
-  border: 2px solid #ffffff3d;
-  border-top: 2px solid #ffffff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-
 // Interview Settings Styles
 const InterviewSettingsContainer = styled.div`
   display: flex;
@@ -257,7 +243,6 @@ export {
   InstructionsContainer,
   InstructionItem,
   StatusMessage,
-  LoadingSpinner,
   InterviewSettingsContainer,
   SettingsCard,
   SettingsCardHeader,
