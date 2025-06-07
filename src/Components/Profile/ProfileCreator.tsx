@@ -21,6 +21,7 @@ import { ErrorResponse } from "@/Types/ApiResponse";
 import ProfileData from "@/Types/ProfileData";
 import { ErrorMessage } from "../Auth/Styles/StyledAuth";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 interface ViewProps {
   steps: number;
   setSteps: Dispatch<SetStateAction<number>>;
@@ -108,6 +109,7 @@ const JobRoleInput = ({
   authError,
   setAuthError,
 }: ViewProps) => {
+  const navigate = useNavigate();
   const handleUpdateUser = async () => {
     if (!profileData.profile.jobRole.trim()) {
       setAuthError("Job Role is required");
@@ -117,7 +119,7 @@ const JobRoleInput = ({
     setAuthError(null);
     try {
       await UpdateUser(profileData);
-      //TODO: move to next view
+      navigate({ to: "/video-test" });
     } catch (error: unknown) {
       if (error instanceof AxiosError && error.response?.data) {
         const errorMessage = (error.response.data as ErrorResponse).message;

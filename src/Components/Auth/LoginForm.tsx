@@ -77,8 +77,7 @@ const LoginForm = () => {
         users?.profile?.name &&
         users?.profile?.jobRole
       ) {
-        // TODO: navigate to dashboard.
-        // navigate({ to: "/dashboard" });
+        navigate({ to: "/video-test" });
       } else {
         navigate({ to: "/profile-create" });
       }
@@ -102,8 +101,7 @@ const LoginForm = () => {
         users?.profile?.name &&
         users?.profile?.jobRole
       ) {
-        // TODO: navigate to dashboard.
-        // navigate({ to: "/dashboard" });
+        navigate({ to: "/video-test" });
       } else {
         navigate({ to: "/profile-create" });
       }
