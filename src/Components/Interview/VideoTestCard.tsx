@@ -49,7 +49,7 @@ const VideoTestCard: FC = () => {
   
   // Interview settings state
   const [interviewType, setInterviewType] = useState('');
-
+  // TODO: Add interview types to Database and fetch from there.
   const interviewTypes = [
     { value: 'technical', label: 'Technical Interview' },
     { value: 'behavioral', label: 'Behavioral Interview' },
