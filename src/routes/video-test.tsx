@@ -1,19 +1,19 @@
 import { createRoute } from "@tanstack/react-router";
 import rootRoute from "./__root";
-import ProfileCreator from "../Components/Profile/ProfileCreator";
+import InterviewIndex from "../Components/Interview/InterviewIndex";
 import AuthGuard from "../Components/AuthGuard";
 
-const ProtectedProfileCreate = () => {
+const ProtectedVideoTest = () => {
     return (
         <AuthGuard>
-            <ProfileCreator />
+            <InterviewIndex />
         </AuthGuard>
     )
 }
-// Create a protected profile-create route
+// Create a protected video-test route
 export const Route = createRoute({
-    path: '/profile-create',
-    component: ProtectedProfileCreate,
+    path: '/video-test',
+    component: ProtectedVideoTest,
     getParentRoute: () => rootRoute,
 });
 
