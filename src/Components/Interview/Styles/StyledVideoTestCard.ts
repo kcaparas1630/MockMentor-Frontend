@@ -10,18 +10,21 @@ const Container = styled.div`
 `;
 
 const GridContainer = styled.div`
-  width: 100%;
+  width: 95%;
   max-width: 72rem;
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  margin: 2rem 0;
 
   @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    margin: 0;
   }
 `;
 
-const Card = styled.div`
+const Card = styled.section`
   background: white;
   border-radius: 0.5rem;
   box-shadow:
@@ -34,7 +37,7 @@ const Card = styled.div`
   }
 `;
 
-const CardHeader = styled.div`
+const CardHeader = styled.header`
   padding: 1.5rem 1.5rem 0 1.5rem;
 `;
 
@@ -61,6 +64,9 @@ const VideoPreview = styled.div`
 `;
 
 const VideoElement = styled.video`
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -117,9 +123,14 @@ const ControlButton = styled.button<{ isActive: boolean; disabled?: boolean }>`
   &:disabled {
     cursor: not-allowed;
   }
+
+  &:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
 `;
 
-const InstructionsContainer = styled.div`
+const InstructionsContainer = styled.section`
   font-size: 0.875rem;
   color: #4b5563;
   display: flex;
@@ -128,7 +139,7 @@ const InstructionsContainer = styled.div`
   margin-top: 1rem;
 `;
 
-const InstructionItem = styled.p`
+const InstructionItem = styled.li`
   margin: 0;
 
   &:before {
@@ -137,12 +148,13 @@ const InstructionItem = styled.p`
   }
 `;
 
-const StatusMessage = styled.div<{ type: 'error' | 'success' | 'warning' | 'info' }>`
+const StatusMessage = styled.output<{ type: 'error' | 'success' | 'warning' | 'info' }>`
   padding: 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 1rem;
+  display: block;
   
   ${props => props.type === 'error' && `
     background-color: #fef2f2;
@@ -170,13 +182,13 @@ const StatusMessage = styled.div<{ type: 'error' | 'success' | 'warning' | 'info
 `;
 
 // Interview Settings Styles
-const InterviewSettingsContainer = styled.div`
+const InterviewSettingsContainer = styled.aside`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 `;
 
-const SettingsCard = styled.div`
+const SettingsCard = styled.section`
   background: white;
   border-radius: 0.5rem;
   box-shadow:
@@ -184,7 +196,7 @@ const SettingsCard = styled.div`
     0 1px 2px -1px rgb(0 0 0 / 0.1);
 `;
 
-const SettingsCardHeader = styled.div`
+const SettingsCardHeader = styled.header`
   padding: 1.5rem 1.5rem 0 1.5rem;
 `;
 
@@ -204,10 +216,15 @@ const SettingsCardContent = styled.div`
 
 const ButtonContainer = styled.div`
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
 `;
 
 const StartInterviewButton = styled.button<{ disabled?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background-color: ${props => props.disabled ? '#9ca3af' : '#2563eb'};
   color: white;
   padding: 0.75rem 2rem;
@@ -226,10 +243,15 @@ const StartInterviewButton = styled.button<{ disabled?: boolean }>`
   &:active:not(:disabled) {
     transform: translateY(0);
   }
+
+  &:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
 `;
 
 // Microphone Test Styles
-const MicTestContainer = styled.div`
+const MicTestContainer = styled.section`
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 0.5rem;
@@ -237,7 +259,7 @@ const MicTestContainer = styled.div`
   margin-top: 1rem;
 `;
 
-const MicTestHeader = styled.div`
+const MicTestHeader = styled.header`
   margin-bottom: 0.75rem;
 `;
 
@@ -289,6 +311,11 @@ const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean 
   &:active:not(:disabled) {
     transform: scale(0.98);
   }
+
+  &:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
 `;
 
 const PlaybackButton = styled.button<{ disabled?: boolean }>`
@@ -308,6 +335,11 @@ const PlaybackButton = styled.button<{ disabled?: boolean }>`
 
   &:active:not(:disabled) {
     transform: scale(0.98);
+  }
+
+  &:focus {
+    outline: 2px solid #059669;
+    outline-offset: 2px;
   }
 `;
 
@@ -362,6 +394,17 @@ const TroubleshootingLink = styled.p`
   }
 `;
 
+const StartButtonRequirements = styled.p`
+  font-size: 0.75rem;
+  color: #6b7280;
+  background-color: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  margin: 0;
+  line-height: 1.4;
+  margin: 1.5rem 0;
+`;
+
 export {
   Container,
   GridContainer,
@@ -371,7 +414,7 @@ export {
   CardContent,
   VideoPreview,
   VideoElement,
-  VideoPlaceholder,
+  VideoPlaceholder, 
   ControlsContainer,
   ControlButton,
   InstructionsContainer,
@@ -396,4 +439,5 @@ export {
   AudioLevelBar,
   AudioLevelText,
   TroubleshootingLink,
+  StartButtonRequirements,
 };

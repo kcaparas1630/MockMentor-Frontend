@@ -16,6 +16,7 @@ import { Route as ProfileCreateImport } from './routes/profile-create'
 import { Route as LoginImport } from './routes/login'
 import { Route as SignUpImport } from './routes/SignUp'
 import { Route as IndexImport } from './routes/index'
+import { Route as InterviewRoomSessionIdImport } from './routes/interview-room/$sessionId'
 
 // Create/Update Routes
 
@@ -46,6 +47,12 @@ const SignUpRoute = SignUpImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const InterviewRoomSessionIdRoute = InterviewRoomSessionIdImport.update({
+  id: '/interview-room/$sessionId',
+  path: '/interview-room/$sessionId',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -88,6 +95,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VideoTestImport
       parentRoute: typeof rootRoute
     }
+    '/interview-room/$sessionId': {
+      id: '/interview-room/$sessionId'
+      path: '/interview-room/$sessionId'
+      fullPath: '/interview-room/$sessionId'
+      preLoaderRoute: typeof InterviewRoomSessionIdImport
+      parentRoute: typeof rootRoute
+    }
   }
 }
 
@@ -99,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/profile-create': typeof ProfileCreateRoute
   '/video-test': typeof VideoTestRoute
+  '/interview-room/$sessionId': typeof InterviewRoomSessionIdRoute
 }
 
 export interface FileRoutesByTo {
@@ -107,6 +122,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/profile-create': typeof ProfileCreateRoute
   '/video-test': typeof VideoTestRoute
+  '/interview-room/$sessionId': typeof InterviewRoomSessionIdRoute
 }
 
 export interface FileRoutesById {
@@ -116,13 +132,26 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/profile-create': typeof ProfileCreateRoute
   '/video-test': typeof VideoTestRoute
+  '/interview-room/$sessionId': typeof InterviewRoomSessionIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/SignUp' | '/login' | '/profile-create' | '/video-test'
+  fullPaths:
+    | '/'
+    | '/SignUp'
+    | '/login'
+    | '/profile-create'
+    | '/video-test'
+    | '/interview-room/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/SignUp' | '/login' | '/profile-create' | '/video-test'
+  to:
+    | '/'
+    | '/SignUp'
+    | '/login'
+    | '/profile-create'
+    | '/video-test'
+    | '/interview-room/$sessionId'
   id:
     | '__root__'
     | '/'
@@ -130,6 +159,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/profile-create'
     | '/video-test'
+    | '/interview-room/$sessionId'
   fileRoutesById: FileRoutesById
 }
 
@@ -139,6 +169,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProfileCreateRoute: typeof ProfileCreateRoute
   VideoTestRoute: typeof VideoTestRoute
+  InterviewRoomSessionIdRoute: typeof InterviewRoomSessionIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -147,6 +178,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProfileCreateRoute: ProfileCreateRoute,
   VideoTestRoute: VideoTestRoute,
+  InterviewRoomSessionIdRoute: InterviewRoomSessionIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -163,7 +195,8 @@ export const routeTree = rootRoute
         "/SignUp",
         "/login",
         "/profile-create",
-        "/video-test"
+        "/video-test",
+        "/interview-room/$sessionId"
       ]
     },
     "/": {
@@ -180,6 +213,9 @@ export const routeTree = rootRoute
     },
     "/video-test": {
       "filePath": "video-test.tsx"
+    },
+    "/interview-room/$sessionId": {
+      "filePath": "interview-room/$sessionId.tsx"
     }
   }
 }
