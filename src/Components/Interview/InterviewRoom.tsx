@@ -61,12 +61,6 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
   const [interviewerVideoEnabled] = useState(true);
   const [interviewerAudioEnabled] = useState(true);
 
-  useEffect(() => {
-    console.log("InterviewRoom useEffect: streamReady:", streamReady);
-    console.log("InterviewRoom useEffect: isLoading:", isLoading);
-    console.log("InterviewRoom useEffect: videoEnabled:", videoEnabled);
-    console.log("InterviewRoom useEffect: audioEnabled:", audioEnabled);
-  }, [streamReady, isLoading, videoEnabled, audioEnabled]);
 
   // Duration timer
   useEffect(() => {

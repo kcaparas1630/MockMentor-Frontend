@@ -25,21 +25,11 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    console.log("VideoDisplay useEffect:", { stream, videoEnabled, streamActive: stream?.active });
-    
     if (videoRef.current && stream && videoEnabled) {
-      console.log("Setting stream to video element:", stream);
-      console.log("Stream tracks:", stream.getTracks().map(track => ({
-        kind: track.kind,
-        enabled: track.enabled,
-        readyState: track.readyState,
-        muted: track.muted
-      })));
-      
       videoRef.current.srcObject = stream;
-      
+
       // Try to play the video and log any errors
-      videoRef.current.play().catch(error => {
+      videoRef.current.play().catch((error) => {
         console.error("Video play failed:", error);
       });
     } else if (videoRef.current) {
@@ -60,7 +50,7 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   return (
     <VideoDisplayWrapper isUser={isUser}>
       <NameLabel>{name}</NameLabel>
-      
+
       {videoEnabled && stream ? (
         <VideoElement
           ref={videoRef}
@@ -72,16 +62,24 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
         <VideoPlaceholder>
           <AvatarPlaceholder>{getInitials(name)}</AvatarPlaceholder>
           <p style={{ fontSize: "0.875rem", margin: 0 }}>
-            {videoEnabled ? "Loading video..." : "Camera required for interview"}
+            {videoEnabled
+              ? "Loading video..."
+              : "Camera required for interview"}
           </p>
           {!videoEnabled && (
-            <p style={{ fontSize: "0.75rem", margin: "0.5rem 0 0 0", color: "#ef4444" }}>
+            <p
+              style={{
+                fontSize: "0.75rem",
+                margin: "0.5rem 0 0 0",
+                color: "#ef4444",
+              }}
+            >
               Please enable your camera to continue
             </p>
           )}
         </VideoPlaceholder>
       )}
-      
+
       {/* Audio status indicator for non-user video */}
       {!isUser && !audioEnabled && (
         <div
@@ -128,4 +126,4 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   );
 };
 
-export default VideoDisplay; 
+export default VideoDisplay;
