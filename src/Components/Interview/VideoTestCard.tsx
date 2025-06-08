@@ -198,12 +198,14 @@ const VideoTestCard: FC = () => {
         },
       }
     );
+    setTimeout(() => {
       if (response.data?.sessionId) {
         router.navigate({
           to: `/interview-room/${response.data.sessionId}`,
-          params: { sessionId: response.data.sessionId },
-        });
-      }
+            params: { sessionId: response.data.sessionId },
+          });
+        }
+    }, 1000); // 1 seconds delay 
   };
 
   // Renders different video content based on current state
