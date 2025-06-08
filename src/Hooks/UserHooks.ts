@@ -65,4 +65,4 @@ const GetUserQuery = () => {
     }
 }
 
-export { GetUserQuery, UpdateUser };
+export { GetUserQuery, UpdateUser, getUserToken };
