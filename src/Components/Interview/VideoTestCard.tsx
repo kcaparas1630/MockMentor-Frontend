@@ -1,4 +1,11 @@
-import { FC, useState, useEffect, useRef } from "react";
+import {
+  FC,
+  useState,
+  useEffect,
+  useRef,
+  SetStateAction,
+  Dispatch,
+} from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
 import ReusableSelect from "../../Commons/Select";
 import LoadingSpinner from "../../Commons/Spinner";
@@ -37,8 +44,16 @@ import {
 } from "./Styles/StyledVideoTestCard";
 import { useMediaDevices } from "../../Hooks/useMediaDevices";
 import { useMicTesting } from "../../Hooks/useMicTesting";
+import { getUserToken } from "../../Hooks/UserHooks";
+import axios from "axios";
+import { useRouter } from "@tanstack/react-router";
 
-const VideoTestCard: FC = () => {
+interface VideoTestCardProps {
+  setSessionId: Dispatch<SetStateAction<string | null>>;
+}
+
+const VideoTestCard: FC<VideoTestCardProps> = ({ setSessionId }) => {
+  const router = useRouter();
   // Use the custom hook for all media device logic
   const {
     videoEnabled,
@@ -66,7 +81,8 @@ const VideoTestCard: FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Interview settings state
-  const [interviewType, setInterviewType] = useState("");
+  const [jobLevel, setJobLevel] = useState<string>("");
+  const [interviewType, setInterviewType] = useState<string>("");
   // TODO: Add interview types to Database and fetch from there.
   const interviewTypes = [
     { value: "technical", label: "Technical Interview" },
@@ -75,10 +91,16 @@ const VideoTestCard: FC = () => {
     { value: "coding-challenge", label: "Coding Challenge" },
     { value: "hr-round", label: "HR Round" },
   ];
+  const jobLevels = [
+    { value: "Entry-Level", label: "Entry-Level" },
+    { value: "Mid-Level", label: "Mid-Level" },
+    { value: "Senior-Level", label: "Senior-Level" },
+    { value: "Staff-Level", label: "Staff-Level" },
+    { value: "Principal-Level", label: "Principal-Level" },
+  ];
 
   // Combine errors from both hooks
   const [error, setError] = useState<string | null>(mediaError || micError);
-
   // Wrapper function for mic testing that handles audio enabling
   const startMicTest = async () => {
     if (!deviceSupport.hasMicrophone) return;
@@ -114,7 +136,9 @@ const VideoTestCard: FC = () => {
 
       // Start playing the video - catch errors in case autoplay is blocked
       videoRef.current.play().catch(() => {
-        setError("Video autoplay is blocked. Please click video to start playing.")
+        setError(
+          "Video autoplay is blocked. Please click video to start playing."
+        );
       });
     }
   }, [videoEnabled, streamReady, streamRef]);
@@ -163,10 +187,25 @@ const VideoTestCard: FC = () => {
     );
   };
 
-  const handleStartInterview = () => {
-    console.log("Starting interview with:", { interviewType });
-    // navigate to interview page
-    //navigate("/interview");
+  const handleStartInterview = async () => {
+    // Get User Token for Firebase Auth verification
+    const userToken = await getUserToken();
+    const response = await axios.post(
+      "http://localhost:3000/api/start-interview",
+      { jobLevel, interviewType },
+      {
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      }
+    );
+    if (response.data?.sessionId) {
+      setSessionId(response.data.sessionId);
+      router.navigate({
+        to: `/interview-room/${response.data.sessionId}`,
+        params: { sessionId: response.data.sessionId },
+      });
+    }
   };
 
   // Renders different video content based on current state
@@ -194,8 +233,6 @@ const VideoTestCard: FC = () => {
       </VideoPlaceholder>
     );
   };
-
-
 
   return (
     <Container>
@@ -297,10 +334,18 @@ const VideoTestCard: FC = () => {
             </SettingsCardHeader>
             <SettingsCardContent>
               <ReusableSelect
+                name="job-level"
+                label="Job Level"
+                value={jobLevel}
+                placeholder="Select Job Level"
+                options={jobLevels}
+                onChange={setJobLevel}
+              />
+              <ReusableSelect
                 name="interview-type"
                 label="Interview Type"
                 value={interviewType}
-                placeholder="Select interview type"
+                placeholder="Select Interview Type"
                 options={interviewTypes}
                 onChange={setInterviewType}
               />
