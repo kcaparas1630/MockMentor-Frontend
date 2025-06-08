@@ -53,6 +53,8 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
     startStream,
     stopStream,
     deviceSupport,
+    toggleVideo,
+    toggleAudio,
   } = useMediaDevicesContext();
 
   // Mock interviewer states (in real app, this would come from video call service)
@@ -289,7 +291,11 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
                 </p>
               </div>
               <button 
-                onClick={() => startStream(true, true)} 
+                onClick={() => {
+                  toggleVideo();
+                  toggleAudio();
+                  startStream(true, true);
+                }} 
                 style={{
                   padding: '0.75rem 1.5rem',
                   backgroundColor: '#3b82f6',
@@ -334,7 +340,7 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
               <VideoLabel>Interviewer</VideoLabel>
               <VideoDisplayContainer>
                 <VideoDisplay
-                  name="Sarah Johnson"
+                  name="MockMentor AI"
                   videoEnabled={interviewerVideoEnabled}
                   audioEnabled={interviewerAudioEnabled}
                   // No stream for mock interviewer - will show placeholder
