@@ -322,6 +322,9 @@ const VideoTestCard: FC = () => {
               <InstructionItem>
                 Allow browser permissions when prompted
               </InstructionItem>
+              <InstructionItem>
+                Recommended to use Desktop for better experience.
+              </InstructionItem>
             </InstructionsContainer>
           </CardContent>
         </Card>
