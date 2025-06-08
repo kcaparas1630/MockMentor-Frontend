@@ -1,4 +1,5 @@
 import { FC, useEffect, useRef } from "react";
+import { MicOff, Video, Mic, X } from "lucide-react";
 import {
   VideoDisplayWrapper,
   VideoElement,
@@ -6,6 +7,15 @@ import {
   AvatarPlaceholder,
   NameLabel,
 } from "./Styles/StyledInterviewRoom";
+import {
+  AudioStatusIndicator,
+  RequiredIndicatorsContainer,
+  DisabledIconWrapper,
+  RequiredLabel,
+  DisabledIcon,
+  PlaceholderText,
+  PlaceholderError,
+} from "./Styles/StyledVideoDisplay";
 
 interface VideoDisplayProps {
   name: string;
@@ -61,66 +71,49 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
       ) : (
         <VideoPlaceholder>
           <AvatarPlaceholder>{getInitials(name)}</AvatarPlaceholder>
-          <p style={{ fontSize: "0.875rem", margin: 0 }}>
+          <PlaceholderText>
             {videoEnabled
               ? "Loading video..."
               : "Camera required for interview"}
-          </p>
+          </PlaceholderText>
           {!videoEnabled && (
-            <p
-              style={{
-                fontSize: "0.75rem",
-                margin: "0.5rem 0 0 0",
-                color: "#ef4444",
-              }}
-            >
+            <PlaceholderError>
               Please enable your camera to continue
-            </p>
+            </PlaceholderError>
           )}
         </VideoPlaceholder>
       )}
 
       {/* Audio status indicator for non-user video */}
       {!isUser && !audioEnabled && (
-        <div
-          style={{
-            position: "absolute",
-            top: "0.75rem",
-            right: "0.75rem",
-            background: "rgba(0, 0, 0, 0.7)",
-            color: "white",
-            padding: "0.25rem 0.5rem",
-            borderRadius: "0.25rem",
-            fontSize: "0.75rem",
-          }}
-        >
-          🔇
-        </div>
+        <AudioStatusIndicator>
+          <MicOff size={12} />
+        </AudioStatusIndicator>
       )}
 
       {/* Required indicators for user video */}
       {isUser && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "0.75rem",
-            left: "0.75rem",
-            background: "rgba(0, 0, 0, 0.7)",
-            color: "white",
-            padding: "0.25rem 0.5rem",
-            borderRadius: "0.25rem",
-            fontSize: "0.75rem",
-            display: "flex",
-            alignItems: "center",
-            gap: "0.25rem",
-          }}
-        >
-          {videoEnabled ? "📹" : "📹❌"}
-          {audioEnabled ? "🎤" : "🎤❌"}
-          <span style={{ marginLeft: "0.25rem", fontSize: "0.625rem" }}>
+        <RequiredIndicatorsContainer>
+          {videoEnabled ? <Video size={12} /> : (
+            <DisabledIconWrapper>
+              <Video size={12} />
+              <DisabledIcon>
+                <X size={8} />
+              </DisabledIcon>
+            </DisabledIconWrapper>
+          )}
+          {audioEnabled ? <Mic size={12} /> : (
+            <DisabledIconWrapper>
+              <Mic size={12} />
+              <DisabledIcon>
+                <X size={8} />
+              </DisabledIcon>
+            </DisabledIconWrapper>
+          )}
+          <RequiredLabel>
             Required
-          </span>
-        </div>
+          </RequiredLabel>
+        </RequiredIndicatorsContainer>
       )}
     </VideoDisplayWrapper>
   );

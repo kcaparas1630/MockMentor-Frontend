@@ -288,3 +288,187 @@ export const NameLabel = styled.div`
   font-size: 0.75rem;
   font-weight: 500;
 `;
+
+// Error and Loading States
+export const ErrorStateContainer = styled.section`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+`;
+
+export const ErrorTitle = styled.h2`
+  color: #dc2626;
+  margin: 0;
+`;
+
+export const ErrorDescription = styled.p`
+  color: #6b7280;
+  margin: 0;
+`;
+
+export const ErrorDetails = styled.p`
+  color: #374151;
+  margin: 0;
+  font-size: 0.875rem;
+`;
+
+export const ErrorActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+`;
+
+export const RetryButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #2563eb;
+  }
+
+  &:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+`;
+
+export const RefreshButton = styled.button`
+  padding: 0.5rem 1rem;
+  background-color: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #4b5563;
+  }
+
+  &:focus {
+    outline: 2px solid #6b7280;
+    outline-offset: 2px;
+  }
+`;
+
+export const LoadingStateContainer = styled.section`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+`;
+
+export const LoadingSpinner = styled.div`
+  width: 3rem;
+  height: 3rem;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+export const LoadingTitle = styled.h2`
+  color: #374151;
+  margin: 0;
+`;
+
+export const LoadingDescription = styled.p`
+  color: #6b7280;
+  margin: 0;
+`;
+
+export const MissingDevicesContainer = styled.section`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: center;
+  padding: 2rem;
+`;
+
+export const MissingDevicesTitle = styled.h2`
+  color: #dc2626;
+  margin: 0;
+`;
+
+export const MissingDevicesDescription = styled.p`
+  color: #6b7280;
+  margin: 0;
+`;
+
+export const MissingDevicesDetails = styled.p`
+  color: #374151;
+  margin: 0;
+  font-size: 0.875rem;
+`;
+
+export const MissingDevicesAlert = styled.aside`
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #fef3c7;
+  border-radius: 0.5rem;
+  
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #92400e;
+  }
+`;
+
+export const EnableDevicesButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #2563eb;
+  }
+
+  &:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+`;
+
+export const ActiveDevicesIndicator = styled.div`
+  font-size: 0.875rem;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;

@@ -3,6 +3,7 @@ import { Route } from "../../routes/interview-room/$sessionId";
 import { useMediaDevicesContext } from "../../Hooks/useMediaDevicesContext";
 import VideoDisplay from "./VideoDisplay";
 import ChatPanel from "./ChatPanel";
+import { MessageCircle, Video, Mic } from "lucide-react";
 import {
   InterviewRoomContainer,
   Header,
@@ -23,10 +24,28 @@ import {
   DurationText,
   ChatButton,
   ChatOverlay,
+  ErrorStateContainer,
+  ErrorTitle,
+  ErrorDescription,
+  ErrorDetails,
+  ErrorActions,
+  RetryButton,
+  RefreshButton,
+  LoadingStateContainer,
+  LoadingSpinner,
+  LoadingTitle,
+  LoadingDescription,
+  MissingDevicesContainer,
+  MissingDevicesTitle,
+  MissingDevicesDescription,
+  MissingDevicesDetails,
+  MissingDevicesAlert,
+  EnableDevicesButton,
+  ActiveDevicesIndicator,
 } from "./Styles/StyledInterviewRoom";
 
-// Simple icons
-const MessageCircleIcon = () => <span>💬</span>;
+// Updated icon component using lucide-react
+const MessageCircleIcon = () => <MessageCircle size={20} />;
 
 interface InterviewRoomProps {
   jobRole?: string;
@@ -109,52 +128,23 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
         </Header>
         <VideoSection>
           <VideoContainer>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '100%',
-              flexDirection: 'column',
-              gap: '1rem',
-              textAlign: 'center',
-              padding: '2rem'
-            }}>
-              <h2 style={{ color: '#dc2626', margin: 0 }}>Camera & Microphone Required</h2>
-              <p style={{ color: '#6b7280', margin: 0 }}>
+            <ErrorStateContainer>
+              <ErrorTitle>Camera & Microphone Required</ErrorTitle>
+              <ErrorDescription>
                 This interview requires access to your camera and microphone for face landmark analysis and audio processing.
-              </p>
-              <p style={{ color: '#374151', margin: 0, fontSize: '0.875rem' }}>
+              </ErrorDescription>
+              <ErrorDetails>
                 Error: {error}
-              </p>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                <button 
-                  onClick={() => startStream(true, true)} 
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    cursor: 'pointer'
-                  }}
-                >
+              </ErrorDetails>
+              <ErrorActions>
+                <RetryButton onClick={() => startStream(true, true)}>
                   Retry Access
-                </button>
-                <button 
-                  onClick={() => window.location.reload()} 
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    cursor: 'pointer'
-                  }}
-                >
+                </RetryButton>
+                <RefreshButton onClick={() => window.location.reload()}>
                   Refresh Page
-                </button>
-              </div>
-            </div>
+                </RefreshButton>
+              </ErrorActions>
+            </ErrorStateContainer>
           </VideoContainer>
         </VideoSection>
       </InterviewRoomContainer>
@@ -175,29 +165,13 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
         </Header>
         <VideoSection>
           <VideoContainer>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '100%',
-              flexDirection: 'column',
-              gap: '1rem',
-              textAlign: 'center',
-              padding: '2rem'
-            }}>
-              <div style={{
-                width: '3rem',
-                height: '3rem',
-                border: '4px solid #e5e7eb',
-                borderTop: '4px solid #3b82f6',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
-              <h2 style={{ color: '#374151', margin: 0 }}>Initializing Camera & Microphone</h2>
-              <p style={{ color: '#6b7280', margin: 0 }}>
+            <LoadingStateContainer>
+              <LoadingSpinner />
+              <LoadingTitle>Initializing Camera & Microphone</LoadingTitle>
+              <LoadingDescription>
                 Please allow access to your camera and microphone when prompted.
-              </p>
-            </div>
+              </LoadingDescription>
+            </LoadingStateContainer>
           </VideoContainer>
         </VideoSection>
       </InterviewRoomContainer>
@@ -218,29 +192,13 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
         </Header>
         <VideoSection>
           <VideoContainer>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '100%',
-              flexDirection: 'column',
-              gap: '1rem',
-              textAlign: 'center',
-              padding: '2rem'
-            }}>
-              <div style={{
-                width: '3rem',
-                height: '3rem',
-                border: '4px solid #e5e7eb',
-                borderTop: '4px solid #3b82f6',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }}></div>
-              <h2 style={{ color: '#374151', margin: 0 }}>Detecting Devices</h2>
-              <p style={{ color: '#6b7280', margin: 0 }}>
+            <LoadingStateContainer>
+              <LoadingSpinner />
+              <LoadingTitle>Detecting Devices</LoadingTitle>
+              <LoadingDescription>
                 Checking for camera and microphone availability...
-              </p>
-            </div>
+              </LoadingDescription>
+            </LoadingStateContainer>
           </VideoContainer>
         </VideoSection>
       </InterviewRoomContainer>
@@ -262,48 +220,29 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
         </Header>
         <VideoSection>
           <VideoContainer>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              height: '100%',
-              flexDirection: 'column',
-              gap: '1rem',
-              textAlign: 'center',
-              padding: '2rem'
-            }}>
-              <h2 style={{ color: '#dc2626', margin: 0 }}>Interview Cannot Proceed</h2>
-              <p style={{ color: '#6b7280', margin: 0 }}>
+            <MissingDevicesContainer>
+              <MissingDevicesTitle>Interview Cannot Proceed</MissingDevicesTitle>
+              <MissingDevicesDescription>
                 Both camera and microphone access are required for this interview.
-              </p>
-              <p style={{ color: '#374151', margin: 0, fontSize: '0.875rem' }}>
+              </MissingDevicesDescription>
+              <MissingDevicesDetails>
                 We use MediaPipe for face landmark analysis and need audio for evaluation.
-              </p>
-              <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#fef3c7', borderRadius: '0.5rem' }}>
-                <p style={{ margin: 0, fontSize: '0.875rem', color: '#92400e' }}>
+              </MissingDevicesDetails>
+              <MissingDevicesAlert>
+                <p>
                   <strong>Missing:</strong> {!videoEnabled && "Camera"} {!videoEnabled && !audioEnabled && " & "} {!audioEnabled && "Microphone"}
                 </p>
-              </div>
-              <button 
+              </MissingDevicesAlert>
+              <EnableDevicesButton 
                 onClick={() => {
                   toggleVideo();
                   toggleAudio();
                   startStream(true, true);
-                }} 
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                  fontWeight: '500'
                 }}
               >
                 Enable Camera & Microphone
-              </button>
-            </div>
+              </EnableDevicesButton>
+            </MissingDevicesContainer>
           </VideoContainer>
         </VideoSection>
       </InterviewRoomContainer>
@@ -370,15 +309,11 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
             <DurationText>
               Duration: {formatDuration(duration)}
             </DurationText>
-            <div style={{ 
-              fontSize: "0.875rem", 
-              color: "#16a34a",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.25rem"
-            }}>
-              📹 🎤 <span>Active</span>
-            </div>
+            <ActiveDevicesIndicator>
+              <Video size={16} />
+              <Mic size={16} />
+              <span>Active</span>
+            </ActiveDevicesIndicator>
           </StatusInfo>
 
           {/* Chat Button */}

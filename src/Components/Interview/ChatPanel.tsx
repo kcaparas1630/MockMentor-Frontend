@@ -1,4 +1,5 @@
 import { FC, useState } from "react";
+import { X, Send } from "lucide-react";
 import {
   ChatPanelContainer,
   ChatHeader,
@@ -14,9 +15,9 @@ import {
   SendButton,
 } from "./Styles/StyledChatPanel";
 
-// Simple icons
-const XIcon = () => <span>✕</span>;
-const SendIcon = () => <span>→</span>;
+// Updated icons using lucide-react
+const XIcon = () => <X size={16} />;
+const SendIcon = () => <Send size={16} />;
 
 interface ChatMessage {
   id: string;
@@ -75,47 +76,76 @@ const ChatPanel: FC<ChatPanelProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <ChatPanelContainer isOpen={isOpen}>
+    <ChatPanelContainer 
+      isOpen={isOpen}
+      role="complementary"
+      aria-label="Interview chat panel"
+      aria-hidden={!isOpen}
+    >
       <ChatHeader>
-        <h3>Chat</h3>
-        <CloseButton onClick={onClose}>
+        <h3 id="chat-title">Chat</h3>
+        <CloseButton 
+          onClick={onClose}
+          aria-label="Close chat panel"
+          title="Close chat"
+        >
           <XIcon />
         </CloseButton>
       </ChatHeader>
 
-      <MessagesContainer>
+      <MessagesContainer
+        role="log"
+        aria-labelledby="chat-title"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         <MessagesContent>
           {messages.map((message) => (
             <MessageWrapper key={message.id} isUser={message.isUser}>
-              <MessageBubble isUser={message.isUser}>
-                <p>{message.message}</p>
-              </MessageBubble>
-              <MessageMeta>
-                <span>{message.sender}</span>
-                <span>•</span>
-                <span>{formatTime(message.timestamp)}</span>
-              </MessageMeta>
+              <article role="listitem">
+                <MessageBubble isUser={message.isUser}>
+                  <p>{message.message}</p>
+                </MessageBubble>
+                <MessageMeta>
+                  <span aria-label="Sender">{message.sender}</span>
+                  <span aria-hidden="true">•</span>
+                  <time 
+                    dateTime={message.timestamp.toISOString()}
+                    aria-label={`Sent at ${formatTime(message.timestamp)}`}
+                  >
+                    {formatTime(message.timestamp)}
+                  </time>
+                </MessageMeta>
+              </article>
             </MessageWrapper>
           ))}
         </MessagesContent>
       </MessagesContainer>
 
       <InputSection>
-        <InputWrapper>
-          <MessageInput
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Type a message..."
-            rows={1}
-          />
-          <SendButton
-            onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
-          >
-            <SendIcon />
-          </SendButton>
-        </InputWrapper>
+        <form onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}>
+          <InputWrapper>
+            <MessageInput
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Type a message..."
+              rows={1}
+              aria-label="Type your message"
+              aria-describedby="send-button"
+            />
+            <SendButton
+              id="send-button"
+              type="submit"
+              onClick={handleSendMessage}
+              disabled={!newMessage.trim()}
+              aria-label={newMessage.trim() ? "Send message" : "Type a message to send"}
+              title={newMessage.trim() ? "Send message" : "Type a message to send"}
+            >
+              <SendIcon />
+            </SendButton>
+          </InputWrapper>
+        </form>
       </InputSection>
     </ChatPanelContainer>
   );

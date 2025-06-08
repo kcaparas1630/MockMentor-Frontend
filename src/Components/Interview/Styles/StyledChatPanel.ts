@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 
-export const ChatPanelContainer = styled.div<{ isOpen: boolean }>`
+export const ChatPanelContainer = styled.aside<{ isOpen: boolean }>`
   position: fixed;
   top: 0;
   right: 0;
@@ -61,7 +61,7 @@ export const CloseButton = styled.button`
   }
 `;
 
-export const MessagesContainer = styled.div`
+export const MessagesContainer = styled.main`
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
