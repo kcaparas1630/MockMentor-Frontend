@@ -16,21 +16,32 @@ import {
   PlaceholderText,
   PlaceholderError,
 } from "./Styles/StyledVideoDisplay";
+import AICoach from "./AiCoach";
 
 interface VideoDisplayProps {
   name: string;
   isUser?: boolean;
-  videoEnabled: boolean;
-  audioEnabled: boolean;
+  isAICoach?: boolean;
+  videoEnabled?: boolean;
+  audioEnabled?: boolean;
   stream?: MediaStream | null;
+  onToggleVideo?: () => void;
+  onToggleAudio?: () => void;
+  onQuestionSpoken?: (question: string, questionIndex: number) => void;
+  onInterviewStart?: () => void;
+  onInterviewEnd?: () => void;
 }
 
 const VideoDisplay: FC<VideoDisplayProps> = ({
   name,
   isUser = false,
-  videoEnabled,
-  audioEnabled,
+  isAICoach = false,
+  videoEnabled = true,
+  audioEnabled = true,
   stream,
+  onQuestionSpoken,
+  onInterviewStart,
+  onInterviewEnd,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -56,6 +67,21 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // If this is the AI Coach, render the special AI interface
+  if (isAICoach) {
+    return (
+      <VideoDisplayWrapper isUser={isUser}>
+        <NameLabel>{name}</NameLabel>
+        <AICoach 
+          isActive={true}
+          onQuestionSpoken={onQuestionSpoken}
+          onInterviewStart={onInterviewStart}
+          onInterviewEnd={onInterviewEnd}
+        />
+      </VideoDisplayWrapper>
+    );
+  }
 
   return (
     <VideoDisplayWrapper isUser={isUser}>
