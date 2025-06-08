@@ -40,11 +40,11 @@ import {
   AudioLevelBar,
   AudioLevelText,
 } from "./Styles/StyledVideoTestCard";
-import { useMediaDevices } from "../../Hooks/useMediaDevices";
 import { useMicTesting } from "../../Hooks/useMicTesting";
 import { getUserToken } from "../../Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
+import { useMediaDevicesContext } from "../../Hooks/useMediaDevicesContext";
 
 
 
@@ -62,7 +62,7 @@ const VideoTestCard: FC = () => {
     streamRef,
     toggleVideo,
     toggleAudio,
-  } = useMediaDevices();
+  } = useMediaDevicesContext(); 
 
   // Use the custom hook for microphone testing
   const {
@@ -198,14 +198,12 @@ const VideoTestCard: FC = () => {
         },
       }
     );
-    setTimeout(() => {
       if (response.data?.sessionId) {
         router.navigate({
           to: `/interview-room/${response.data.sessionId}`,
           params: { sessionId: response.data.sessionId },
         });
       }
-    }, 1000); // 1 seconds delay 
   };
 
   // Renders different video content based on current state
