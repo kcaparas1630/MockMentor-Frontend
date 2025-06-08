@@ -3,8 +3,6 @@ import {
   useState,
   useEffect,
   useRef,
-  SetStateAction,
-  Dispatch,
 } from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
 import ReusableSelect from "../../Commons/Select";
@@ -48,11 +46,9 @@ import { getUserToken } from "../../Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
 
-interface VideoTestCardProps {
-  setSessionId: Dispatch<SetStateAction<string | null>>;
-}
 
-const VideoTestCard: FC<VideoTestCardProps> = ({ setSessionId }) => {
+
+const VideoTestCard: FC = () => {
   const router = useRouter();
   // Use the custom hook for all media device logic
   const {
@@ -79,6 +75,7 @@ const VideoTestCard: FC<VideoTestCardProps> = ({ setSessionId }) => {
 
   // Component-specific refs
   const videoRef = useRef<HTMLVideoElement>(null);
+
 
   // Interview settings state
   const [jobLevel, setJobLevel] = useState<string>("");
@@ -200,7 +197,6 @@ const VideoTestCard: FC<VideoTestCardProps> = ({ setSessionId }) => {
       }
     );
     if (response.data?.sessionId) {
-      setSessionId(response.data.sessionId);
       router.navigate({
         to: `/interview-room/${response.data.sessionId}`,
         params: { sessionId: response.data.sessionId },
