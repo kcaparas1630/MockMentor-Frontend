@@ -76,7 +76,8 @@ const VideoTestCard: FC = () => {
   // Component-specific refs
   const videoRef = useRef<HTMLVideoElement>(null);
 
-
+  // Interview start button state. Nothing important. Just changing the text of the button.
+  const [isInterviewStarted, setIsInterviewStarted] = useState<boolean>(false);
   // Interview settings state
   const [jobLevel, setJobLevel] = useState<string>("");
   const [interviewType, setInterviewType] = useState<string>("");
@@ -187,6 +188,7 @@ const VideoTestCard: FC = () => {
   const handleStartInterview = async () => {
     // Get User Token for Firebase Auth verification
     const userToken = await getUserToken();
+    setIsInterviewStarted(true);
     const response = await axios.post(
       "http://localhost:3000/api/start-interview",
       { jobLevel, interviewType },
@@ -196,12 +198,14 @@ const VideoTestCard: FC = () => {
         },
       }
     );
-    if (response.data?.sessionId) {
-      router.navigate({
-        to: `/interview-room/${response.data.sessionId}`,
-        params: { sessionId: response.data.sessionId },
-      });
-    }
+    setTimeout(() => {
+      if (response.data?.sessionId) {
+        router.navigate({
+          to: `/interview-room/${response.data.sessionId}`,
+          params: { sessionId: response.data.sessionId },
+        });
+      }
+    }, 1000); // 1 seconds delay 
   };
 
   // Renders different video content based on current state
@@ -357,7 +361,12 @@ const VideoTestCard: FC = () => {
                 !deviceSupport.hasMicrophone
               }
             >
-              Start Interview
+              {isInterviewStarted ? 
+              <>
+              <LoadingSpinner />
+              <span>Starting Interview...</span>
+              </>
+              : "Start Interview"}
             </StartInterviewButton>
           </ButtonContainer>
         </InterviewSettingsContainer>

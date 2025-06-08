@@ -208,6 +208,10 @@ const ButtonContainer = styled.div`
 `;
 
 const StartInterviewButton = styled.button<{ disabled?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   background-color: ${props => props.disabled ? '#9ca3af' : '#2563eb'};
   color: white;
   padding: 0.75rem 2rem;
