@@ -64,6 +64,9 @@ const VideoPreview = styled.div`
 `;
 
 const VideoElement = styled.video`
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -391,6 +394,17 @@ const TroubleshootingLink = styled.p`
   }
 `;
 
+const StartButtonRequirements = styled.p`
+  font-size: 0.75rem;
+  color: #6b7280;
+  background-color: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  margin: 0;
+  line-height: 1.4;
+  margin: 1.5rem 0;
+`;
+
 export {
   Container,
   GridContainer,
@@ -400,7 +414,7 @@ export {
   CardContent,
   VideoPreview,
   VideoElement,
-  VideoPlaceholder,
+  VideoPlaceholder, 
   ControlsContainer,
   ControlButton,
   InstructionsContainer,
@@ -425,4 +439,5 @@ export {
   AudioLevelBar,
   AudioLevelText,
   TroubleshootingLink,
+  StartButtonRequirements,
 };

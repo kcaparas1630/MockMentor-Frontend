@@ -39,6 +39,7 @@ import {
   AudioLevelContainer,
   AudioLevelBar,
   AudioLevelText,
+  StartButtonRequirements,
 } from "./Styles/StyledVideoTestCard";
 import { useMicTesting } from "../../Hooks/useMicTesting";
 import { getUserToken } from "../../Hooks/UserHooks";
@@ -414,10 +415,10 @@ const VideoTestCard: FC = () => {
                 </>
                 : "Start Interview"}
               </StartInterviewButton>
-              <p id="start-button-requirements" style={{ fontSize: "0.75rem", color: "#6b7280", margin: "0.5rem 0 0 0" }}>
+                <StartButtonRequirements id="start-button-requirements">
                 {(!interviewType || !jobLevel) && "Please select job level and interview type. "}
                 {(!deviceSupport.hasCamera || !deviceSupport.hasMicrophone) && "Camera and microphone are required."}
-              </p>
+              </StartButtonRequirements>
             </ButtonContainer>
           </InterviewSettingsContainer>
         </GridContainer>
