@@ -65,7 +65,7 @@ export const MessagesContainer = styled.main`
   flex: 1;
   overflow-y: auto;
   padding: 1rem;
-  height: calc(100vh - 120px);
+  min-height: 0;
 `;
 
 export const MessagesContent = styled.div`

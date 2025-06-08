@@ -80,15 +80,15 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
   const [interviewerVideoEnabled] = useState(true);
   const [interviewerAudioEnabled] = useState(true);
 
-
   // Duration timer
   useEffect(() => {
+    if (!streamReady) return;
     const interval = setInterval(() => {
       setDuration((prev) => prev + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [streamReady]);
 
   // Format duration
   const formatDuration = (seconds: number) => {
@@ -98,7 +98,6 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
   };
 
   const toggleChat = () => {
-    console.log("Toggling chat:", !isChatOpen);
     setIsChatOpen(!isChatOpen);
   };
 
@@ -123,7 +122,12 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
               <h1>Interview Room - {sessionId}</h1>
               <p>Camera/Microphone Required</p>
             </HeaderInfo>
-            <EndButton onClick={handleEndInterview}>Exit</EndButton>
+            <EndButton
+              onClick={handleEndInterview}
+              aria-label="End Interview Session"
+            >
+              Exit
+            </EndButton>
           </HeaderContent>
         </Header>
         <VideoSection>
@@ -131,11 +135,10 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
             <ErrorStateContainer>
               <ErrorTitle>Camera & Microphone Required</ErrorTitle>
               <ErrorDescription>
-                This interview requires access to your camera and microphone for face landmark analysis and audio processing.
+                This interview requires access to your camera and microphone for
+                face landmark analysis and audio processing.
               </ErrorDescription>
-              <ErrorDetails>
-                Error: {error}
-              </ErrorDetails>
+              <ErrorDetails>Error: {error}</ErrorDetails>
               <ErrorActions>
                 <RetryButton onClick={() => startStream(true, true)}>
                   Retry Access
@@ -215,25 +218,36 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
               <h1>Interview Room - {sessionId}</h1>
               <p>Camera & Microphone Required</p>
             </HeaderInfo>
-            <EndButton onClick={handleEndInterview}>Exit</EndButton>
+            <EndButton
+              onClick={handleEndInterview}
+              aria-label="End Interview Session"
+            >
+              Exit
+            </EndButton>
           </HeaderContent>
         </Header>
         <VideoSection>
           <VideoContainer>
             <MissingDevicesContainer>
-              <MissingDevicesTitle>Interview Cannot Proceed</MissingDevicesTitle>
+              <MissingDevicesTitle>
+                Interview Cannot Proceed
+              </MissingDevicesTitle>
               <MissingDevicesDescription>
-                Both camera and microphone access are required for this interview.
+                Both camera and microphone access are required for this
+                interview.
               </MissingDevicesDescription>
               <MissingDevicesDetails>
-                We use MediaPipe for face landmark analysis and need audio for evaluation.
+                We use MediaPipe for face landmark analysis and need audio for
+                evaluation.
               </MissingDevicesDetails>
               <MissingDevicesAlert>
                 <p>
-                  <strong>Missing:</strong> {!videoEnabled && "Camera"} {!videoEnabled && !audioEnabled && " & "} {!audioEnabled && "Microphone"}
+                  <strong>Missing:</strong> {!videoEnabled && "Camera"}{" "}
+                  {!videoEnabled && !audioEnabled && " & "}{" "}
+                  {!audioEnabled && "Microphone"}
                 </p>
               </MissingDevicesAlert>
-              <EnableDevicesButton 
+              <EnableDevicesButton
                 onClick={() => {
                   toggleVideo();
                   toggleAudio();
@@ -255,10 +269,15 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
       <Header>
         <HeaderContent>
           <HeaderInfo>
-            <h1>{interviewType} - {jobRole}</h1>
+            <h1>
+              {interviewType} - {jobRole}
+            </h1>
             <p>Interview in progress • Session: {sessionId}</p>
           </HeaderInfo>
-          <EndButton onClick={handleEndInterview}>
+          <EndButton
+            onClick={handleEndInterview}
+            aria-label="End Interview Session"
+          >
             End Interview
           </EndButton>
         </HeaderContent>
@@ -306,9 +325,7 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
               <RecordingDot />
               <span>Recording</span>
             </RecordingStatus>
-            <DurationText>
-              Duration: {formatDuration(duration)}
-            </DurationText>
+            <DurationText>Duration: {formatDuration(duration)}</DurationText>
             <ActiveDevicesIndicator>
               <Video size={16} />
               <Mic size={16} />
@@ -317,7 +334,12 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
           </StatusInfo>
 
           {/* Chat Button */}
-          <ChatButton isOpen={isChatOpen} onClick={toggleChat}>
+          <ChatButton
+            isOpen={isChatOpen}
+            onClick={toggleChat}
+            aria-label={isChatOpen ? "Close chat" : "Open chat"}
+            aria-expanded={isChatOpen}
+          >
             <MessageCircleIcon />
             <span>Chat</span>
           </ChatButton>
@@ -328,10 +350,7 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       {/* Overlay when chat is open on mobile */}
-      <ChatOverlay
-        isOpen={isChatOpen}
-        onClick={() => setIsChatOpen(false)}
-      />
+      <ChatOverlay isOpen={isChatOpen} onClick={() => setIsChatOpen(false)} />
     </InterviewRoomContainer>
   );
 };

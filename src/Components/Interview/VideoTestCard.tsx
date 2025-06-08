@@ -187,6 +187,7 @@ const VideoTestCard: FC = () => {
   };
 
   const handleStartInterview = async () => {
+    try {
     // Get User Token for Firebase Auth verification
     const userToken = await getUserToken();
     setIsInterviewStarted(true);
@@ -205,8 +206,13 @@ const VideoTestCard: FC = () => {
           to: `/interview-room/${response.data.sessionId}`,
             params: { sessionId: response.data.sessionId },
           });
-        }
-    }, 1000); // 1 seconds delay 
+          }
+      }, 1000); // 1 seconds delay 
+    } catch (error) {
+      setIsInterviewStarted(false);
+      setError("Error starting interview. Please try again.");
+      console.error("Error starting interview:", error);
+    }
   };
 
   // Renders different video content based on current state
