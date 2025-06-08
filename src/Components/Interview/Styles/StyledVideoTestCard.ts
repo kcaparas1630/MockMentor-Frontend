@@ -10,14 +10,17 @@ const Container = styled.div`
 `;
 
 const GridContainer = styled.div`
-  width: 100%;
+  width: 95%;
   max-width: 72rem;
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
+  margin: 2rem 0;
 
   @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    margin: 0;
   }
 `;
 
