@@ -7,6 +7,10 @@ export const InterviewRoomContainer = styled.div`
   display: flex;
   flex-direction: column;
   position: relative;
+
+  @media (min-width: 1024px) {
+    height: 95vh;
+  }
 `;
 
 // Header section
