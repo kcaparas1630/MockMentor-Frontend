@@ -1,12 +1,12 @@
 import { createRoute } from "@tanstack/react-router";
 import rootRoute from "./__root";
-import InterviewIndex from "../Components/Interview/InterviewIndex";
+import VideoTestCard from "../Components/Interview/VideoTestCard";
 import AuthGuard from "../Components/AuthGuard";
 
 const ProtectedVideoTest = () => {
     return (
         <AuthGuard>
-            <InterviewIndex />
+            <VideoTestCard />
         </AuthGuard>
     )
 }
