@@ -76,9 +76,6 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
     toggleAudio,
   } = useMediaDevicesContext();
 
-  // Mock interviewer states (in real app, this would come from video call service)
-  const [interviewerVideoEnabled] = useState(true);
-  const [interviewerAudioEnabled] = useState(true);
 
   // Duration timer
   useEffect(() => {
@@ -110,6 +107,19 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
       console.log("Interview ended");
       alert("Interview ended. Thank you!");
     }
+  };
+  // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
+  // AI Coach handlers
+  const handleInterviewStart = () => {
+    console.log("AI Interview practice started");
+  };
+
+  const handleQuestionSpoken = (question: string, questionIndex: number) => {
+    console.log(`AI Coach asked question ${questionIndex + 1}: ${question}`);
+  };
+
+  const handleInterviewEnd = () => {
+    console.log("AI Interview practice completed");
   };
 
   // Show error state if there are device issues
@@ -287,15 +297,16 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
       <VideoSection>
         <VideoContainer>
           <VideoGrid>
-            {/* Interviewer Video */}
+            {/* AI Coach/Interviewer */}
             <VideoWrapper>
-              <VideoLabel>Interviewer</VideoLabel>
+              <VideoLabel>AI Interview Coach</VideoLabel>
               <VideoDisplayContainer>
                 <VideoDisplay
-                  name="MockMentor AI"
-                  videoEnabled={interviewerVideoEnabled}
-                  audioEnabled={interviewerAudioEnabled}
-                  // No stream for mock interviewer - will show placeholder
+                  name="AI Coach"
+                  isAICoach={true}
+                  onQuestionSpoken={handleQuestionSpoken}
+                  onInterviewStart={handleInterviewStart}
+                  onInterviewEnd={handleInterviewEnd}
                 />
               </VideoDisplayContainer>
             </VideoWrapper>
