@@ -33,7 +33,7 @@ const AICoach: React.FC<AICoachProps> = () => {
   // const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | undefined>(undefined);
   // const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
+  // TODO: questions will be fetched from the backend.
   const questions = [
     "Hello! Welcome to your interview practice session. Could you please tell me about yourself?",
     "What interests you most about this position and our company?",
@@ -46,6 +46,7 @@ const AICoach: React.FC<AICoachProps> = () => {
     "What questions do you have for me about the role or our company?"
   ];
 
+  // TODO: refactor this function to incorporate the ai coach speaking.
   // const initializeAudioContext = async (): Promise<void> => {
   //   try {
   //     if (!audioContextRef.current) {
@@ -58,7 +59,7 @@ const AICoach: React.FC<AICoachProps> = () => {
   //     console.error('Error initializing audio context:', error);
   //   }
   // };
-  
+  // TODO: refactor this function to incorporate the ai coach speaking.
   // const speakQuestion = async (text: string): Promise<void> => {
   //   if (!('speechSynthesis' in window)) {
   //     console.error('Speech synthesis not supported in this browser');
@@ -117,7 +118,7 @@ const AICoach: React.FC<AICoachProps> = () => {
 
   //   speechSynthesis.speak(utterance);
   // };
-
+  // TODO: refactor this function to incorporate the ai coach speaking.
   // const startVisualization = (): void => {
   //   const animate = () => {
   //     // Simulate audio level for speech synthesis
