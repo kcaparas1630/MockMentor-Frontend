@@ -36,7 +36,6 @@ export const AICoachCircle = styled.div<{
   justify-content: center;
   border: 2px solid #60a5fa;
   transition: all 100ms ease-out;
-  cursor: pointer;
   
   transform: scale(${props => 1 + props.audioLevel / 200});
   box-shadow: 0 0 ${props => 20 + props.audioLevel * 0.3}px rgba(59, 130, 246, ${props => 0.3 + props.audioLevel * 0.007});
@@ -45,10 +44,6 @@ export const AICoachCircle = styled.div<{
     animation: glow 2s ease-in-out infinite;
   `}
 
-  &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
-  }
 
   @keyframes glow {
     0% {
