@@ -1,48 +1,61 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 export interface WebSocketMessage {
-  type: 'message' | 'error';
+  type: "message" | "error";
   content: string;
 }
 
-const useWebSocketConnection = (onMessage?: (message: WebSocketMessage) => void) => {
-    const [socket, setSocket] = useState<WebSocket | null>(null);
+const useWebSocketConnection = (
+  onMessage?: (message: WebSocketMessage) => void
+) => {
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const onMessageRef = useRef(onMessage);
 
-    useEffect(() => {
-        const ws = new WebSocket("ws://localhost:8000/api/ws");
-        
-        ws.onopen = () => {
-            console.log('WebSocket Connected');
-            setSocket(ws);
-        };
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:8000/api/ws");
 
-        ws.onclose = () => {
-            console.log('WebSocket Disconnected');
-            setSocket(null);
-        };
+    ws.onopen = () => {
+      console.log("WebSocket Connected");
+      setSocket(ws);
+    };
 
-        ws.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data) as WebSocketMessage;
-                console.log('Received WebSocket message:', message);
-                onMessage?.(message);
-            } catch (error) {
-                console.error('Error parsing WebSocket message:', error);
-            }
-        };
+    ws.onclose = () => {
+      console.log("WebSocket Disconnected");
+      setSocket(null);
+    };
 
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        // Validate message structure
+        if (
+          typeof data !== "object" ||
+          !data.type ||
+          !["message", "error"].includes(data.type) ||
+          typeof data.content !== "string"
+        ) {
+          throw new Error("Invalid data structure");
+        }
+        const message = data as WebSocketMessage;
+        console.log("Received WebSocket message:", message);
+        onMessageRef?.current?.(message);
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
 
-        return () => {
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.close();
-            }
-        };
-    }, [onMessage]);
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
 
-    return socket;
-}
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, []);
+
+  return socket;
+};
 
 export default useWebSocketConnection;
