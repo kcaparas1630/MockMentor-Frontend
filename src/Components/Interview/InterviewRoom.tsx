@@ -45,22 +45,22 @@ import {
   ActiveDevicesIndicator,
 } from "./Styles/StyledInterviewRoom";
 import { GetUserQuery } from "../../Hooks/UserHooks";
-import useWebSocketConnection, { WebSocketMessage } from "../../Hooks/useWebSocketConnection";
+import useWebSocketConnection, {
+  WebSocketMessage,
+} from "../../Hooks/useWebSocketConnection";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
-
-
 
 const InterviewRoom: FC = () => {
   const { sessionId } = Route.useParams();
   const { jobLevel, interviewType } = useSearch({ from: Route.id });
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
-  const [AICoachMessage, setAICoachMessage] = useState<string>('');
+  const [AICoachMessage, setAICoachMessage] = useState<string>("");
   const [duration, setDuration] = useState<number>(0);
   const { users } = GetUserQuery();
   const jobRole = users?.profile?.jobRole;
-  
+
   const {
     videoEnabled = true,
     audioEnabled = true,
@@ -74,17 +74,6 @@ const InterviewRoom: FC = () => {
     toggleVideo,
     toggleAudio,
   } = useMediaDevicesContext();
-
-  const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
-    // Handle different types of messages from the server
-    if (message.type === 'message') {
-      // Handle question from AI coach
-      handleQuestionSpoken(message.content);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-}, []);
-
-  const socket = useWebSocketConnection(handleWebSocketMessage);
 
   // Duration timer
   useEffect(() => {
@@ -112,37 +101,79 @@ const InterviewRoom: FC = () => {
     console.log("Interview ended");
     alert("Interview ended. Thank you!");
   };
+
+  const handleQuestionSpoken = useCallback((speechText: string) => {
+    setAICoachMessage(speechText);
+  }, []);
+
+  const handleWebSocketMessage = useCallback(
+    (message: WebSocketMessage) => {
+      // Handle different types of messages from the server
+      if (message.type === "message") {
+        // Handle question from AI coach
+        handleQuestionSpoken(message.content);
+      }
+    },
+    [handleQuestionSpoken]
+  );
+
+  const socket = useWebSocketConnection(handleWebSocketMessage);
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
-  const handleInterviewStart = () => {
-    // Function to send message when connection is ready
+  // Use useCallback for handleInterviewStart to memoize it
+  const handleInterviewStart = useCallback(() => {
     const sendMessage = () => {
+      // Check if socket is truly ready, not just existing.
       if (socket && socket.readyState === WebSocket.OPEN) {
         const interviewData = {
           session_id: sessionId,
           user_name: users?.profile?.name,
           jobRole: jobRole,
           jobLevel: jobLevel,
-          questionType: interviewType
-        }
-        const initialUnifiedMessage = {
-          content: interviewData
+          questionType: interviewType,
         };
-    
+        const initialUnifiedMessage = {
+          content: interviewData,
+        };
         socket.send(JSON.stringify(initialUnifiedMessage));
+        console.log("WebSocket initial message sent:", interviewData);
       } else {
-        console.log("WebSocket not ready, retrying in 500ms...");
-        // Retry after a short delay if not connected
-        setTimeout(sendMessage, 500);
+        console.log(
+          "WebSocket not ready, retrying initial message in 500ms..."
+        );
+        setTimeout(sendMessage, 500); // Internal retry for initial message if socket not open
       }
     };
-    sendMessage();
-  };
+    sendMessage(); // Start the process
+  }, [
+    socket,
+    sessionId,
+    users?.profile?.name,
+    jobRole,
+    jobLevel,
+    interviewType,
+  ]); // Dependencies for handleInterviewStart
 
-  const handleQuestionSpoken = (speechText: string) => {
-    setAICoachMessage(speechText);
-  };
-
+  // Effect to trigger handleInterviewStart after 5 seconds,
+  // but only when the socket connection is established.
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      console.log(
+        "Socket is open, scheduling initial interview start in 5 seconds."
+      );
+      timer = setTimeout(() => {
+        handleInterviewStart();
+      }, 5000);
+    }
+    // cleanup
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+        console.log("Cleared initial interview start timer.");
+      }
+    };
+  }, [socket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
 
   // Show error state if there are device issues
   if (error && !streamReady) {
@@ -302,7 +333,8 @@ const InterviewRoom: FC = () => {
         <HeaderContent>
           <HeaderInfo>
             <h1>
-              {jobRole} - {interviewType.charAt(0).toUpperCase() + interviewType.slice(1)}
+              {jobRole} -{" "}
+              {interviewType.charAt(0).toUpperCase() + interviewType.slice(1)}
             </h1>
             <p>Interview in progress • Session: {sessionId}</p>
           </HeaderInfo>
@@ -328,7 +360,6 @@ const InterviewRoom: FC = () => {
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
                   onQuestionSpoken={handleQuestionSpoken}
-                  onInterviewStart={handleInterviewStart}
                 />
               </VideoDisplayContainer>
             </VideoWrapper>
