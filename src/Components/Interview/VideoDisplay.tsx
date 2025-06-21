@@ -24,12 +24,11 @@ interface VideoDisplayProps {
   isAICoach?: boolean;
   videoEnabled?: boolean;
   audioEnabled?: boolean;
+  AICoachMessage?: string;
   stream?: MediaStream | null;
   onToggleVideo?: () => void;
   onToggleAudio?: () => void;
-  onQuestionSpoken?: (question: string, questionIndex: number) => void;
-  onInterviewStart?: () => void;
-  onInterviewEnd?: () => void;
+  onQuestionSpoken?: (speechText: string) => void;
 }
 
 const VideoDisplay: FC<VideoDisplayProps> = ({
@@ -39,9 +38,8 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   videoEnabled = true,
   audioEnabled = true,
   stream,
+  AICoachMessage,
   onQuestionSpoken,
-  onInterviewStart,
-  onInterviewEnd,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -74,10 +72,8 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
       <VideoDisplayWrapper isUser={isUser}>
         <NameLabel>{name}</NameLabel>
         <AICoach 
-          isActive={true}
+          AICoachMessage={AICoachMessage}
           onQuestionSpoken={onQuestionSpoken}
-          onInterviewStart={onInterviewStart}
-          onInterviewEnd={onInterviewEnd}
         />
       </VideoDisplayWrapper>
     );
