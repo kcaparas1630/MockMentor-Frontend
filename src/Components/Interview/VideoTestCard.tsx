@@ -91,11 +91,11 @@ const VideoTestCard: FC = () => {
     { value: "hr-round", label: "HR Round" },
   ];
   const jobLevels = [
-    { value: "Entry-Level", label: "Entry-Level" },
-    { value: "Mid-Level", label: "Mid-Level" },
-    { value: "Senior-Level", label: "Senior-Level" },
-    { value: "Staff-Level", label: "Staff-Level" },
-    { value: "Principal-Level", label: "Principal-Level" },
+    { value: "entry", label: "Entry-Level" },
+    { value: "mid", label: "Mid-Level" },
+    { value: "senior", label: "Senior-Level" },
+    { value: "staff", label: "Staff-Level" },
+    { value: "principal", label: "Principal-Level" },
   ];
 
   // Combine errors from both hooks
@@ -204,8 +204,8 @@ const VideoTestCard: FC = () => {
       if (response.data?.sessionId) {
         router.navigate({
           to: `/interview-room/${response.data.sessionId}`,
-            params: { sessionId: response.data.sessionId },
-          });
+          search: { interviewType, jobLevel }
+        });
           }
       }, 1000); // 1 seconds delay 
     } catch (error) {
