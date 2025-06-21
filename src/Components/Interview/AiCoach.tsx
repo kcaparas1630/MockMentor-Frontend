@@ -25,7 +25,6 @@ const AICoach: React.FC<AICoachProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [hasStarted,] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -110,7 +109,10 @@ const AICoach: React.FC<AICoachProps> = ({
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
-
+      // Notify parent that speech has ended.
+      if (onQuestionSpokenRef.current && text) {
+        onQuestionSpokenRef.current(text);
+      }
     };
 
     utterance.onerror = (event) => {
@@ -186,8 +188,8 @@ const AICoach: React.FC<AICoachProps> = ({
             <Volume2 aria-hidden="true" />
             <VisuallyHidden>
               {isSpeaking
-                ? "AI Coach is speaking. Press to stop."
-                : "Click to start AI Coach"}
+                ? "AI Coach is speaking."
+                : "AI Coach is ready to help you practice."}
             </VisuallyHidden>
           </IconWrapper>
         </AICoachCircle>
@@ -205,26 +207,9 @@ const AICoach: React.FC<AICoachProps> = ({
       <AICoachInfo>
         <AICoachTitle id="coach-title">AI Interview Coach</AICoachTitle>
         <AICoachStatus id="coach-status">
-          {isSpeaking
-            ? "Speaking question..."
-            : hasStarted
-              ? "Ready for next question"
-              : "Ready to help you practice"}
+          {isSpeaking ? "Speaking question..." : "Ready to help you practice"}
         </AICoachStatus>
       </AICoachInfo>
-      {/* <button
-        onClick={handleStartInterview} // This will now be the ONLY way to call it
-        style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
-      >
-        Start Interview
-      </button>
-      {/* Hidden descriptions for screen readers */}
-      {/* <div id="next-button-desc" className="sr-only">
-        Move to the next interview question
-      </div>
-      <div id="finish-button-desc" className="sr-only">
-        Complete the interview practice session
-      </div> */}
     </AICoachContainer>
   );
 };
