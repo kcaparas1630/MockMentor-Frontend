@@ -1,9 +1,10 @@
-import { FC, useState, useEffect } from "react";
+import { FC, useState, useEffect, useCallback } from "react";
 import { Route } from "../../routes/interview-room/$sessionId";
 import { useMediaDevicesContext } from "../../Hooks/useMediaDevicesContext";
 import VideoDisplay from "./VideoDisplay";
 import ChatPanel from "./ChatPanel";
 import { MessageCircle, Video, Mic } from "lucide-react";
+import { useSearch } from "@tanstack/react-router";
 import {
   InterviewRoomContainer,
   Header,
@@ -43,25 +44,23 @@ import {
   EnableDevicesButton,
   ActiveDevicesIndicator,
 } from "./Styles/StyledInterviewRoom";
+import { GetUserQuery } from "../../Hooks/UserHooks";
+import useWebSocketConnection, { WebSocketMessage } from "../../Hooks/useWebSocketConnection";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
 
-interface InterviewRoomProps {
-  jobRole?: string;
-  interviewType?: string;
-  onEndInterview?: () => void;
-}
 
-const InterviewRoom: FC<InterviewRoomProps> = ({
-  jobRole = "Software Engineer",
-  interviewType = "Technical Interview",
-  onEndInterview,
-}) => {
+
+const InterviewRoom: FC = () => {
   const { sessionId } = Route.useParams();
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [duration, setDuration] = useState(0);
-
+  const { jobLevel, interviewType } = useSearch({ from: Route.id });
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  const [AICoachMessage, setAICoachMessage] = useState<string>('');
+  const [duration, setDuration] = useState<number>(0);
+  const { users } = GetUserQuery();
+  const jobRole = users?.profile?.jobRole;
+  
   const {
     videoEnabled = true,
     audioEnabled = true,
@@ -76,6 +75,16 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
     toggleAudio,
   } = useMediaDevicesContext();
 
+  const handleWebSocketMessage = useCallback((message: WebSocketMessage) => {
+    // Handle different types of messages from the server
+    if (message.type === 'message') {
+      // Handle question from AI coach
+      handleQuestionSpoken(message.content);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+  const socket = useWebSocketConnection(handleWebSocketMessage);
 
   // Duration timer
   useEffect(() => {
@@ -100,27 +109,40 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
 
   const handleEndInterview = () => {
     stopStream(); // Stop media stream
-    if (onEndInterview) {
-      onEndInterview();
-    } else {
-      // Default behavior - could navigate back or show confirmation
-      console.log("Interview ended");
-      alert("Interview ended. Thank you!");
-    }
+    console.log("Interview ended");
+    alert("Interview ended. Thank you!");
   };
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
   const handleInterviewStart = () => {
-    console.log("AI Interview practice started");
+    // Function to send message when connection is ready
+    const sendMessage = () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        const interviewData = {
+          session_id: sessionId,
+          user_name: users?.profile?.name,
+          jobRole: jobRole,
+          jobLevel: jobLevel,
+          questionType: interviewType
+        }
+        const initialUnifiedMessage = {
+          content: interviewData
+        };
+    
+        socket.send(JSON.stringify(initialUnifiedMessage));
+      } else {
+        console.log("WebSocket not ready, retrying in 500ms...");
+        // Retry after a short delay if not connected
+        setTimeout(sendMessage, 500);
+      }
+    };
+    sendMessage();
   };
 
-  const handleQuestionSpoken = (question: string, questionIndex: number) => {
-    console.log(`AI Coach asked question ${questionIndex + 1}: ${question}`);
+  const handleQuestionSpoken = (speechText: string) => {
+    setAICoachMessage(speechText);
   };
 
-  const handleInterviewEnd = () => {
-    console.log("AI Interview practice completed");
-  };
 
   // Show error state if there are device issues
   if (error && !streamReady) {
@@ -280,7 +302,7 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
         <HeaderContent>
           <HeaderInfo>
             <h1>
-              {interviewType} - {jobRole}
+              {jobRole} - {interviewType.charAt(0).toUpperCase() + interviewType.slice(1)}
             </h1>
             <p>Interview in progress • Session: {sessionId}</p>
           </HeaderInfo>
@@ -304,9 +326,9 @@ const InterviewRoom: FC<InterviewRoomProps> = ({
                 <VideoDisplay
                   name="AI Coach"
                   isAICoach={true}
+                  AICoachMessage={AICoachMessage}
                   onQuestionSpoken={handleQuestionSpoken}
                   onInterviewStart={handleInterviewStart}
-                  onInterviewEnd={handleInterviewEnd}
                 />
               </VideoDisplayContainer>
             </VideoWrapper>
