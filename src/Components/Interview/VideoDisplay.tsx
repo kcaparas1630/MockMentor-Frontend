@@ -29,8 +29,6 @@ interface VideoDisplayProps {
   onToggleVideo?: () => void;
   onToggleAudio?: () => void;
   onQuestionSpoken?: (speechText: string) => void;
-  onInterviewStart?: () => void;
-  onInterviewEnd?: () => void;
 }
 
 const VideoDisplay: FC<VideoDisplayProps> = ({
@@ -42,7 +40,6 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   stream,
   AICoachMessage,
   onQuestionSpoken,
-  onInterviewStart,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -77,7 +74,6 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
         <AICoach 
           AICoachMessage={AICoachMessage}
           onQuestionSpoken={onQuestionSpoken}
-          onInterviewStart={onInterviewStart}
         />
       </VideoDisplayWrapper>
     );

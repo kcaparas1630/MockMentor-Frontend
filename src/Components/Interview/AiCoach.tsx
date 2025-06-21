@@ -16,18 +16,16 @@ import {
 interface AICoachProps {
   AICoachMessage?: string;
   onQuestionSpoken?: (speechText: string) => void;
-  onInterviewStart?: () => void;
 }
 
 const AICoach: React.FC<AICoachProps> = ({
   AICoachMessage,
   onQuestionSpoken,
-  onInterviewStart,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [hasStarted,] = useState(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -38,18 +36,12 @@ const AICoach: React.FC<AICoachProps> = ({
   const onQuestionSpokenRef = useRef(onQuestionSpoken);
   onQuestionSpokenRef.current = onQuestionSpoken;
 
-  const onInterviewStartRef = useRef(onInterviewStart);
-  onInterviewStartRef.current = onInterviewStart;
-
   useEffect(() => {
     if (AICoachMessage) {
       AICoachSpeak(AICoachMessage);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [AICoachMessage]);
-
- 
-
   /**
    * Initialize the audio context for the AI coach.
    * @returns void
@@ -149,22 +141,6 @@ const AICoach: React.FC<AICoachProps> = ({
     animate();
   };
 
-  /**
-   * Handle the start of the interview.
-   * @returns void
-   */
-  const handleStartInterview = async (): Promise<void> => {
-    setHasStarted(true);
-    if (onInterviewStartRef.current) {
-      onInterviewStartRef.current();
-    }    
-  };
-
-  // // Effect to handle when parent tells us to start speaking
-  // useEffect(() => {
-  //   handleStartInterview();
-  // }, []);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -236,19 +212,19 @@ const AICoach: React.FC<AICoachProps> = ({
               : "Ready to help you practice"}
         </AICoachStatus>
       </AICoachInfo>
-      <button
+      {/* <button
         onClick={handleStartInterview} // This will now be the ONLY way to call it
         style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
       >
         Start Interview
       </button>
       {/* Hidden descriptions for screen readers */}
-      <div id="next-button-desc" className="sr-only">
+      {/* <div id="next-button-desc" className="sr-only">
         Move to the next interview question
       </div>
       <div id="finish-button-desc" className="sr-only">
         Complete the interview practice session
-      </div>
+      </div> */}
     </AICoachContainer>
   );
 };
