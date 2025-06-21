@@ -5,7 +5,7 @@ export interface WebSocketMessage {
   content: string;
 }
 
-const useWebSocketConnection = (
+const useMainWebSocketConnection = (
   onMessage?: (message: WebSocketMessage) => void
 ) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -58,4 +58,4 @@ const useWebSocketConnection = (
   return socket;
 };
 
-export default useWebSocketConnection;
+export default useMainWebSocketConnection;

@@ -45,9 +45,9 @@ import {
   ActiveDevicesIndicator,
 } from "./Styles/StyledInterviewRoom";
 import { GetUserQuery } from "../../Hooks/UserHooks";
-import useWebSocketConnection, {
+import useMainWebSocketConnection, {
   WebSocketMessage,
-} from "../../Hooks/useWebSocketConnection";
+} from "../../Hooks/useMainWebSocketConnection.ts";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -117,7 +117,7 @@ const InterviewRoom: FC = () => {
     [handleQuestionSpoken]
   );
 
-  const socket = useWebSocketConnection(handleWebSocketMessage);
+  const socket = useMainWebSocketConnection(handleWebSocketMessage);
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
   // Use useCallback for handleInterviewStart to memoize it
