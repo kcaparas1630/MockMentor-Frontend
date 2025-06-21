@@ -122,7 +122,12 @@ const InterviewRoom: FC = () => {
   // AI Coach handlers
   // Use useCallback for handleInterviewStart to memoize it
   const handleInterviewStart = useCallback(() => {
+    let isSent = false;
     const sendMessage = () => {
+      // if message is already sent, return
+      if (isSent) return;
+      // check if there is user. if not, return
+      if (!users?.profile?.name) return;
       // Check if socket is truly ready, not just existing.
       if (socket && socket.readyState === WebSocket.OPEN) {
         const interviewData = {
@@ -135,8 +140,12 @@ const InterviewRoom: FC = () => {
         const initialUnifiedMessage = {
           content: interviewData,
         };
-        socket.send(JSON.stringify(initialUnifiedMessage));
-        console.log("WebSocket initial message sent:", interviewData);
+        try {
+          socket.send(JSON.stringify(initialUnifiedMessage));
+          isSent = true;
+        } catch (error) {
+          console.error("Error sending WebSocket message:", error);
+        }
       } else {
         console.log(
           "WebSocket not ready, retrying initial message in 500ms..."
@@ -334,7 +343,10 @@ const InterviewRoom: FC = () => {
           <HeaderInfo>
             <h1>
               {jobRole} -{" "}
-              {interviewType.charAt(0).toUpperCase() + interviewType.slice(1)}
+              {interviewType
+                .split("-")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")}
             </h1>
             <p>Interview in progress • Session: {sessionId}</p>
           </HeaderInfo>
