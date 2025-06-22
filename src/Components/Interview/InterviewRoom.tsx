@@ -48,6 +48,7 @@ import { GetUserQuery } from "../../Hooks/UserHooks";
 import useWebSocketConnection, {
   WebSocketMessage,
 } from "../../Hooks/useWebSocketConnection";
+import recordStream from "../../Hooks/useMediaRecorder";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -111,13 +112,14 @@ const InterviewRoom: FC = () => {
       // Handle different types of messages from the server
       if (message.type === "message") {
         // Handle question from AI coach
-        handleQuestionSpoken(message.content);
+        handleQuestionSpoken(JSON.stringify(message.content));
       }
     },
     [handleQuestionSpoken]
   );
 
-  const socket = useWebSocketConnection(handleWebSocketMessage);
+  const mainSocket = useWebSocketConnection("ws", handleWebSocketMessage);
+  const transcriptionSocket = useWebSocketConnection("ws/transcription", handleWebSocketMessage);
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
   // Use useCallback for handleInterviewStart to memoize it
@@ -129,7 +131,7 @@ const InterviewRoom: FC = () => {
       // check if there is user. if not, return
       if (!users?.profile?.name) return;
       // Check if socket is truly ready, not just existing.
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
         const interviewData = {
           session_id: sessionId,
           user_name: users?.profile?.name,
@@ -141,7 +143,7 @@ const InterviewRoom: FC = () => {
           content: interviewData,
         };
         try {
-          socket.send(JSON.stringify(initialUnifiedMessage));
+          mainSocket.send(JSON.stringify(initialUnifiedMessage));
           isSent = true;
         } catch (error) {
           console.error("Error sending WebSocket message:", error);
@@ -155,7 +157,7 @@ const InterviewRoom: FC = () => {
     };
     sendMessage(); // Start the process
   }, [
-    socket,
+    mainSocket,
     sessionId,
     users?.profile?.name,
     jobRole,
@@ -163,16 +165,60 @@ const InterviewRoom: FC = () => {
     interviewType,
   ]); // Dependencies for handleInterviewStart
 
+  const handleTranscriptionMessage = useCallback(async () => {
+    let isSent = false;
+    // if message is already sent, return
+    if (isSent) return; 
+    // Check if transaction is ready , not just ready.
+    if (transcriptionSocket && transcriptionSocket.readyState === WebSocket.OPEN) {
+      isSent = true;
+      console.log("Starting audio recording");
+      if (streamRef.current) {
+        const blob = await recordStream(streamRef.current);
+        console.log("blob content", blob);
+        
+        // Convert blob to base64
+        const reader = new FileReader();
+        reader.onload = () => {
+          const base64Data = reader.result as string;
+          // Remove the data URL prefix (e.g., "data:audio/ogg;base64,")
+          const base64Audio = base64Data.split(',')[1];
+          
+          // Send the audio data in the correct format
+          const audioMessage = {
+            type: "audio",
+            data: base64Audio
+          };
+          
+          try {
+            transcriptionSocket.send(JSON.stringify(audioMessage));
+            console.log("Audio data sent to transcription service");
+          } catch (error) {
+            console.error("Error sending audio data:", error);
+          }
+        };
+        
+        reader.onerror = () => {
+          console.error("Error reading blob data");
+        };
+        
+        reader.readAsDataURL(blob);
+      }
+    }
+  }, [transcriptionSocket, streamRef]);
+
+
   // Effect to trigger handleInterviewStart after 5 seconds,
   // but only when the socket connection is established.
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (socket && socket.readyState === WebSocket.OPEN) {
+    if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
       console.log(
         "Socket is open, scheduling initial interview start in 5 seconds."
       );
       timer = setTimeout(() => {
         handleInterviewStart();
+        setHasStartedInterview(true);
       }, 5000);
     }
     // cleanup
@@ -182,7 +228,9 @@ const InterviewRoom: FC = () => {
         console.log("Cleared initial interview start timer.");
       }
     };
-  }, [socket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
+  }, [mainSocket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
+
+  
 
   // Show error state if there are device issues
   if (error && !streamReady) {
@@ -371,7 +419,7 @@ const InterviewRoom: FC = () => {
                   name="AI Coach"
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
-                  onQuestionSpoken={handleQuestionSpoken}
+                  onQuestionSpoken={handleQuestionSpoken} 
                 />
               </VideoDisplayContainer>
             </VideoWrapper>
