@@ -16,11 +16,13 @@ import {
 interface AICoachProps {
   AICoachMessage?: string;
   onQuestionSpoken?: (speechText: string) => void;
+  onTranscriptionEnd?: () => void;
 }
 
 const AICoach: React.FC<AICoachProps> = ({
   AICoachMessage,
   onQuestionSpoken,
+  onTranscriptionEnd
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -34,6 +36,9 @@ const AICoach: React.FC<AICoachProps> = ({
   // Store the latest callback refs to avoid stale closures
   const onQuestionSpokenRef = useRef(onQuestionSpoken);
   onQuestionSpokenRef.current = onQuestionSpoken;
+
+  const onTranscriptionEndRef = useRef(onTranscriptionEnd);
+  onTranscriptionEndRef.current = onTranscriptionEnd;
 
   useEffect(() => {
     if (AICoachMessage) {
@@ -112,6 +117,10 @@ const AICoach: React.FC<AICoachProps> = ({
       // Notify parent that speech has ended.
       if (onQuestionSpokenRef.current && text) {
         onQuestionSpokenRef.current(text);
+      }
+      // Notify parent when transcription starts
+      if (onTranscriptionEndRef.current) {
+        onTranscriptionEndRef.current();
       }
     };
 
