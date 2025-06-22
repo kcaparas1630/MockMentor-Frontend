@@ -76,16 +76,6 @@ const InterviewRoom: FC = () => {
     toggleAudio,
   } = useMediaDevicesContext();
 
-  // Duration timer
-  useEffect(() => {
-    if (!streamReady) return;
-    const interval = setInterval(() => {
-      setDuration((prev) => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [streamReady]);
-
   // Format duration
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -103,6 +93,9 @@ const InterviewRoom: FC = () => {
     alert("Interview ended. Thank you!");
   };
 
+  // --------- Callbacks to handle parent and child communication --------- //
+  // TODO: SEPARATE CONCERNS INTO DIFFERENT FILES
+  // Use useCallback to memoize the function to prevent unnecessary re-renders
   const handleQuestionSpoken = useCallback((speechText: string) => {
     setAICoachMessage(speechText);
   }, []);
@@ -117,9 +110,11 @@ const InterviewRoom: FC = () => {
     },
     [handleQuestionSpoken]
   );
-
   const mainSocket = useWebSocketConnection("ws", handleWebSocketMessage);
-  const transcriptionSocket = useWebSocketConnection("ws/transcription", handleWebSocketMessage);
+  const transcriptionSocket = useWebSocketConnection(
+    "ws/transcription",
+    handleWebSocketMessage
+  );
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
   // Use useCallback for handleInterviewStart to memoize it
@@ -166,30 +161,28 @@ const InterviewRoom: FC = () => {
   ]); // Dependencies for handleInterviewStart
 
   const handleTranscriptionMessage = useCallback(async () => {
-    let isSent = false;
-    // if message is already sent, return
-    if (isSent) return; 
     // Check if transaction is ready , not just ready.
-    if (transcriptionSocket && transcriptionSocket.readyState === WebSocket.OPEN) {
-      isSent = true;
+    if (
+      transcriptionSocket &&
+      transcriptionSocket.readyState === WebSocket.OPEN
+    ) {
       console.log("Starting audio recording");
       if (streamRef.current) {
+        // Record the current stream`
         const blob = await recordStream(streamRef.current);
-        console.log("blob content", blob);
-        
         // Convert blob to base64
         const reader = new FileReader();
         reader.onload = () => {
           const base64Data = reader.result as string;
           // Remove the data URL prefix (e.g., "data:audio/ogg;base64,")
-          const base64Audio = base64Data.split(',')[1];
-          
+          const base64Audio = base64Data.split(",")[1];
+
           // Send the audio data in the correct format
           const audioMessage = {
             type: "audio",
-            data: base64Audio
+            data: base64Audio,
           };
-          
+
           try {
             transcriptionSocket.send(JSON.stringify(audioMessage));
             console.log("Audio data sent to transcription service");
@@ -197,16 +190,34 @@ const InterviewRoom: FC = () => {
             console.error("Error sending audio data:", error);
           }
         };
-        
+
         reader.onerror = () => {
           console.error("Error reading blob data");
         };
-        
+
         reader.readAsDataURL(blob);
       }
     }
   }, [transcriptionSocket, streamRef]);
 
+  const handleAISpeechEnd = useCallback(() => {
+    console.log("AI speech ended");
+    handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
+  }, [handleTranscriptionMessage]);
+
+  // ----------------- End of Callbacks ----------------- //
+
+  // -------------------- USE EFFECTS --------------------
+
+  // Duration timer
+  useEffect(() => {
+    if (!streamReady) return;
+    const interval = setInterval(() => {
+      setDuration((prev) => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [streamReady]);
 
   // Effect to trigger handleInterviewStart after 5 seconds,
   // but only when the socket connection is established.
@@ -218,7 +229,6 @@ const InterviewRoom: FC = () => {
       );
       timer = setTimeout(() => {
         handleInterviewStart();
-        setHasStartedInterview(true);
       }, 5000);
     }
     // cleanup
@@ -230,8 +240,9 @@ const InterviewRoom: FC = () => {
     };
   }, [mainSocket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
 
-  
+  // ------------------------------------------------- //
 
+  // TODO: Separate different concerns into different files.
   // Show error state if there are device issues
   if (error && !streamReady) {
     return (
@@ -382,7 +393,7 @@ const InterviewRoom: FC = () => {
       </InterviewRoomContainer>
     );
   }
-
+  // ------------- End of separation of concerns ------------- //
   return (
     <InterviewRoomContainer>
       {/* Header */}
@@ -419,7 +430,8 @@ const InterviewRoom: FC = () => {
                   name="AI Coach"
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
-                  onQuestionSpoken={handleQuestionSpoken} 
+                  onQuestionSpoken={handleQuestionSpoken}
+                  onTranscriptionEnd={handleAISpeechEnd}
                 />
               </VideoDisplayContainer>
             </VideoWrapper>
