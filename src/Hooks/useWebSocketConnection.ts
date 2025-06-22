@@ -1,43 +1,37 @@
 import { useState, useEffect, useRef } from "react";
 
 export interface WebSocketMessage {
-  type: "message" | "error";
-  content: string;
+  type: "message" | "error" | "transcription" | "audio" | "transcript";
+  content: string | object;
+  audioData?: string;
+  audioFormat?: string;
 }
 
 const useWebSocketConnection = (
+  socketUrl: string,
   onMessage?: (message: WebSocketMessage) => void
 ) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const onMessageRef = useRef(onMessage);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/api/ws");
+    const ws = new WebSocket(`ws://localhost:8000/api/${socketUrl}`);
 
     ws.onopen = () => {
-      console.log("WebSocket Connected");
+      console.log(`WebSocket Connected to ${socketUrl}`);
       setSocket(ws);
     };
 
     ws.onclose = () => {
-      console.log("WebSocket Disconnected");
+      console.log(`WebSocket Disconnected from ${socketUrl}`);
       setSocket(null);
     };
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        // Validate message structure
-        if (
-          typeof data !== "object" ||
-          !data.type ||
-          !["message", "error"].includes(data.type) ||
-          typeof data.content !== "string"
-        ) {
-          throw new Error("Invalid data structure");
-        }
         const message = data as WebSocketMessage;
-        console.log("Received WebSocket message:", message);
+        console.log(`Received WebSocket message from ${socketUrl}:`, message);
         onMessageRef?.current?.(message);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -45,7 +39,7 @@ const useWebSocketConnection = (
     };
 
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
+      console.error(`WebSocket error for ${socketUrl}:`, error);
     };
 
     return () => {
@@ -53,7 +47,7 @@ const useWebSocketConnection = (
         ws.close();
       }
     };
-  }, []);
+  }, [socketUrl]);
 
   return socket;
 };
