@@ -1,4 +1,4 @@
-import { FC, useState, useEffect, useCallback } from "react";
+import { FC, useState, useEffect, useRef, useCallback } from "react";
 import { Route } from "../../routes/interview-room/$sessionId";
 import { useMediaDevicesContext } from "../../Hooks/useMediaDevicesContext";
 import VideoDisplay from "./VideoDisplay";
@@ -54,12 +54,18 @@ import recordStream from "../../Hooks/useMediaRecorder";
 const MessageCircleIcon = () => <MessageCircle size={20} />;
 
 const InterviewRoom: FC = () => {
+  // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
+  // Get job level and interview type from search params. Check routes.
   const { jobLevel, interviewType } = useSearch({ from: Route.id });
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
+  // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
   const [duration, setDuration] = useState<number>(0);
   const { users } = GetUserQuery();
+  // Use a ref to store the main socket instance
+  // This allows us to access the latest socket instance in callbacks without stale closures
+  const mainSocketRef = useRef<WebSocket | null>(null);
   const jobRole = users?.profile?.jobRole;
 
   const {
@@ -96,11 +102,12 @@ const InterviewRoom: FC = () => {
   // --------- Callbacks to handle parent and child communication --------- //
   // TODO: SEPARATE CONCERNS INTO DIFFERENT FILES
   // Use useCallback to memoize the function to prevent unnecessary re-renders
+
   const handleQuestionSpoken = useCallback((speechText: string) => {
     setAICoachMessage(speechText);
   }, []);
 
-  const handleWebSocketMessage = useCallback(
+  const handleAIWebSocket = useCallback(
     (message: WebSocketMessage) => {
       // Handle different types of messages from the server
       if (message.type === "message") {
@@ -110,11 +117,35 @@ const InterviewRoom: FC = () => {
     },
     [handleQuestionSpoken]
   );
-  const mainSocket = useWebSocketConnection("ws", handleWebSocketMessage);
+  const handleTranscriptionSocket = useCallback(
+    (message: WebSocketMessage) => {
+      // Handle transcription messages
+      if (message.type === "transcript") {
+        // Use mainSocketRef.current to access the latest mainSocket instance
+        if (
+          mainSocketRef.current &&
+          mainSocketRef.current.readyState === WebSocket.OPEN
+        ) {
+          try {
+            mainSocketRef.current.send(
+              JSON.stringify({ content: message.content })
+            );
+          } catch (error) {
+            // TODO: Handle error sending transcription. Remove consoles in production.
+            console.error("Error sending transcription to AI service:", error);
+          }
+        }
+      }
+    },
+    [mainSocketRef] // Dependency to ensure latest mainSocket is used
+  );
+  
+  const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
   const transcriptionSocket = useWebSocketConnection(
     "ws/transcription",
-    handleWebSocketMessage
+    handleTranscriptionSocket
   );
+
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
   // Use useCallback for handleInterviewStart to memoize it
@@ -240,6 +271,10 @@ const InterviewRoom: FC = () => {
     };
   }, [mainSocket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
 
+  // Effect to update ref for mainSocket changes
+  useEffect(() => {
+    mainSocketRef.current = mainSocket;
+  }, [mainSocket]);
   // ------------------------------------------------- //
 
   // TODO: Separate different concerns into different files.
