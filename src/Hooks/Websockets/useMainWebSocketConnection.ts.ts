@@ -5,14 +5,15 @@ export interface WebSocketMessage {
   content: string;
 }
 
-const useMainWebSocketConnection = (
+const useWebSocketConnection = (
+  socketUrl: string,
   onMessage?: (message: WebSocketMessage) => void
 ) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const onMessageRef = useRef(onMessage);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/api/ws");
+    const ws = new WebSocket(`ws://localhost:8000/api/${socketUrl}`);
 
     ws.onopen = () => {
       console.log("WebSocket Connected");
@@ -58,4 +59,4 @@ const useMainWebSocketConnection = (
   return socket;
 };
 
-export default useMainWebSocketConnection;
+export default useWebSocketConnection;
