@@ -45,9 +45,9 @@ import {
   ActiveDevicesIndicator,
 } from "./Styles/StyledInterviewRoom";
 import { GetUserQuery } from "../../Hooks/UserHooks";
-import useMainWebSocketConnection, {
+import useWebSocketConnection, {
   WebSocketMessage,
-} from "../../Hooks/useMainWebSocketConnection.ts";
+} from "../../Hooks/Websockets/useMainWebSocketConnection.ts.ts";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -116,8 +116,13 @@ const InterviewRoom: FC = () => {
     },
     [handleQuestionSpoken]
   );
-
-  const socket = useMainWebSocketConnection(handleWebSocketMessage);
+  // Main WebSocket Connection
+  const mainSocket = useWebSocketConnection("ws", handleWebSocketMessage);
+  // Transcription WebSocket Connection
+  const transcriptionSocket = useWebSocketConnection(
+    "ws/transcription",
+    handleWebSocketMessage
+  );
   // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
   // AI Coach handlers
   // Use useCallback for handleInterviewStart to memoize it
@@ -129,7 +134,7 @@ const InterviewRoom: FC = () => {
       // check if there is user. if not, return
       if (!users?.profile?.name) return;
       // Check if socket is truly ready, not just existing.
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
         const interviewData = {
           session_id: sessionId,
           user_name: users?.profile?.name,
@@ -141,7 +146,7 @@ const InterviewRoom: FC = () => {
           content: interviewData,
         };
         try {
-          socket.send(JSON.stringify(initialUnifiedMessage));
+          mainSocket.send(JSON.stringify(initialUnifiedMessage));
           isSent = true;
         } catch (error) {
           console.error("Error sending WebSocket message:", error);
@@ -155,19 +160,30 @@ const InterviewRoom: FC = () => {
     };
     sendMessage(); // Start the process
   }, [
-    socket,
+    mainSocket,
     sessionId,
     users?.profile?.name,
     jobRole,
     jobLevel,
     interviewType,
-  ]); // Dependencies for handleInterviewStart
+  ]); // Dependencies for handleInterviewStart\
+
+  const handleTranscriptionMessage = useCallback(() => {
+    let isSent = false;
+    // if message is already sent, return
+    if (isSent) return; 
+    // Check if transaction is ready , not just ready.
+    if (transcriptionSocket && transcriptionSocket.readyState === WebSocket.OPEN) {
+      isSent = true;
+      //TODO: finish the implementation. Use MediaRecorder to pass in the file to ai server.
+    }
+  }, [transcriptionSocket]);
 
   // Effect to trigger handleInterviewStart after 5 seconds,
   // but only when the socket connection is established.
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (socket && socket.readyState === WebSocket.OPEN) {
+    if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
       console.log(
         "Socket is open, scheduling initial interview start in 5 seconds."
       );
@@ -182,7 +198,7 @@ const InterviewRoom: FC = () => {
         console.log("Cleared initial interview start timer.");
       }
     };
-  }, [socket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
+  }, [mainSocket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
 
   // Show error state if there are device issues
   if (error && !streamReady) {
