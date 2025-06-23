@@ -109,6 +109,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       if (audioContextRef.current.state === "suspended") {
         await audioContextRef.current.resume();
       }
+      // TODO: setup sapphi-red noise suppression.
       // setup audio analysis
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
