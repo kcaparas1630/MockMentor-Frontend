@@ -49,6 +49,7 @@ import useWebSocketConnection, {
   WebSocketMessage,
 } from "../../Hooks/useWebSocketConnection";
 import recordStream from "../../Hooks/useMediaRecorder";
+import { useDetectAudio } from "../../Hooks/useDetectAudio";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -63,6 +64,7 @@ const InterviewRoom: FC = () => {
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
   const [duration, setDuration] = useState<number>(0);
   const { users } = GetUserQuery();
+  const { startDetectingAudio } = useDetectAudio();
   // Use a ref to store the main socket instance
   // This allows us to access the latest socket instance in callbacks without stale closures
   const mainSocketRef = useRef<WebSocket | null>(null);
@@ -139,7 +141,7 @@ const InterviewRoom: FC = () => {
     },
     [mainSocketRef] // Dependency to ensure latest mainSocket is used
   );
-  
+
   const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
   const transcriptionSocket = useWebSocketConnection(
     "ws/transcription",
@@ -275,6 +277,13 @@ const InterviewRoom: FC = () => {
   useEffect(() => {
     mainSocketRef.current = mainSocket;
   }, [mainSocket]);
+
+  useEffect(() => {
+    // Start audio detection when stream is ready
+    if (streamReady && streamRef.current) {
+      startDetectingAudio(streamRef.current);
+    }
+  }, [streamReady, streamRef, startDetectingAudio]);
   // ------------------------------------------------- //
 
   // TODO: Separate different concerns into different files.
