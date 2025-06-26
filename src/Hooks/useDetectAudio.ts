@@ -15,7 +15,7 @@ import rnnoiseWasmPath from '@sapphi-red/web-noise-suppressor/rnnoise.wasm?url';
 import rnnoiseWasmSimdPath from '@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url';
 
 interface UseDetectAudioReturn {
-  startDetectingAudio: (stream: MediaStream) => Promise<void>;
+  startDetectingAudio: (stream: MediaStream, onSpeakingChange?: (isSpeaking: boolean) => void) => Promise<void>;
   stopDetectingAudio: () => void;
 }
 
@@ -30,6 +30,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     isSpeaking: false,
     silenceStartTime: 0,
   });
+  const speakingChangeCallbackRef = useRef<((isSpeaking: boolean) => void) | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const rrnoiseRef = useRef<RnnoiseWorkletNode | null>(null);
   const noiseGateRef = useRef<NoiseGateWorkletNode | null>(null);
@@ -40,7 +41,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   // CONSTANTS
   const VAD_THRESHOLD: number = 15; // Threshold for minimum amplitude before it's considered voice
   const ANALYSIS_INTERVAL_MS: number = 50;
-  const SILENCE_INTERVAL_MS: number = 500; // 500 milliseconds of silence before considering user stopped speaking
+  const SILENCE_INTERVAL_MS: number = 1000; // 1 second of silence before considering user stopped speaking
 
   const analyzeAudio = useCallback(() => {
     // check if not null
@@ -86,6 +87,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       if (!stateRef.current.isSpeaking) {
         console.log("Voice detected");
         stateRef.current.isSpeaking = true;
+        speakingChangeCallbackRef.current?.(true);
         stateRef.current.silenceStartTime = 0; // Reset silence timer
       }
       stateRef.current.silenceStartTime = currentTime; // Update silence timer
@@ -102,13 +104,15 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
         // If silence exceeds threshold, consider user stopped speaking
         console.log("User has stopped speaking for a while.");
         stateRef.current.isSpeaking = false; // Reset speaking state
+        speakingChangeCallbackRef.current?.(false);
         stateRef.current.silenceStartTime = 0; // Reset silence timer
       }
     }
     // Continue analyzing audio
     animationFrameRef.current = requestAnimationFrame(analyzeAudio);
   }, []);
-  const startDetectingAudio = async (stream: MediaStream) => {
+  const startDetectingAudio = async (stream: MediaStream, onSpeakingChange?: (isSpeaking: boolean) => void) => {
+    speakingChangeCallbackRef.current = onSpeakingChange || null;
     const audioTracks = stream.getAudioTracks();
 
     if (!audioTracks || audioTracks.length === 0) {
@@ -203,7 +207,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       isSpeaking: false,
       silenceStartTime: 0,
     };
-    
+    speakingChangeCallbackRef.current = null;
     console.log("Audio detection stopped and resources cleaned up.");
   };
 
