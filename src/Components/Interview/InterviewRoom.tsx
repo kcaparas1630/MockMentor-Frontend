@@ -243,11 +243,10 @@ const InterviewRoom: FC = () => {
         recorder?.stop();
         isRecording = false;
         // Stop VAD when user stops talking
-        if (typeof stopDetectingAudio === 'function') {
-          stopDetectingAudio();
-        }
+        stopDetectingAudio();
       }
     });
+
   }, [transcriptionSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
 
   const handleAISpeechEnd = useCallback(() => {

@@ -1,7 +1,8 @@
-//**
-//* Detects if there is audio in the given MediaStream.
-//* @param stream - MediaStream to analyze
-//* @returns boolean indicating if audio is detected
+/**
+ * Custom hook for voice activity detection on audio streams.
+* Uses noise suppression and amplitude analysis to detect speech.
+* @returns {UseDetectAudioReturn} Object with startDetectingAudio and stopDetectingAudio methods
+*/
 
 import { useCallback, useRef } from "react";
 import {
@@ -62,7 +63,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     if (timeDataArray) {
       analyserRef.current.getByteTimeDomainData(timeDataArray);
       // Optimized amplitude calculation
-      const length = timeDataArray.length;
+      const length = timeDataArray.length || 0;
 
       // Unrolled loop for better performance (process 4 samples at once)
       let i = 0;
@@ -141,13 +142,14 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
         wasmBinary: rrnoiseWasmBinary,
         maxChannels: 1,
       });
+      rrnoiseRef.current = rrnoise;
       const noiseGate = new NoiseGateWorkletNode(ctx, {
         openThreshold: -50,
         closeThreshold: -60,
         holdMs: 90,
         maxChannels: 1,
       });
-
+      noiseGateRef.current = noiseGate;
       // create analyser
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 1024;

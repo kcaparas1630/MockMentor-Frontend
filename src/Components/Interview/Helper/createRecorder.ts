@@ -46,8 +46,8 @@ export const createRecorder = (stream: MediaStream, onStop: (blob: Blob) => void
   };
 
   return {
-    start: () => recorder && recorder.start(),
+    start: () => recorder.start(),
     stop: () => recorder && recorder.state === "recording" && recorder.stop(),
-    get state() { return recorder?.state; }
+    get state() { return recorder?.state ?? "inactive" as RecordingState; }
   };
 };
