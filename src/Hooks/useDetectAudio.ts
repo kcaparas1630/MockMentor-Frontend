@@ -4,6 +4,15 @@
 //* @returns boolean indicating if audio is detected
 
 import { useCallback, useRef } from "react";
+import {
+  loadRnnoise,
+  RnnoiseWorkletNode,
+  NoiseGateWorkletNode
+} from '@sapphi-red/web-noise-suppressor';
+import noiseGateWorkletPath from '@sapphi-red/web-noise-suppressor/noiseGateWorklet.js?url';
+import rnnoiseWorkletPath from '@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url';
+import rnnoiseWasmPath from '@sapphi-red/web-noise-suppressor/rnnoise.wasm?url';
+import rnnoiseWasmSimdPath from '@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url';
 
 interface UseDetectAudioReturn {
   startDetectingAudio: (stream: MediaStream) => Promise<void>;
@@ -22,6 +31,9 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     silenceStartTime: 0,
   });
   const animationFrameRef = useRef<number | null>(null);
+  const rrnoiseRef = useRef<RnnoiseWorkletNode | null>(null);
+  const noiseGateRef = useRef<NoiseGateWorkletNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   // Pre-allocate arrays to avoid GC pressure
   const timeDataArrayRef = useRef<Uint8Array | null>(null);
   const lastAnalysisTimeRef = useRef<number>(0);
@@ -110,16 +122,38 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
         await audioContextRef.current.resume();
       }
       // TODO: setup sapphi-red noise suppression.
-      // setup audio analysis
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
+      // load wasm binaries and worklets
+      const [rrnoiseWasmBinary] = await Promise.all([
+        loadRnnoise({ url: rnnoiseWasmPath, simdUrl: rnnoiseWasmSimdPath }),
+        audioContextRef.current.audioWorklet.addModule(noiseGateWorkletPath),
+        audioContextRef.current.audioWorklet.addModule(rnnoiseWorkletPath),
+      ])
+      // create nodes
+      const ctx = audioContextRef.current;
+      sourceRef.current = ctx.createMediaStreamSource(stream);
+      
+      // Suppresion types
+      const rrnoise = new RnnoiseWorkletNode(ctx, {
+        wasmBinary: rrnoiseWasmBinary,
+        maxChannels: 1,
+      });
+      const noiseGate = new NoiseGateWorkletNode(ctx, {
+        openThreshold: -50,
+        closeThreshold: -60,
+        holdMs: 90,
+        maxChannels: 1,
+      });
 
+      // create analyser
+      analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 1024;
       analyserRef.current.smoothingTimeConstant = 0.8;
       analyserRef.current.minDecibels = -100;
       analyserRef.current.maxDecibels = -10;
 
-      source.connect(analyserRef.current);
+      sourceRef.current.connect(rrnoise);
+      rrnoise.connect(noiseGate);
+      noiseGate.connect(analyserRef.current);
 
       // Pre-allocate the data array once
       timeDataArrayRef.current = new Uint8Array(
@@ -151,13 +185,25 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
-
+    if (sourceRef.current) {
+      sourceRef.current.disconnect();
+      sourceRef.current = null;
+    }
+    if (rrnoiseRef.current) {
+      rrnoiseRef.current.disconnect();
+      rrnoiseRef.current = null;
+    }
+    if (noiseGateRef.current) {
+      noiseGateRef.current.disconnect();
+      noiseGateRef.current = null;
+    }
     analyserRef.current = null;
     timeDataArrayRef.current = null;
     stateRef.current = {
       isSpeaking: false,
       silenceStartTime: 0,
     };
+    
     console.log("Audio detection stopped and resources cleaned up.");
   };
 
