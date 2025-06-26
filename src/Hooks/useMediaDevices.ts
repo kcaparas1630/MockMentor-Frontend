@@ -128,7 +128,13 @@ export const useMediaDevices = (): UseMediaDevicesReturn => {
     try {
       const constraints: MediaStreamConstraints = {
         video: deviceSupport.hasCamera && videoState,
-        audio: deviceSupport.hasMicrophone && audioState,
+        audio: deviceSupport.hasMicrophone && audioState
+        ? {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: false,
+        }
+        : false
       };
 
       if (!constraints.video && !constraints.audio) {
