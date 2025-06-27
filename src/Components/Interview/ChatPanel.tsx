@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Chat panel component for real-time messaging during interviews, with accessibility and UX enhancements.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file implements the chat panel interface for interview sessions, providing real-time messaging between users and AI or human interviewers. It features accessible markup, keyboard navigation, and message formatting. The component manages message state, input handling, and integrates with the interview room for seamless communication.
+ *
+ * Plays a crucial role in enabling interactive, accessible, and user-friendly chat experiences during interviews.
+ *
+ * @see {@link src/Components/InterviewRoom/InterviewRoom.tsx}
+ * @see {@link src/Components/Interview/Styles/StyledChatPanel.ts}
+ *
+ * Dependencies:
+ * - React (useState)
+ * - Lucide React Icons (X, Send)
+ * - Styled Components
+ */
 import { FC, useState } from "react";
 import { X, Send } from "lucide-react";
 import {
@@ -27,11 +44,45 @@ interface ChatMessage {
   isUser: boolean;
 }
 
+/**
+ * Props interface for the ChatPanel component.
+ *
+ * @interface
+ * @property {boolean} isOpen - Whether the chat panel is open and visible.
+ * @property {function} onClose - Callback to close the chat panel.
+ */
 interface ChatPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+/**
+ * Chat panel component for real-time messaging during interviews.
+ *
+ * @component
+ * @param {ChatPanelProps} props - Component props for chat panel configuration.
+ * @returns {JSX.Element} The rendered chat panel interface with message log and input.
+ * @example
+ * // Usage in InterviewRoom:
+ * <ChatPanel isOpen={isChatOpen} onClose={handleCloseChat} />
+ *
+ * @throws {Error} No errors thrown - this is a pure UI component.
+ * @remarks
+ * Side Effects:
+ * - Manages message state and input field
+ * - Handles keyboard events for sending messages
+ * - Provides accessible markup for screen readers
+ *
+ * Known Issues/Limitations:
+ * - No backend integration for real messages (placeholder only)
+ * - No support for file/image attachments
+ * - No message read receipts or typing indicators
+ *
+ * Design Decisions/Rationale:
+ * - Uses local state for message management (to be replaced with backend integration)
+ * - Provides ARIA roles and labels for accessibility
+ * - Keyboard navigation and Enter-to-send for usability
+ */
 const ChatPanel: FC<ChatPanelProps> = ({ isOpen, onClose }) => {
   // TODO: Add messages from backend. This is just a placeholder.
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -66,6 +117,17 @@ const ChatPanel: FC<ChatPanelProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  /**
+   * Formats a Date object as a time string (HH:mm, 24-hour format).
+   *
+   * @function
+   * @param {Date} date - The date to format.
+   * @returns {string} Formatted time string.
+   * @example
+   * formatTime(new Date()) // "14:05"
+   * @remarks
+   * Side Effects: None (pure function)
+   */
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",

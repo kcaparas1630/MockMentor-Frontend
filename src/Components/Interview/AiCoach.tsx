@@ -1,3 +1,24 @@
+/**
+ * @fileoverview AI Coach component that provides speech synthesis and visual feedback for interview guidance.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file implements an AI coach interface with speech synthesis capabilities and animated visual audio feedback.
+ * It handles text-to-speech conversion, professional voice selection, and provides callbacks for parent components to coordinate interview flow. The component uses the Web Speech API for text-to-speech and simulates audio visualization through animated elements that respond to speaking state. It is accessible, supports ARIA labels, and is designed for integration in interview room experiences.
+ *
+ * Plays a crucial role in providing interactive, accessible, and engaging AI-driven interview guidance within the interview room interface.
+ *
+ * @see {@link src/Components/InterviewRoom/InterviewRoom.tsx}
+ * @see {@link src/Components/InterviewRoom/VideoDisplay.tsx}
+ * @see {@link src/Components/InterviewRoom/Styles/StyledAICoach.ts}
+ *
+ * Dependencies:
+ * - React (useState, useEffect, useRef)
+ * - Lucide React Icons (Volume2)
+ * - Web Speech API (speechSynthesis)
+ * - Web Audio API (AudioContext, AnalyserNode)
+ * - Styled Components
+ */
 import React, { useState, useEffect, useRef } from "react";
 import { Volume2 } from "lucide-react";
 import {
@@ -13,11 +34,60 @@ import {
   VisuallyHidden,
 } from "./Styles/StyledAICoach";
 
+/**
+ * Props interface for the AICoach component.
+ *
+ * @interface
+ * @property {string} [AICoachMessage] - Text message to be spoken by the AI coach.
+ * Constraints/Format: Must be valid text for speech synthesis, supports SSML markup
+ * @property {function} [onQuestionSpoken] - Callback triggered when AI finishes speaking.
+ * Constraints/Format: Function that accepts speechText string parameter
+ * @property {function} [onTranscriptionEnd] - Callback triggered to signal transcription should start.
+ * Constraints/Format: Function with no parameters, called after speech ends
+ */
 interface AICoachProps {
   AICoachMessage?: string;
   onQuestionSpoken?: (speechText: string) => void;
   onTranscriptionEnd?: () => void;
 }
+
+/**
+ * AI Coach component that provides speech synthesis and visual feedback for interview guidance.
+ *
+ * @component
+ * @param {AICoachProps} props - Component props for AI coach configuration.
+ * @returns {JSX.Element} The rendered AI coach interface with speech and visual feedback.
+ * @example
+ * // Basic usage:
+ * <AICoach 
+ *   AICoachMessage="Hello, let's begin your technical interview"
+ *   onQuestionSpoken={handleSpeechComplete}
+ *   onTranscriptionEnd={startUserRecording}
+ * />
+ *
+ * @throws {Error} May throw if Web Speech API is not supported or audio context fails.
+ * @remarks
+ * Side Effects:
+ * - Uses Web Speech API for text-to-speech synthesis
+ * - Creates and manages AudioContext for audio visualization
+ * - Modifies speechSynthesis global state
+ * - Uses requestAnimationFrame for smooth animations
+ * - Triggers parent callbacks for speech lifecycle events
+ *
+ * Known Issues/Limitations:
+ * - Requires Web Speech API support (not available in all browsers)
+ * - Speech synthesis may be limited by browser voice availability
+ * - Audio visualization is simulated (not based on actual audio analysis)
+ * - No speech rate/pitch user controls
+ * - Limited error recovery for speech synthesis failures
+ *
+ * Design Decisions/Rationale:
+ * - Uses useRef for callback storage to prevent stale closures
+ * - Implements simulated audio visualization for consistent feedback
+ * - Provides comprehensive accessibility features
+ * - Automatically selects professional voices when available
+ * - Separates speech synthesis from audio visualization for modularity
+ */
 
 const AICoach: React.FC<AICoachProps> = ({
   AICoachMessage,
