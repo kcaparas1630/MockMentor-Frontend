@@ -1,3 +1,22 @@
+/**
+ * @fileoverview Profile creator component for onboarding users and collecting essential profile information.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file implements the profile creation flow, guiding users through a multi-step form to collect their name and job role. It manages form state, validation, and error handling, and integrates with backend APIs for user updates. The component is designed for accessibility and smooth onboarding.
+ *
+ * Plays a crucial role in onboarding users and ensuring complete profile data for personalized interview experiences.
+ *
+ * @see {@link src/Components/Interview/VideoTestCard.tsx}
+ * @see {@link src/Components/Profile/Styles/StyledProfile.ts}
+ * @see {@link src/Hooks/UserHooks.ts}
+ *
+ * Dependencies:
+ * - React (useState)
+ * - Custom hooks (UpdateUser)
+ * - Styled Components
+ * - Axios
+ */
 import {
   ButtonGroup,
   FormContainer,
@@ -13,8 +32,8 @@ import {
 } from "./Styles/StyledProfile";
 import ReusableInput from "../../Commons/ReusableInputField";
 import { useState } from "react";
-import { UpdateUser } from "../../Hooks/UserHooks";
-import ReusableButton from "../../Commons/Button";
+import { UpdateUser } from "@/Hooks/UserHooks";
+import ReusableButton from "@/Commons/Button";
 import { Dispatch, SetStateAction } from "react";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/Types/ApiResponse";
@@ -22,6 +41,18 @@ import ProfileData from "@/Types/ProfileData";
 import { ErrorMessage } from "../Auth/Styles/StyledAuth";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+
+/**
+ * Props interface for the multi-step profile creation views.
+ *
+ * @interface
+ * @property {number} steps - Current step in the profile creation flow.
+ * @property {function} setSteps - Setter for the current step.
+ * @property {ProfileData} profileData - User profile data being collected.
+ * @property {function} setProfileData - Setter for profile data.
+ * @property {string|null} authError - Error message for validation/auth.
+ * @property {function} setAuthError - Setter for error message.
+ */
 interface ViewProps {
   steps: number;
   setSteps: Dispatch<SetStateAction<number>>;
@@ -31,6 +62,18 @@ interface ViewProps {
   setAuthError: Dispatch<SetStateAction<string | null>>;
 }
 
+/**
+ * Name input step for profile creation.
+ *
+ * @component
+ * @param {ViewProps} props - Props for the name input step.
+ * @returns {JSX.Element} The rendered name input form.
+ * @example
+ * <NameInput {...props} />
+ * @throws {Error} No errors thrown - validation handled in component.
+ * @remarks
+ * Side Effects: Updates parent state for name and error.
+ */
 const NameInput = ({
   steps,
   setSteps,
@@ -101,6 +144,19 @@ const NameInput = ({
     </FormGroup>
   );
 };
+
+/**
+ * Job role input step for profile creation.
+ *
+ * @component
+ * @param {ViewProps} props - Props for the job role input step.
+ * @returns {JSX.Element} The rendered job role input form.
+ * @example
+ * <JobRoleInput {...props} />
+ * @throws {Error} No errors thrown - validation handled in component.
+ * @remarks
+ * Side Effects: Updates parent state for job role and error. Calls backend API on submit.
+ */
 const JobRoleInput = ({
   profileData,
   setProfileData,
@@ -184,6 +240,20 @@ const JobRoleInput = ({
 
 // TODO: Add Analytics for the profile creator. (Where did the user discover the app?, etc.)
 
+/**
+ * Progress indicator for multi-step profile creation.
+ *
+ * @component
+ * @param {object} props - Progress indicator props.
+ * @param {number} props.currentStep - Current step in the flow.
+ * @param {number} props.totalSteps - Total number of steps.
+ * @returns {JSX.Element} The rendered progress indicator.
+ * @example
+ * <ProgressIndicatorGroup currentStep={1} totalSteps={2} />
+ * @throws {Error} No errors thrown - this is a pure UI component.
+ * @remarks
+ * Side Effects: None (pure function)
+ */
 const ProgressIndicatorGroup = ({
   currentStep,
   totalSteps,
@@ -200,6 +270,17 @@ const ProgressIndicatorGroup = ({
   </ProgressContainer>
 );
 
+/**
+ * Profile creator component for onboarding users and collecting profile information.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered multi-step profile creation form.
+ * @example
+ * <ProfileCreator />
+ * @throws {Error} No errors thrown - this is a pure UI component.
+ * @remarks
+ * Side Effects: Manages form state and validation.
+ */
 const ProfileCreator = () => {
   const [steps, setSteps] = useState<number>(1);
   const [authError, setAuthError] = useState<string | null>(null);

@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Video and microphone test card for pre-interview device readiness, with real-time feedback and settings selection.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file implements the device test card for interview preparation, allowing users to test their camera and microphone, view real-time feedback, and select interview settings. It integrates with custom hooks for device management and provides accessibility and error handling throughout the device check process.
+ *
+ * Plays a crucial role in ensuring users are technically ready for interviews by validating device functionality and collecting interview preferences.
+ *
+ * @see {@link src/Components/InterviewRoom/InterviewRoom.tsx}
+ * @see {@link src/Components/Interview/Styles/StyledVideoTestCard.ts}
+ * @see {@link src/Hooks/useMicTesting.ts}
+ *
+ * Dependencies:
+ * - React (useState, useEffect, useRef)
+ * - Lucide React Icons (Video, Mic, VideoOff, MicOff)
+ * - Custom hooks (useMicTesting, useMediaDevicesContext)
+ * - Styled Components
+ * - Axios
+ */
 import {
   FC,
   useState,
@@ -5,8 +25,8 @@ import {
   useRef,
 } from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
-import ReusableSelect from "../../Commons/Select";
-import LoadingSpinner from "../../Commons/Spinner";
+import ReusableSelect from "@/Commons/Select";
+import LoadingSpinner from "@/Commons/Spinner";
 import {
   Container,
   GridContainer,
@@ -41,14 +61,38 @@ import {
   AudioLevelText,
   StartButtonRequirements,
 } from "./Styles/StyledVideoTestCard";
-import { useMicTesting } from "../../Hooks/useMicTesting";
-import { getUserToken } from "../../Hooks/UserHooks";
+import { useMicTesting } from "@/Hooks/useMicTesting";
+import { getUserToken } from "@/Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
-import { useMediaDevicesContext } from "../../Hooks/useMediaDevicesContext";
+import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 
-
-
+/**
+ * Video and microphone test card component for pre-interview device readiness.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered device test card with camera/mic test and interview settings.
+ * @example
+ * // Usage in onboarding flow:
+ * <VideoTestCard />
+ *
+ * @throws {Error} May throw if device APIs are unavailable or interview start fails.
+ * @remarks
+ * Side Effects:
+ * - Connects media streams to video element
+ * - Starts/stops microphone test using custom hook
+ * - Handles interview start API call and navigation
+ *
+ * Known Issues/Limitations:
+ * - No support for multiple cameras/microphones
+ * - No advanced troubleshooting or diagnostics
+ * - Interview types/job levels are hardcoded (should be fetched from backend)
+ *
+ * Design Decisions/Rationale:
+ * - Uses custom hooks for device management and mic testing
+ * - Provides real-time feedback and accessibility
+ * - Integrates settings selection for interview configuration
+ */
 const VideoTestCard: FC = () => {
   const router = useRouter();
   // Use the custom hook for all media device logic
@@ -149,7 +193,14 @@ const VideoTestCard: FC = () => {
     }
   }, [audioEnabled, isMicTesting, stopMicTest]);
 
-  // Returns appropriate status message based on current state
+  /**
+   * Returns appropriate status message based on current device and error state.
+   *
+   * @function
+   * @returns {JSX.Element} Status message element for UI.
+   * @remarks
+   * Side Effects: None (pure function)
+   */
   const getStatusMessage = () => {
     if (error) {
       return <StatusMessage type="error" role="alert">{error}</StatusMessage>;
@@ -186,6 +237,17 @@ const VideoTestCard: FC = () => {
     );
   };
 
+  /**
+   * Handles the interview start process, including API call and navigation.
+   *
+   * @function
+   * @returns {Promise<void>} Resolves when interview is started or error is handled.
+   * @throws {Error} Sets error state if API call fails.
+   * @remarks
+   * Side Effects:
+   * - Calls backend API to start interview
+   * - Navigates to interview room on success
+   */
   const handleStartInterview = async () => {
     try {
     // Get User Token for Firebase Auth verification
@@ -215,7 +277,14 @@ const VideoTestCard: FC = () => {
     }
   };
 
-  // Renders different video content based on current state
+  /**
+   * Renders the video preview or placeholder based on device state.
+   *
+   * @function
+   * @returns {JSX.Element} Video element or placeholder.
+   * @remarks
+   * Side Effects: None (pure function)
+   */
   const renderVideoContent = () => {
     if (isLoading) {
       return (

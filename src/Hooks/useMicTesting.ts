@@ -1,5 +1,32 @@
+/**
+ * @fileoverview Custom hook for microphone testing with real-time audio level visualization and monitoring.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file serves as a microphone testing hook that provides real-time audio level monitoring,
+ * visual feedback, and error handling for microphone functionality. It uses Web Audio API to
+ * analyze audio streams and provides audio level data for UI visualization. It plays a crucial
+ * role in device testing and user experience validation.
+ *
+ * @see {@link src/Components/Interview/VideoTestCard.tsx}
+ * @see {@link src/Components/Interview/InterviewRoom/InterviewRoom.tsx}
+ *
+ * Dependencies:
+ * - React
+ * - Web Audio API
+ */
+
 import { useState, useRef, useEffect } from "react";
 
+/**
+ * Interface for microphone testing hook return value.
+ * @interface UseMicTestingReturn
+ * @property {boolean} isMicTesting - Whether microphone testing is currently active.
+ * @property {number} audioLevel - Current audio level (0-1).
+ * @property {string|null} error - Error message if testing fails.
+ * @property {Function} startMicTest - Function to start microphone testing.
+ * @property {Function} stopMicTest - Function to stop microphone testing.
+ */
 export interface UseMicTestingReturn {
   isMicTesting: boolean;
   audioLevel: number;
@@ -9,8 +36,43 @@ export interface UseMicTestingReturn {
 }
 
 /**
- * Custom hook for microphone testing with real-time audio level visualization
- * Can be reused across components that need mic testing functionality
+ * Custom hook for microphone testing with real-time audio level visualization.
+ * Can be reused across components that need mic testing functionality.
+ *
+ * @function
+ * @returns {UseMicTestingReturn} Object containing mic testing state and methods.
+ * @example
+ * // Usage in components:
+ * const { isMicTesting, audioLevel, error, startMicTest, stopMicTest } = useMicTesting();
+ * 
+ * // Start testing
+ * await startMicTest(stream);
+ * 
+ * // Display audio level
+ * console.log('Audio level:', audioLevel);
+ * 
+ * // Stop testing
+ * stopMicTest();
+ *
+ * @throws {Error} Logs errors to console but doesn't throw.
+ * @remarks
+ * Side Effects: 
+ * - Creates Web Audio API context
+ * - Processes audio stream in real-time
+ * - Updates audio level state
+ * - Manages audio node connections
+ *
+ * Known Issues/Limitations:
+ * - Requires browser support for Web Audio API
+ * - Performance intensive on low-end devices
+ * - No fallback for unsupported browsers
+ * - Limited error recovery
+ *
+ * Design Decisions/Rationale:
+ * - Uses useRef for stable references across renders
+ * - Combines frequency and time domain analysis
+ * - Implements peak detection for better accuracy
+ * - Provides comprehensive error handling
  */
 export const useMicTesting = (): UseMicTestingReturn => {
   const [isMicTesting, setIsMicTesting] = useState(false);
@@ -24,7 +86,22 @@ export const useMicTesting = (): UseMicTestingReturn => {
   const micTestingRef = useRef<boolean>(false);
 
   /**
-   * Starts microphone testing with the provided stream
+   * Starts microphone testing with the provided stream.
+   *
+   * @function
+   * @param {MediaStream} stream - Audio stream to test.
+   * @returns {Promise<void>} Resolves when testing is started.
+   * @example
+   * // Start testing:
+   * await startMicTest(stream);
+   *
+   * @throws {Error} Logs errors to console but doesn't throw.
+   * @remarks
+   * Side Effects: 
+   * - Creates AudioContext
+   * - Sets up audio analysis pipeline
+   * - Starts real-time monitoring
+   * - Updates testing state
    */
   const startMicTest = async (stream: MediaStream) => {
     const audioTracks = stream.getAudioTracks();
@@ -80,7 +157,20 @@ export const useMicTesting = (): UseMicTestingReturn => {
   };
 
   /**
-   * Stops microphone testing and cleans up resources
+   * Stops microphone testing and cleans up resources.
+   *
+   * @function
+   * @returns {void} Cleans up audio context and resets state.
+   * @example
+   * // Stop testing:
+   * stopMicTest();
+   *
+   * @remarks
+   * Side Effects: 
+   * - Cancels animation frame
+   * - Closes audio context
+   * - Resets testing state
+   * - Clears audio level
    */
   const stopMicTest = () => {
     micTestingRef.current = false;
@@ -100,7 +190,19 @@ export const useMicTesting = (): UseMicTestingReturn => {
   };
 
   /**
-   * Real-time audio level monitoring
+   * Real-time audio level monitoring using frequency and time domain analysis.
+   *
+   * @function
+   * @returns {void} Updates audio level state continuously.
+   * @example
+   * // Called automatically by startMicTest:
+   * startAudioLevelMonitoring();
+   *
+   * @remarks
+   * Side Effects: 
+   * - Updates audio level state
+   * - Schedules next monitoring frame
+   * - Processes audio data in real-time
    */
   const startAudioLevelMonitoring = () => {
     if (!analyserRef.current) return;
