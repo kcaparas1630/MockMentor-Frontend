@@ -1,3 +1,32 @@
+/**
+ * @fileoverview Main interview room component that orchestrates video streaming, WebSocket communication, and AI coach interactions.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This is the central component for conducting live interviews with AI coaching capabilities. It manages:
+ * - Real-time video/audio streaming between participants
+ * - WebSocket connections for AI coach communication and transcription services
+ * - Media device management and status monitoring
+ * - Interview session lifecycle (start, duration tracking, end)
+ * - Chat functionality for additional communication
+ * - Voice activity detection for automatic transcription triggering
+ *
+ * The component implements a sophisticated state management system to handle multiple WebSocket connections,
+ * media stream orchestration, and error handling for various device and network failure scenarios.
+ *
+ * @see {@link src/Components/InterviewRoom/VideoDisplay.tsx}
+ * @see {@link src/Components/InterviewRoom/ChatPanel.tsx}
+ * @see {@link src/Components/InterviewRoom/AiCoach.tsx}
+ * @see {@link src/Hooks/useMediaDevicesContext.tsx}
+ * @see {@link src/Hooks/useWebSocketConnection.tsx}
+ *
+ * Dependencies:
+ * - React (useState, useEffect, useRef, useCallback)
+ * - TanStack Router (Route, useSearch)
+ * - Lucide React Icons
+ * - Custom Hooks (useMediaDevicesContext, useWebSocketConnection, useDetectAudio)
+ * - Styled Components
+ */
 import { FC, useState, useEffect, useRef, useCallback } from "react";
 import { Route } from "@/routes/interview-room/$sessionId";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
@@ -37,10 +66,42 @@ import DeviceIssues from "./ComponentHandlers/DeviceIssues";
 import LoadingStream from "./ComponentHandlers/LoadingStream";
 import LoadingWhileCheckingDevice from "./ComponentHandlers/LoadingWhileCheckingDevice";
 import BlockInterview from "./ComponentHandlers/BlockInterview";
+import formatDuration from "./Utils/FormatDuration";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
 
+/**
+ * Main interview room component that provides the complete interview experience.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered interview room interface with video, chat, and controls.
+ * @example
+ * // Usage in routing:
+ * <Route path="/interview-room/$sessionId" component={InterviewRoom} />
+ *
+ * @throws {Error} May throw if WebSocket connections fail or media devices are inaccessible.
+ * @remarks
+ * Side Effects:
+ * - Establishes multiple WebSocket connections for AI communication and transcription
+ * - Manages media stream lifecycle (start, monitor, cleanup)
+ * - Triggers voice activity detection and audio recording
+ * - Updates interview duration timer
+ * - Handles cleanup on component unmount
+ *
+ * Known Issues/Limitations:
+ * - Requires stable internet connection for WebSocket functionality
+ * - Media permissions must be granted before component mounts
+ * - Voice activity detection may have false positives in noisy environments
+ * - WebSocket reconnection logic not implemented
+ *
+ * Design Decisions/Rationale:
+ * - Uses useRef for WebSocket instances to prevent stale closures in callbacks
+ * - implements separate WebSocket connections for AI coach and transcription services
+ * - Uses useCallback for performance optimization of frequently called handlers
+ * - Conditional rendering based on device status and permissions
+ * - Centralized error handling for device and network issues
+ */
 const InterviewRoom: FC = () => {
   // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
@@ -50,12 +111,19 @@ const InterviewRoom: FC = () => {
   // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
   const [duration, setDuration] = useState<number>(0);
-  const { users } = GetUserQuery();
-  const { startDetectingAudio, stopDetectingAudio } = useDetectAudio();
-  // Use a ref to store the main socket instance
-  // This allows us to access the latest socket instance in callbacks without stale closures
+
+  // ==================== REFS ====================
+
+  /**
+   * Reference to the main WebSocket connection for AI coach communication.
+   * Uses ref to prevent stale closures in callback functions.
+   * @type {React.MutableRefObject<WebSocket | null>} mainSocketRef
+   */
   const mainSocketRef = useRef<WebSocket | null>(null);
-  const jobRole = users?.profile?.jobRole;
+
+  const { users } = GetUserQuery();
+
+  // ==================== CUSTOM HOOKS ====================
 
   const {
     videoEnabled = true,
@@ -67,13 +135,17 @@ const InterviewRoom: FC = () => {
     stopStream,
     deviceSupport,
   } = useMediaDevicesContext();
+  const { startDetectingAudio, stopDetectingAudio } = useDetectAudio();
 
-  // Format duration
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
+  // ==================== DERIVED VALUES ====================
+
+  /**
+   * Extract job role from user profile.
+   * @type {string|undefined} jobRole - The user's current job role.
+   */
+  const jobRole = users?.profile?.jobRole;
+
+  // ==================== UTILITY FUNCTIONS ====================
 
   const toggleChat = () => {
     setIsChatOpen(!isChatOpen);
@@ -84,9 +156,7 @@ const InterviewRoom: FC = () => {
     // TODO: GO back to previous page. Do Cleanup
   };
 
-  // --------- Callbacks to handle parent and child communication --------- //
-  // TODO: SEPARATE CONCERNS INTO DIFFERENT FILES
-  // Use useCallback to memoize the function to prevent unnecessary re-renders
+  // ==================== WEBSOCKET MESSAGE HANDLERS ====================
 
   const handleQuestionSpoken = useCallback((speechText: string) => {
     setAICoachMessage(speechText);
@@ -102,6 +172,35 @@ const InterviewRoom: FC = () => {
     },
     [handleQuestionSpoken]
   );
+
+  /**
+   * Processes transcription messages and forwards them to AI coach service.
+   *
+   * @function
+   * @param {WebSocketMessage} message - The WebSocket message containing transcription data.
+   * Constraints/Format: Must have type "transcript" and valid content
+   * @returns {void}
+   * @example
+   * // Example usage:
+   * handleTranscriptionSocket({ type: "transcript", content: "User spoke this text" });
+   *
+   * @throws {Error} May throw if WebSocket send operation fails.
+   * @remarks
+   * Side Effects:
+   * - Sends transcription data to main AI coach WebSocket
+   * - Logs errors for failed send operations
+   *
+   * Known Issues/Limitations:
+   * - No retry mechanism for failed sends
+   * - Limited error recovery options
+   *
+   * Design Decisions/Rationale:
+   * - Uses mainSocketRef.current to avoid stale closure issues
+   * - Checks WebSocket readyState before sending
+   * - Wraps send operation in try-catch for error handling
+   * - Memoized with mainSocketRef dependency
+   */
+
   const handleTranscriptionSocket = useCallback(
     (message: WebSocketMessage) => {
       // Handle transcription messages
@@ -125,15 +224,44 @@ const InterviewRoom: FC = () => {
     [mainSocketRef] // Dependency to ensure latest mainSocket is used
   );
 
+  // ==================== WEBSOCKET CONNECTIONS ====================
+
   const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
   const transcriptionSocket = useWebSocketConnection(
     "ws/transcription",
     handleTranscriptionSocket
   );
 
-  // TODO: Remove these handlers and use Web-VAD to detect when the user is speaking
-  // AI Coach handlers
-  // Use useCallback for handleInterviewStart to memoize it
+  // ==================== INTERVIEW LIFECYCLE HANDLERS ====================
+
+  /**
+   * Initiates the interview session by sending initial configuration to AI coach.
+   *
+   * @function
+   * @returns {void}
+   * @example
+   * // Example usage (typically called automatically):
+   * handleInterviewStart();
+   *
+   * @throws {Error} May throw if WebSocket send operation fails.
+   * @remarks
+   * Side Effects:
+   * - Sends interview configuration to AI coach WebSocket
+   * - Implements retry mechanism for WebSocket readiness
+   * - Sets internal flag to prevent duplicate sends
+   *
+   * Known Issues/Limitations:
+   * - Uses polling retry mechanism instead of event-based approach
+   * - Limited retry attempts (50 attempts with 500ms intervals)
+   * - No user feedback during retry attempts
+   *
+   * Design Decisions/Rationale:
+   * - Uses closure variable to prevent duplicate sends
+   * - Validates required data before sending
+   * - Implements timeout-based retry for WebSocket readiness
+   * - Memoized with all dependencies to ensure fresh values
+   */
+
   const handleInterviewStart = useCallback(() => {
     let isSent = false;
     const sendMessage = () => {
@@ -172,6 +300,37 @@ const InterviewRoom: FC = () => {
     jobLevel,
     interviewType,
   ]); // Dependencies for handleInterviewStart
+
+  /**
+   * Manages audio transcription process with voice activity detection.
+   *
+   * @function
+   * @returns {void}
+   * @example
+   * // Example usage (typically called after AI speech ends):
+   * handleTranscriptionMessage();
+   *
+   * @throws {Error} May throw if audio recording or WebSocket operations fail.
+   * @remarks
+   * Side Effects:
+   * - Starts voice activity detection on media stream
+   * - Creates and manages audio recorder instance
+   * - Sends recorded audio data to transcription WebSocket
+   * - Automatically stops recording when user stops speaking
+   *
+   * Known Issues/Limitations:
+   * - Requires stable WebSocket connection for transcription service
+   * - Voice activity detection may have false positives/negatives
+   * - No handling for recorder creation failures
+   * - FileReader operations may fail silently
+   *
+   * Design Decisions/Rationale:
+   * - Uses closure variables to track recording state
+   * - Implements automatic start/stop based on voice activity
+   * - Converts audio to base64 for WebSocket transmission
+   * - Cleans up voice activity detection when recording stops
+   * - Memoized with all dependencies for performance
+   */
 
   const handleTranscriptionMessage = useCallback(() => {
     if (
@@ -231,9 +390,8 @@ const InterviewRoom: FC = () => {
     handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
   }, [handleTranscriptionMessage]);
 
-  // ----------------- End of Callbacks ----------------- //
 
-  // -------------------- USE EFFECTS --------------------
+  // ==================== CONDITIONAL USE EFFECTS ====================
 
   // Duration timer
   useEffect(() => {
@@ -267,7 +425,7 @@ const InterviewRoom: FC = () => {
     mainSocketRef.current = mainSocket;
   }, [mainSocket]);
 
-  // ------------------------------------------------------------------------- //
+  // ==================== CONDITIONAL RENDERING ====================
 
   // Show error state if there are device issues
   if (error && !streamReady) {
@@ -295,9 +453,16 @@ const InterviewRoom: FC = () => {
 
   // Block interview if video/audio are not enabled (required for face landmarks)
   if (!videoEnabled || !audioEnabled) {
-    return <BlockInterview sessionId={sessionId} handleEndInterview={handleEndInterview} />;
+    return (
+      <BlockInterview
+        sessionId={sessionId}
+        handleEndInterview={handleEndInterview}
+      />
+    );
   }
-  // -------------------------------------------------------------------------------------- //
+
+  // ==================== MAIN RENDER ====================
+  
   return (
     <InterviewRoomContainer>
       {/* Header */}

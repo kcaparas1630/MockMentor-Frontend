@@ -1,3 +1,24 @@
+/**
+ * @fileoverview Video display component that renders video streams and AI coach interface for interview participants.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This component handles the display of video streams for both users and AI coaches in the interview room.
+ * It manages video element lifecycle, provides fallback interfaces for disabled devices, and integrates
+ * with the AI coach component for interactive interview experiences. The component is responsible for
+ * visual feedback about device status and requirements, making it central to the interview room interface.
+ *
+ * @see {@link src/Components/InterviewRoom/AiCoach.tsx}
+ * @see {@link src/Components/InterviewRoom/Styles/StyledInterviewRoom.ts}
+ * @see {@link src/Components/InterviewRoom/Styles/StyledVideoDisplay.ts}
+ *
+ * Dependencies:
+ * - React
+ * - Lucide React Icons
+ * - Styled Components
+ * - AI Coach Component
+ */
+
 import { FC, useEffect, useRef } from "react";
 import { MicOff, Video, Mic, X } from "lucide-react";
 import {
@@ -18,6 +39,25 @@ import {
 } from "./Styles/StyledVideoDisplay";
 import AICoach from "./AiCoach";
 
+/**
+ * Props interface for the VideoDisplay component.
+ *
+ * @interface
+ * @property {string} name - Display name for the video participant.
+ * Constraints/Format: Must be a non-empty string
+ * @property {boolean} [isUser=false] - Whether this display represents the current user.
+ * @property {boolean} [isAICoach=false] - Whether this display represents the AI coach.
+ * @property {boolean} [videoEnabled=true] - Whether video is enabled for this participant.
+ * @property {boolean} [audioEnabled=true] - Whether audio is enabled for this participant.
+ * @property {string} [AICoachMessage] - Message from AI coach to be spoken.
+ * Constraints/Format: Must be valid text for speech synthesis
+ * @property {MediaStream|null} [stream] - Video stream to display.
+ * @property {function} [onTranscriptionEnd] - Callback when AI speech transcription ends.
+ * @property {function} [onToggleVideo] - Callback to toggle video state.
+ * @property {function} [onToggleAudio] - Callback to toggle audio state.
+ * @property {function} [onQuestionSpoken] - Callback when AI coach finishes speaking.
+ * Constraints/Format: Must accept speechText string parameter
+ */
 interface VideoDisplayProps {
   name: string;
   isUser?: boolean;
@@ -32,6 +72,47 @@ interface VideoDisplayProps {
   onQuestionSpoken?: (speechText: string) => void;
 }
 
+/**
+ * Video display component that renders video streams and participant interfaces.
+ *
+ * @component
+ * @param {VideoDisplayProps} props - Component props for video display configuration.
+ * @returns {JSX.Element} The rendered video display with appropriate interface elements.
+ * @example
+ * // Usage for user video:
+ * <VideoDisplay 
+ *   name="User Name" 
+ *   isUser={true} 
+ *   stream={userStream} 
+ *   videoEnabled={true} 
+ * />
+ * 
+ * // Usage for AI coach:
+ * <VideoDisplay 
+ *   name="AI Coach" 
+ *   isAICoach={true} 
+ *   AICoachMessage="Hello, let's begin the interview"
+ *   onQuestionSpoken={handleQuestionComplete}
+ * />
+ *
+ * @throws {Error} May throw if video element fails to play stream.
+ * @remarks
+ * Side Effects: 
+ * - Sets video element source when stream changes
+ * - Triggers video playback
+ * - Renders AI coach interface with speech synthesis
+ *
+ * Known Issues/Limitations:
+ * - Video play may fail in some browsers without user interaction
+ * - Muted user video to prevent feedback (no audio output for user)
+ * - Limited error handling for video playback failures
+ *
+ * Design Decisions/Rationale:
+ * - Conditional rendering based on participant type (user vs AI coach)
+ * - Provides visual indicators for device status
+ * - Shows initials as fallback when video is disabled
+ * - Integrates AI coach component for interactive experience
+ */
 const VideoDisplay: FC<VideoDisplayProps> = ({
   name,
   isUser = false,
@@ -48,7 +129,6 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   useEffect(() => {
     if (videoRef.current && stream && videoEnabled) {
       videoRef.current.srcObject = stream;
-
       // Try to play the video and log any errors
       videoRef.current.play().catch((error) => {
         console.error("Video play failed:", error);
@@ -58,6 +138,33 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
     }
   }, [stream, videoEnabled]);
 
+  /**
+   * Generates initials from a participant name for avatar display.
+   *
+   * @function
+   * @param {string} name - The participant's full name.
+   * Constraints/Format: Must be a non-empty string
+   * @returns {string} Uppercase initials (maximum 2 characters).
+   * Example Return Value: "JD" for "John Doe"
+   * @example
+   * // Example usage:
+   * const initials = getInitials("John Doe");
+   * console.log(initials); // "JD"
+   *
+   * @throws {Error} Does not throw but may return empty string for invalid input.
+   * @remarks
+   * Side Effects: None (pure function)
+   *
+   * Known Issues/Limitations:
+   * - Only takes first letter of each word
+   * - Limited to 2 characters maximum
+   * - Does not handle special characters or non-Latin scripts
+   *
+   * Design Decisions/Rationale:
+   * - Simple algorithm for consistent avatar generation
+   * - Uppercase for visual consistency
+   * - Handles multiple words by taking first letter of each
+   */
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -72,7 +179,7 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
     return (
       <VideoDisplayWrapper isUser={isUser}>
         <NameLabel>{name}</NameLabel>
-        <AICoach 
+        <AICoach
           AICoachMessage={AICoachMessage}
           onQuestionSpoken={onQuestionSpoken}
           onTranscriptionEnd={onTranscriptionEnd}
@@ -84,7 +191,6 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   return (
     <VideoDisplayWrapper isUser={isUser}>
       <NameLabel>{name}</NameLabel>
-
       {videoEnabled && stream ? (
         <VideoElement
           ref={videoRef}
