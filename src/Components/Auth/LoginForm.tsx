@@ -129,6 +129,9 @@ const loginUser = async (credentials: { email: string; password: string }) => {
   const { email, password } = credentials;
   // Step 1: Authenticate with Firebase (handle auth errors immediately)
   const idToken = await AuthenticateUser(email, password);
+  if (!idToken) {
+    throw new Error("Authentication failed. Please check your credentials.");
+  }
 
   // Step 2: Fetch user data from API
   const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
