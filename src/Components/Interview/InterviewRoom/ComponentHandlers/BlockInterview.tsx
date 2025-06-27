@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { useMediaDevicesContext } from "@/Hooks/useMediaDevicesContext";
+import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import {
   InterviewRoomContainer,
   Header,

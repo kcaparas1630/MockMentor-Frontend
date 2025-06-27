@@ -1,8 +1,8 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { auth } from '../Firebase/FirebaseAuth';
-import LoadingSpinner from '../Commons/Spinner';
+import { auth } from '@/Firebase/FirebaseAuth';
+import LoadingSpinner from '@/Commons/Spinner';
 
 interface AuthGuardProps {
     children: React.ReactNode;

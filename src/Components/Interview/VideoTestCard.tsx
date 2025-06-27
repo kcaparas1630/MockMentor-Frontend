@@ -5,8 +5,8 @@ import {
   useRef,
 } from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
-import ReusableSelect from "../../Commons/Select";
-import LoadingSpinner from "../../Commons/Spinner";
+import ReusableSelect from "@/Commons/Select";
+import LoadingSpinner from "@/Commons/Spinner";
 import {
   Container,
   GridContainer,
@@ -41,11 +41,11 @@ import {
   AudioLevelText,
   StartButtonRequirements,
 } from "./Styles/StyledVideoTestCard";
-import { useMicTesting } from "../../Hooks/useMicTesting";
-import { getUserToken } from "../../Hooks/UserHooks";
+import { useMicTesting } from "@/Hooks/useMicTesting";
+import { getUserToken } from "@/Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
-import { useMediaDevicesContext } from "../../Hooks/useMediaDevicesContext";
+import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 
 
 

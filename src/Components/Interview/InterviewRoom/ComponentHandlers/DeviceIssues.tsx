@@ -16,7 +16,7 @@ import {
   RefreshButton,
 } from "../../Styles/StyledInterviewRoom";
 import SessionIssuesProps from "@/Types/SessionIssuesProps";
-import { useMediaDevicesContext } from "@/Hooks/useMediaDevicesContext";
+import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 
 const DeviceIssues: FC<SessionIssuesProps> = ({
   sessionId,

@@ -13,8 +13,8 @@ import {
 } from "./Styles/StyledProfile";
 import ReusableInput from "../../Commons/ReusableInputField";
 import { useState } from "react";
-import { UpdateUser } from "../../Hooks/UserHooks";
-import ReusableButton from "../../Commons/Button";
+import { UpdateUser } from "@/Hooks/UserHooks";
+import ReusableButton from "@/Commons/Button";
 import { Dispatch, SetStateAction } from "react";
 import { AxiosError } from "axios";
 import { ErrorResponse } from "@/Types/ApiResponse";

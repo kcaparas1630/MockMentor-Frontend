@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, useRef, useCallback } from "react";
-import { Route } from "../../../routes/interview-room/$sessionId";
-import { useMediaDevicesContext } from "../../../Hooks/useMediaDevicesContext";
+import { Route } from "@/routes/interview-room/$sessionId";
+import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import VideoDisplay from "../VideoDisplay";
 import ChatPanel from "../ChatPanel";
 import { MessageCircle, Video, Mic } from "lucide-react";
