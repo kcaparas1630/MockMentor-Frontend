@@ -57,16 +57,21 @@ const BlockInterview: FC<SessionIssuesProps> = ({
             </MissingDevicesDetails>
             <MissingDevicesAlert>
               <p>
-                <strong>Missing:</strong> {!videoEnabled && "Camera"}{" "}
-                {!videoEnabled && !audioEnabled && " & "}{" "}
-                {!audioEnabled && "Microphone"}
+                <strong>Missing:</strong>{[
+                  !videoEnabled && "Camera",
+                  !audioEnabled && "Microphone",
+                ].filter(Boolean).join(" & ")}
               </p>
             </MissingDevicesAlert>
             <EnableDevicesButton
-              onClick={() => {
-                toggleVideo();
-                toggleAudio();
-                startStream(true, true);
+              onClick={async () => {
+                try {
+                  if (!videoEnabled) toggleVideo();
+                  if (!audioEnabled) toggleAudio();
+                  await startStream(true, true);
+                } catch (error) {
+                  console.error("Error enabling devices:", error);
+                }
               }}
             >
               Enable Camera & Microphone
