@@ -1,7 +1,7 @@
 import { createRoute } from "@tanstack/react-router";
 import rootRoute from "../__root";
 import AuthGuard from "../../Components/AuthGuard";
-import InterviewRoom from "../../Components/Interview/InterviewRoom";
+import InterviewRoom from "../../Components/Interview/InterviewRoom/InterviewRoom";
 
 interface SearchParams {
     jobLevel: string;
