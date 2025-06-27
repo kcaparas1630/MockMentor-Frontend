@@ -42,7 +42,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   // CONSTANTS
   const VAD_THRESHOLD: number = 15; // Threshold for minimum amplitude before it's considered voice
   const ANALYSIS_INTERVAL_MS: number = 50;
-  const SILENCE_INTERVAL_MS: number = 1000; // 1 second of silence before considering user stopped speaking
+  const SILENCE_INTERVAL_MS: number = 700; // 700ms of silence before considering user stopped speaking
 
   const analyzeAudio = useCallback(() => {
     // check if not null
@@ -95,22 +95,19 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     } else {
       // No voice detected
       if (stateRef.current.isSpeaking) {
-        console.log("User stopped speaking. Silence timer started.");
-        stateRef.current.isSpeaking = false;
-        stateRef.current.silenceStartTime = currentTime; // Start silence timer
-      } else if (
-        currentTime - stateRef.current.silenceStartTime >
-        SILENCE_INTERVAL_MS
-      ) {
-        // If silence exceeds threshold, consider user stopped speaking
-        console.log("User has stopped speaking for a while.");
-        stateRef.current.isSpeaking = false; // Reset speaking state
-        speakingChangeCallbackRef.current?.(false);
-        stateRef.current.silenceStartTime = 0; // Reset silence timer
+        if (stateRef.current.silenceStartTime === 0) { // First silence detection
+          stateRef.current.silenceStartTime = currentTime; // Start silence timer
+        } else if (currentTime - stateRef.current.silenceStartTime > SILENCE_INTERVAL_MS) { // Silence detected for longer than threshold
+          stateRef.current.isSpeaking = false;
+          speakingChangeCallbackRef.current?.(false); // Notify that user stopped speaking and need to stop recording
+          stateRef.current.silenceStartTime = 0; // Reset silence timer
       }
     }
-    // Continue analyzing audio
-    animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+  }
+    // Continue analyzing audio if not closed
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+    }
   }, []);
   const startDetectingAudio = async (stream: MediaStream, onSpeakingChange?: (isSpeaking: boolean) => void) => {
     speakingChangeCallbackRef.current = onSpeakingChange || null;
@@ -126,7 +123,6 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       if (audioContextRef.current.state === "suspended") {
         await audioContextRef.current.resume();
       }
-      // TODO: setup sapphi-red noise suppression.
       // load wasm binaries and worklets
       const [rrnoiseWasmBinary] = await Promise.all([
         loadRnnoise({ url: rnnoiseWasmPath, simdUrl: rnnoiseWasmSimdPath }),
@@ -164,15 +160,6 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       // Pre-allocate the data array once
       timeDataArrayRef.current = new Uint8Array(
         analyserRef.current.frequencyBinCount
-      );
-
-      console.log("Audio detection started with optimizations:");
-      console.log("- FFT Size:", analyserRef.current.fftSize);
-      console.log("- Analysis interval:", ANALYSIS_INTERVAL_MS + "ms");
-      console.log(
-        "- Buffer size:",
-        analyserRef.current.frequencyBinCount,
-        "samples"
       );
 
       await new Promise((resolve) => setTimeout(resolve, 100));
