@@ -1,6 +1,6 @@
 # MockMentor Frontend
 
-A modern, containerized React frontend for the Interview AI Helper, built with Vite, TypeScript, and Firebase integration.
+A modern, containerized React frontend for the Interview AI Helper, built with Vite, TypeScript, and Firebase integration. Features comprehensive JSDoc documentation for maintainable, well-documented code.
 
 ---
 
@@ -11,10 +11,13 @@ A modern, containerized React frontend for the Interview AI Helper, built with V
 | `src/main.tsx`              | App entry point, router setup               |
 | `src/App.tsx`               | Main App component                          |
 | `src/routes/`               | Route/page components                       |
-| `src/Components/`           | UI components (e.g., Auth forms)            |
+| `src/Components/`           | UI components (Auth, Interview, Profile)    |
 | `src/Commons/`              | Shared UI and utility components            |
+| `src/Hooks/`                | Custom React hooks                          |
+| `src/Context/`              | React context providers                     |
 | `src/Firebase/`             | Firebase integration logic                  |
 | `src/Types/`                | TypeScript type definitions                 |
+| `src/Assets/`               | Static assets and icons                     |
 | `public/`                   | Static assets (empty by default)            |
 | `index.html`                | HTML template                               |
 | `vite.config.ts`            | Vite and plugin configuration               |
@@ -30,46 +33,97 @@ A modern, containerized React frontend for the Interview AI Helper, built with V
 ## 🚀 Features
 
 - **React 19 + Vite**: Fast, modern frontend stack.
-- **TypeScript**: Type-safe codebase.
-- **Firebase Auth**: User authentication via Firebase.
+- **TypeScript**: Type-safe codebase with comprehensive type definitions.
+- **Firebase Auth**: User authentication via Firebase with Google OAuth.
 - **Form Validation**: `react-hook-form` + `yup` schemas.
-- **Componentized UI**: Modular, reusable components.
+- **Componentized UI**: Modular, reusable components with consistent styling.
+- **Media Device Management**: Camera and microphone access with real-time testing.
+- **Voice Activity Detection**: Advanced audio processing with noise suppression.
+- **WebSocket Integration**: Real-time communication for interview features.
 - **PWA Support**: Installable, offline-ready (via Vite PWA plugin).
 - **Dockerized**: Dev and prod container setups.
 - **CI/CD**: Automated Docker build & push via GitHub Actions.
+- **Comprehensive Documentation**: JSDoc documentation for all components, hooks, and utilities.
 
 ---
 
 ## 🏗️ Application Overview
 
 ### Main App Initialization (`src/main.tsx`)
-- Sets up React root and router (TanStack Router).
-- Loads global styles.
+- Sets up React root with StrictMode and TanStack Router.
+- Configures React Query for server state management.
+- Provides MediaDevicesContext for global media device access.
+- Loads global styles and initializes routing.
 
 ### Routing (`src/routes/`)
-- Defines main pages: login, signup, and root.
+- Defines main pages: login, signup, profile creation, video testing, and interview rooms.
 - Uses TanStack Router for type-safe navigation.
+- Implements route protection with AuthGuard.
 
 ### Authentication (`src/Components/Auth/`)
-- `LoginForm.tsx` and `SignUpForm.tsx` for user auth.
-- Validation schemas in `Schema/SignupSchema.ts`.
+- `LoginForm.tsx` and `SignUpForm.tsx` for user authentication.
+- Google OAuth integration with Firebase.
+- Form validation and error handling.
 - Styled with Emotion and custom styles.
+
+### Interview Components (`src/Components/Interview/`)
+- `VideoTestCard.tsx`: Device testing interface.
+- `InterviewRoom.tsx`: Main interview interface.
+- `AiCoach.tsx`: AI assistant component.
+- `ChatPanel.tsx`: Real-time chat interface.
+- `VideoDisplay.tsx`: Video stream display.
+
+### Media Device Management (`src/Hooks/`)
+- `useMediaDevices.ts`: Comprehensive media device management.
+- `useDetectAudio.ts`: Voice activity detection with noise suppression.
+- `useMicTesting.ts`: Microphone testing with real-time visualization.
+- `useWebSocketConnection.ts`: WebSocket connection management.
 
 ### Firebase Integration (`src/Firebase/`)
 - Handles authentication logic and error types.
+- Environment-based configuration.
+- User session management.
 
 ### Shared Components (`src/Commons/`)
-- Reusable UI: buttons, input fields, shared styles.
+- Reusable UI: buttons, input fields, select dropdowns, spinners.
+- Consistent styling and behavior across the application.
 
 ---
 
 ## 🗂️ Main Routes/Pages
 
-| Path      | Component         | Description           |
-|-----------|-------------------|-----------------------|
-| `/`       | Root              | Main/root page        |
-| `/login`  | LoginForm         | User login            |
-| `/SignUp` | SignUpForm        | User registration     |
+| Path              | Component         | Description                    |
+|-------------------|-------------------|--------------------------------|
+| `/`               | Root              | Redirects to login             |
+| `/login`          | LoginForm         | User login                     |
+| `/SignUp`         | SignUpForm        | User registration              |
+| `/profile-create` | ProfileCreator    | User profile setup             |
+| `/video-test`     | VideoTestCard     | Device testing                 |
+| `/interview-room/$sessionId` | InterviewRoom | Interview interface |
+
+---
+
+## 📚 Documentation
+
+The project includes comprehensive JSDoc documentation for all components, hooks, and utilities:
+
+### Documentation Standards
+- **File Overview**: Each file includes a detailed description of its purpose and role in the system.
+- **Function Documentation**: All functions include parameter descriptions, return types, examples, and error handling.
+- **Component Documentation**: React components include prop interfaces, usage examples, and side effects.
+- **Hook Documentation**: Custom hooks include return value descriptions and usage patterns.
+- **Error Handling**: Documents known issues, limitations, and error scenarios.
+- **Design Decisions**: Explains architectural choices and implementation rationale.
+
+### Documentation Coverage
+- ✅ Main application files (`App.tsx`, `main.tsx`)
+- ✅ Authentication components and helpers
+- ✅ Common UI components
+- ✅ Context providers
+- ✅ Custom hooks (media devices, audio detection, WebSocket)
+- ✅ Helper functions
+- ✅ Route configurations
+- ✅ Asset components
 
 ---
 
@@ -81,12 +135,14 @@ A modern, containerized React frontend for the Interview AI Helper, built with V
 |------------------------|---------------------------------|
 | react, react-dom       | UI framework                    |
 | @tanstack/react-router | Routing                         |
+| @tanstack/react-query  | Server state management         |
 | firebase               | Auth/backend integration        |
 | react-hook-form        | Form state management           |
 | yup                    | Schema validation               |
 | @emotion/styled        | CSS-in-JS styling               |
 | react-toastify         | Toast notifications             |
 | lucide-react           | Icon set                        |
+| @sapphi-red/web-noise-suppressor | Audio noise suppression |
 
 ### Dev
 
@@ -169,11 +225,29 @@ docker-compose up --build
 ---
 
 ## 📚 Extending
-- Add new pages in `src/routes/`
-- Create new UI components in `src/Components/`
-- Add shared logic/UI in `src/Commons/`
-- Update types in `src/Types/`
-- Integrate new Firebase features in `src/Firebase/`
+
+### Adding New Components
+- Create components in `src/Components/` with appropriate subdirectories
+- Add JSDoc documentation following the established template
+- Include TypeScript interfaces for props
+- Add to relevant route configurations
+
+### Adding New Hooks
+- Create hooks in `src/Hooks/` directory
+- Include comprehensive JSDoc documentation
+- Define return type interfaces
+- Document side effects and error handling
+
+### Adding New Routes
+- Create route files in `src/routes/`
+- Update route tree generation
+- Add authentication guards where needed
+- Include route-specific documentation
+
+### Adding New Types
+- Define types in `src/Types/` with appropriate subdirectories
+- Use descriptive names and comprehensive interfaces
+- Include JSDoc comments for complex types
 
 ---
 
@@ -182,3 +256,11 @@ docker-compose up --build
 curl http://localhost:80/health
 # Response: ok
 ```
+
+---
+
+## 👨‍💻 Author
+
+**kcaparas1630@gmail.com**
+
+This project features comprehensive JSDoc documentation for maintainable, well-documented code that follows industry best practices for React and TypeScript development.
