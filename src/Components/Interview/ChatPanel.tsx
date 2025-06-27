@@ -56,7 +56,6 @@ const ChatPanel: FC<ChatPanelProps> = ({ isOpen, onClose }) => {
       };
       setMessages([...messages, message]);
       setNewMessage("");
-      console.log("Sent message:", newMessage);
     }
   };
 

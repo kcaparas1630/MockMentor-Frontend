@@ -18,12 +18,10 @@ const useWebSocketConnection = (
     const ws = new WebSocket(`ws://localhost:8000/api/${socketUrl}`);
 
     ws.onopen = () => {
-      console.log(`WebSocket Connected to ${socketUrl}`);
       setSocket(ws);
     };
 
     ws.onclose = () => {
-      console.log(`WebSocket Disconnected from ${socketUrl}`);
       setSocket(null);
     };
 
@@ -31,7 +29,6 @@ const useWebSocketConnection = (
       try {
         const data = JSON.parse(event.data);
         const message = data as WebSocketMessage;
-        console.log(`Received WebSocket message from ${socketUrl}:`, message);
         onMessageRef?.current?.(message);
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);

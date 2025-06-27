@@ -86,7 +86,6 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     if (averageAmplitude > VAD_THRESHOLD) {
       // Voice detected
       if (!stateRef.current.isSpeaking) {
-        console.log("Voice detected");
         stateRef.current.isSpeaking = true;
         speakingChangeCallbackRef.current?.(true);
         stateRef.current.silenceStartTime = 0; // Reset silence timer
@@ -197,7 +196,6 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       silenceStartTime: 0,
     };
     speakingChangeCallbackRef.current = null;
-    console.log("Audio detection stopped and resources cleaned up.");
   };
 
   return {

@@ -10,9 +10,9 @@ import {
   ErrorMessage,
   StyledLink,
 } from "./Styles/StyledAuth";
-import ReusableButton from "../../Commons/Button";
-import GoogleIcon from "../../Assets/GoogleIcon";
-import ReusableInput from "../../Commons/ReusableInputField";
+import ReusableButton from "@/Commons/Button";
+import GoogleIcon from "@/Assets/GoogleIcon";
+import ReusableInput from "@/Commons/ReusableInputField";
 import { ToastContainer, toast } from "react-toastify";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation } from "@tanstack/react-query";

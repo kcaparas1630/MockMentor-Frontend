@@ -54,7 +54,6 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
         console.error("Video play failed:", error);
       });
     } else if (videoRef.current) {
-      console.log("Clearing video element srcObject");
       videoRef.current.srcObject = null;
     }
   }, [stream, videoEnabled]);

@@ -81,8 +81,7 @@ const InterviewRoom: FC = () => {
 
   const handleEndInterview = () => {
     stopStream(); // Stop media stream
-    console.log("Interview ended");
-    alert("Interview ended. Thank you!");
+    // TODO: GO back to previous page. Do Cleanup
   };
 
   // --------- Callbacks to handle parent and child communication --------- //
@@ -161,9 +160,6 @@ const InterviewRoom: FC = () => {
           console.error("Error sending WebSocket message:", error);
         }
       } else {
-        console.log(
-          "WebSocket not ready, retrying initial message in 500ms..."
-        );
         setTimeout(sendMessage, 500); // Internal retry for initial message if socket not open
       }
     };
@@ -207,7 +203,6 @@ const InterviewRoom: FC = () => {
               };
               try {
                 transcriptionSocket.send(JSON.stringify(audioMessage));
-                console.log("Audio data sent to transcription service");
               } catch (error) {
                 console.error("Error sending audio data:", error);
               }
@@ -233,7 +228,6 @@ const InterviewRoom: FC = () => {
   }, [transcriptionSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
 
   const handleAISpeechEnd = useCallback(() => {
-    console.log("AI speech ended");
     handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
   }, [handleTranscriptionMessage]);
 
@@ -256,9 +250,6 @@ const InterviewRoom: FC = () => {
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
-      console.log(
-        "Socket is open, scheduling initial interview start in 5 seconds."
-      );
       timer = setTimeout(() => {
         handleInterviewStart();
       }, 5000);
@@ -267,7 +258,6 @@ const InterviewRoom: FC = () => {
     return () => {
       if (timer) {
         clearTimeout(timer);
-        console.log("Cleared initial interview start timer.");
       }
     };
   }, [mainSocket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
@@ -277,9 +267,8 @@ const InterviewRoom: FC = () => {
     mainSocketRef.current = mainSocket;
   }, [mainSocket]);
 
-  // ------------------------------------------------- //
+  // ------------------------------------------------------------------------- //
 
-  // TODO: Separate different concerns into different files.
   // Show error state if there are device issues
   if (error && !streamReady) {
     return (
@@ -308,7 +297,7 @@ const InterviewRoom: FC = () => {
   if (!videoEnabled || !audioEnabled) {
     return <BlockInterview sessionId={sessionId} handleEndInterview={handleEndInterview} />;
   }
-  // ------------- End of separation of concerns ------------- //
+  // -------------------------------------------------------------------------------------- //
   return (
     <InterviewRoomContainer>
       {/* Header */}

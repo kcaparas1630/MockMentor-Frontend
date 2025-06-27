@@ -1,6 +1,6 @@
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "../../../Firebase/FirebaseAuth";
-import isFirebaseAuthError from "../../../Types/Firebase/FirebaseError";
+import { auth } from "@/Firebase/FirebaseAuth";
+import isFirebaseAuthError from "@/Types/Firebase/FirebaseError";
 
 const handleGoogleSignIn = async () => {
   try {

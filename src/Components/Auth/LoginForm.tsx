@@ -10,17 +10,17 @@ import {
   ErrorMessage,
   StyledLink,
 } from "./Styles/StyledAuth";
-import ReusableButton from "../../Commons/Button";
-import GoogleIcon from "../../Assets/GoogleIcon";
-import isFirebaseAuthError from "../../Types/Firebase/FirebaseError";
-import ReusableInput from "../../Commons/ReusableInputField";
-import { auth } from "../../Firebase/FirebaseAuth";
+import ReusableButton from "@/Commons/Button";
+import GoogleIcon from "@/Assets/GoogleIcon";
+import isFirebaseAuthError from "@/Types/Firebase/FirebaseError";
+import ReusableInput from "@/Commons/ReusableInputField";
+import { auth } from "@/Firebase/FirebaseAuth";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import handleGoogleSignIn from "./Helper/handleGoogleSignIn";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
-import { GetUserQuery } from "../../Hooks/UserHooks";
+import { GetUserQuery } from "@/Hooks/UserHooks";
 
 const loginUser = async (credentials: { email: string; password: string }) => {
   const { email, password } = credentials;

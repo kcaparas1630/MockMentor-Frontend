@@ -27,7 +27,6 @@ const getUser = async (): Promise<ProfileData> => {
 }
 
 const UpdateUser = async (userData: ProfileData) => {
-    console.log("User Data:", userData);
     try {
         const userToken = await getUserToken();
         const response = await axios.put('http://localhost:3000/api/update-user',
