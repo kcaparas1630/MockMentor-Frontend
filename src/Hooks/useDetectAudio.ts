@@ -1,7 +1,26 @@
 /**
+ * @fileoverview Custom hook for voice activity detection with noise suppression and real-time audio analysis.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file serves as a sophisticated voice activity detection hook that uses Web Audio API,
+ * noise suppression algorithms, and amplitude analysis to detect when a user is speaking.
+ * It provides real-time speech detection with configurable thresholds and silence intervals.
+ * It plays a crucial role in interview recording automation and audio processing.
+ *
+ * @see {@link src/Components/Interview/InterviewRoom/InterviewRoom.tsx}
+ * @see {@link src/Components/Interview/Helper/createRecorder.ts}
+ *
+ * Dependencies:
+ * - React
+ * - Web Audio API
+ * - @sapphi-red/web-noise-suppressor
+ */
+
+/**
  * Custom hook for voice activity detection on audio streams.
-* Uses noise suppression and amplitude analysis to detect speech.
-* @returns {UseDetectAudioReturn} Object with startDetectingAudio and stopDetectingAudio methods
+ * Uses noise suppression and amplitude analysis to detect speech.
+ * @returns {UseDetectAudioReturn} Object with startDetectingAudio and stopDetectingAudio methods
 */
 
 import { useCallback, useRef } from "react";
@@ -15,11 +34,54 @@ import rnnoiseWorkletPath from '@sapphi-red/web-noise-suppressor/rnnoiseWorklet.
 import rnnoiseWasmPath from '@sapphi-red/web-noise-suppressor/rnnoise.wasm?url';
 import rnnoiseWasmSimdPath from '@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url';
 
+/**
+ * Interface for voice activity detection hook return value.
+ * @interface UseDetectAudioReturn
+ * @property {Function} startDetectingAudio - Function to start audio detection.
+ * @property {Function} stopDetectingAudio - Function to stop audio detection.
+ */
 interface UseDetectAudioReturn {
   startDetectingAudio: (stream: MediaStream, onSpeakingChange?: (isSpeaking: boolean) => void) => Promise<void>;
   stopDetectingAudio: () => void;
 }
 
+/**
+ * Custom hook for voice activity detection with noise suppression and real-time analysis.
+ *
+ * @function
+ * @returns {UseDetectAudioReturn} Object containing audio detection methods.
+ * @example
+ * // Usage in components:
+ * const { startDetectingAudio, stopDetectingAudio } = useDetectAudio();
+ * 
+ * // Start detection with callback
+ * await startDetectingAudio(stream, (isSpeaking) => {
+ *   console.log('User is speaking:', isSpeaking);
+ * });
+ * 
+ * // Stop detection
+ * stopDetectingAudio();
+ *
+ * @throws {Error} Logs errors to console but doesn't throw.
+ * @remarks
+ * Side Effects: 
+ * - Creates Web Audio API context
+ * - Loads WASM binaries and worklets
+ * - Processes audio stream in real-time
+ * - Manages audio node connections
+ *
+ * Known Issues/Limitations:
+ * - Requires browser support for Web Audio API
+ * - WASM loading may fail in some environments
+ * - Performance intensive on low-end devices
+ * - No fallback for unsupported browsers
+ *
+ * Design Decisions/Rationale:
+ * - Uses useRef for stable references across renders
+ * - Implements noise suppression for better accuracy
+ * - Uses requestAnimationFrame for performance
+ * - Pre-allocates arrays to reduce GC pressure
+ */
 export const useDetectAudio = (): UseDetectAudioReturn => {
   // REFERENCES TO AUDIO
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -44,6 +106,21 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   const ANALYSIS_INTERVAL_MS: number = 50;
   const SILENCE_INTERVAL_MS: number = 700; // 700ms of silence before considering user stopped speaking
 
+  /**
+   * Analyzes audio data in real-time to detect voice activity.
+   *
+   * @function
+   * @returns {void} Updates speaking state and calls callback.
+   * @example
+   * // Called automatically by requestAnimationFrame:
+   * analyzeAudio();
+   *
+   * @remarks
+   * Side Effects: 
+   * - Updates speaking state
+   * - Calls speaking change callback
+   * - Schedules next analysis frame
+   */
   const analyzeAudio = useCallback(() => {
     // check if not null
     if (!analyserRef.current || !audioContextRef.current) {
@@ -108,6 +185,28 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       animationFrameRef.current = requestAnimationFrame(analyzeAudio);
     }
   }, []);
+
+  /**
+   * Starts voice activity detection on the provided audio stream.
+   *
+   * @function
+   * @param {MediaStream} stream - Audio stream to analyze.
+   * @param {Function} [onSpeakingChange] - Optional callback for speaking state changes.
+   * @returns {Promise<void>} Resolves when detection is started.
+   * @example
+   * // Start detection:
+   * await startDetectingAudio(stream, (isSpeaking) => {
+   *   console.log('Speaking:', isSpeaking);
+   * });
+   *
+   * @throws {Error} Logs errors to console but doesn't throw.
+   * @remarks
+   * Side Effects: 
+   * - Creates AudioContext
+   * - Loads WASM binaries
+   * - Sets up audio processing pipeline
+   * - Starts real-time analysis
+   */
   const startDetectingAudio = async (stream: MediaStream, onSpeakingChange?: (isSpeaking: boolean) => void) => {
     speakingChangeCallbackRef.current = onSpeakingChange || null;
     const audioTracks = stream.getAudioTracks();
@@ -168,6 +267,22 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     }
   };
 
+  /**
+   * Stops voice activity detection and cleans up resources.
+   *
+   * @function
+   * @returns {void} Cleans up audio context and nodes.
+   * @example
+   * // Stop detection:
+   * stopDetectingAudio();
+   *
+   * @remarks
+   * Side Effects: 
+   * - Cancels animation frame
+   * - Closes audio context
+   * - Disconnects audio nodes
+   * - Resets state
+   */
   const stopDetectingAudio = () => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);

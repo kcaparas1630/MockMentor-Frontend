@@ -1,5 +1,49 @@
+/**
+ * @fileoverview Google brand icon component for OAuth authentication buttons.
+ * @author kcaparas1630@gmail.com
+ * @version 2024-01-01
+ * @description
+ * This file serves as a reusable Google brand icon component that displays the official
+ * Google logo in SVG format. It provides consistent branding for Google OAuth buttons
+ * and maintains the official Google brand guidelines. It plays a crucial role in
+ * authentication UI consistency and brand recognition.
+ *
+ * @see {@link src/Components/Auth/LoginForm.tsx}
+ * @see {@link src/Components/Auth/SignUpForm.tsx}
+ *
+ * Dependencies:
+ * - React
+ */
+
 import React from "react";
 
+/**
+ * Google brand icon component for OAuth authentication.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered Google logo SVG.
+ * @example
+ * // Usage in authentication buttons:
+ * <GoogleButton>
+ *   <GoogleIcon />
+ *   Sign in with Google
+ * </GoogleButton>
+ *
+ * @throws {Error} No errors thrown - this is a pure SVG component.
+ * @remarks
+ * Side Effects: None - this is a pure component that only renders SVG elements.
+ *
+ * Known Issues/Limitations:
+ * - Fixed size (18x18 pixels)
+ * - No color customization
+ * - No accessibility features
+ *
+ * Design Decisions/Rationale:
+ * - Uses official Google brand colors
+ * - Implements SVG for crisp scaling
+ * - Follows Google brand guidelines
+ * - Provides consistent icon across app
+ */
 const GoogleIcon: React.FC = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
