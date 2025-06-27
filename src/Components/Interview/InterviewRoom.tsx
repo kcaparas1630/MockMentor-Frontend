@@ -48,7 +48,8 @@ import { GetUserQuery } from "../../Hooks/UserHooks";
 import useWebSocketConnection, {
   WebSocketMessage,
 } from "../../Hooks/useWebSocketConnection";
-import recordStream from "../../Hooks/useMediaRecorder";
+import { useDetectAudio } from "../../Hooks/useDetectAudio";
+import { createRecorder } from "./Helper/createRecorder";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -63,6 +64,7 @@ const InterviewRoom: FC = () => {
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
   const [duration, setDuration] = useState<number>(0);
   const { users } = GetUserQuery();
+  const { startDetectingAudio, stopDetectingAudio } = useDetectAudio();
   // Use a ref to store the main socket instance
   // This allows us to access the latest socket instance in callbacks without stale closures
   const mainSocketRef = useRef<WebSocket | null>(null);
@@ -139,7 +141,7 @@ const InterviewRoom: FC = () => {
     },
     [mainSocketRef] // Dependency to ensure latest mainSocket is used
   );
-  
+
   const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
   const transcriptionSocket = useWebSocketConnection(
     "ws/transcription",
@@ -191,45 +193,61 @@ const InterviewRoom: FC = () => {
     interviewType,
   ]); // Dependencies for handleInterviewStart
 
-  const handleTranscriptionMessage = useCallback(async () => {
-    // Check if transaction is ready , not just ready.
+  const handleTranscriptionMessage = useCallback(() => {
     if (
-      transcriptionSocket &&
-      transcriptionSocket.readyState === WebSocket.OPEN
+      !transcriptionSocket ||
+      transcriptionSocket.readyState !== WebSocket.OPEN ||
+      !streamRef.current
     ) {
-      console.log("Starting audio recording");
-      if (streamRef.current) {
-        // Record the current stream`
-        const blob = await recordStream(streamRef.current);
-        // Convert blob to base64
-        const reader = new FileReader();
-        reader.onload = () => {
-          const base64Data = reader.result as string;
-          // Remove the data URL prefix (e.g., "data:audio/ogg;base64,")
-          const base64Audio = base64Data.split(",")[1];
-
-          // Send the audio data in the correct format
-          const audioMessage = {
-            type: "audio",
-            data: base64Audio,
-          };
-
-          try {
-            transcriptionSocket.send(JSON.stringify(audioMessage));
-            console.log("Audio data sent to transcription service");
-          } catch (error) {
-            console.error("Error sending audio data:", error);
-          }
-        };
-
-        reader.onerror = () => {
-          console.error("Error reading blob data");
-        };
-
-        reader.readAsDataURL(blob);
-      }
+      return;
     }
-  }, [transcriptionSocket, streamRef]);
+
+    let recorder: ReturnType<typeof createRecorder> | null = null;
+    let isRecording = false;
+
+    // Start VAD and listen for speaking changes
+    startDetectingAudio(streamRef.current, (isSpeaking: boolean) => {
+      if (isSpeaking && !isRecording) {
+        // Start recording
+        recorder = createRecorder(
+          streamRef.current!,
+          (blob) => {
+            // On stop, send audio to server
+            const reader = new FileReader();
+            reader.onload = () => {
+              const base64Data = reader.result as string;
+              const base64Audio = base64Data.split(",")[1];
+              const audioMessage = {
+                type: "audio",
+                data: base64Audio,
+              };
+              try {
+                transcriptionSocket.send(JSON.stringify(audioMessage));
+                console.log("Audio data sent to transcription service");
+              } catch (error) {
+                console.error("Error sending audio data:", error);
+              }
+            };
+            reader.onerror = () => {
+              console.error("Error reading blob data");
+            };
+            reader.readAsDataURL(blob);
+          },
+          (err) => {
+            console.error("Recorder error:", err);
+          }
+        );
+        recorder.start();
+        isRecording = true;
+      } else if (!isSpeaking && isRecording) {
+        recorder?.stop();
+        isRecording = false;
+        // Stop VAD when user stops talking
+        stopDetectingAudio();
+      }
+    });
+
+  }, [transcriptionSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
 
   const handleAISpeechEnd = useCallback(() => {
     console.log("AI speech ended");
@@ -275,6 +293,7 @@ const InterviewRoom: FC = () => {
   useEffect(() => {
     mainSocketRef.current = mainSocket;
   }, [mainSocket]);
+
   // ------------------------------------------------- //
 
   // TODO: Separate different concerns into different files.
