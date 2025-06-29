@@ -67,6 +67,8 @@ import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 
+const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
+
 /**
  * Video and microphone test card component for pre-interview device readiness.
  *
@@ -254,7 +256,7 @@ const VideoTestCard: FC = () => {
     const userToken = await getUserToken();
     setIsInterviewStarted(true);
     const response = await axios.post(
-      "http://localhost:3000/api/start-interview",
+    `${baseUrl}/api/start-interview`,
       { jobLevel, interviewType },
       {
         headers: {

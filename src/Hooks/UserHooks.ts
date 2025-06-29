@@ -23,6 +23,8 @@ import { auth } from "../Firebase/FirebaseAuth";
 import axios from "axios";
 import ProfileData from "@/Types/ProfileData";
 
+const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
+
 /**
  * Retrieves the current user's Firebase ID token for API authentication.
  *
@@ -84,7 +86,7 @@ const getUserToken = async (): Promise<string> => {
 const getUser = async (): Promise<ProfileData> => {
     try {
         const userToken = await getUserToken();
-        const response = await axios.get('http://localhost:3000/api/user', {
+        const response = await axios.get(`${baseUrl}/api/user`, {
             headers: {
                 'Authorization': `Bearer ${userToken}`
             }
@@ -126,7 +128,7 @@ const getUser = async (): Promise<ProfileData> => {
 const UpdateUser = async (userData: ProfileData) => {
     try {
         const userToken = await getUserToken();
-        const response = await axios.put('http://localhost:3000/api/update-user',
+        const response = await axios.put(`${baseUrl}/api/update-user`,
             userData,
             {
             headers: {
