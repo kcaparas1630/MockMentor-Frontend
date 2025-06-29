@@ -45,6 +45,8 @@ import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
 import { GetUserQuery } from "@/Hooks/UserHooks";
 
+const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
+
 /**
  * Authenticates user with Firebase using email and password credentials.
  *
@@ -134,7 +136,7 @@ const loginUser = async (credentials: { email: string; password: string }) => {
   }
 
   // Step 2: Fetch user data from API
-  const response = await axios.get(`${import.meta.env.VITE_API_URL}/user`, {
+  const response = await axios.get(`${baseUrl}/api/user`, {
     headers: {
       Authorization: `Bearer ${idToken}`,
     },

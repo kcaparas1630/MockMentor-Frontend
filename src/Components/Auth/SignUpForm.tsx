@@ -46,6 +46,8 @@ import {
   UserRegistrationData,
 } from "../../Types/ApiResponse";
 
+const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
+
 /**
  * Registers a new user with the backend API using email and password credentials.
  *
@@ -79,7 +81,7 @@ const registerUser = async (credentials: {
   password: string;
 }) => {
   const { email, password } = credentials;
-  const response = await axios.post("http://localhost:3000/api/create-user", {
+  const response = await axios.post(`${baseUrl}/api/create-user`, {
     email,
     password,
   });
