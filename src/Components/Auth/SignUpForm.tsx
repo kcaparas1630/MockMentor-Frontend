@@ -81,7 +81,6 @@ const registerUser = async (credentials: {
   password: string;
 }) => {
   const { email, password } = credentials;
-  console.log(email, password);
   const response = await axios.post(`${baseUrl}/api/create-user`, {
     email,
     password,
