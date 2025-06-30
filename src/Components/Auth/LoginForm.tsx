@@ -77,6 +77,7 @@ const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
  */
 const AuthenticateUser = async (email: string, password: string) => {
   try {
+    console.log(email, password);
     const userCredential = await signInWithEmailAndPassword(
       auth,
       email,
