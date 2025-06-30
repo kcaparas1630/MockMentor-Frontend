@@ -80,7 +80,7 @@ const useWebSocketConnection = (
 
   useEffect(() => {
     const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
-    const ws = new WebSocket(`ws://${baseUrl}/api/${socketUrl}`);
+    const ws = new WebSocket(`wss://${baseUrl}/api/${socketUrl}`);
 
     ws.onopen = () => {
       setSocket(ws);
