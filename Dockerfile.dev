@@ -10,8 +10,6 @@ COPY . .
 RUN npm install && \
     npm run build
 
-# Expose a port (adjust if your app uses a different one)
-EXPOSE 5173
-
 # Default command for development (adjust as necessary)
-CMD [ "npm", "run", "dev" ]
+EXPOSE 80
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "80"]
