@@ -211,7 +211,6 @@ const InterviewRoom: FC = () => {
           mainSocketRef.current.readyState === WebSocket.OPEN
         ) {
           try {
-            console.log("Sending transcription to AI service:", message.content);
             mainSocketRef.current.send(
               JSON.stringify({ content: message.content })
             );
@@ -347,7 +346,6 @@ const InterviewRoom: FC = () => {
 
     // Start VAD and listen for speaking changes
     startDetectingAudio(streamRef.current, (isSpeaking: boolean) => {
-      console.log("User is speaking:", isSpeaking);
       if (isSpeaking && !isRecording) {
         // Start recording
         recorder = createRecorder(
@@ -362,7 +360,6 @@ const InterviewRoom: FC = () => {
                 type: "audio",
                 data: base64Audio,
               };
-              console.log("Sending audio data:", audioMessage);
               try {
                 transcriptionSocket.send(JSON.stringify(audioMessage));
               } catch (error) {
