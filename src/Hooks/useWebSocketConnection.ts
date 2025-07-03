@@ -79,7 +79,7 @@ const useWebSocketConnection = (
   const onMessageRef = useRef(onMessage);
 
   useEffect(() => {
-    const baseUrl = import.meta.env.VITE_WEBSOCKET_URL || 'wss://localhost:8000';
+    const baseUrl = import.meta.env.VITE_WEBSOCKET_URL || 'ws://localhost:8000';
     const ws = new WebSocket(`${baseUrl}/api/${socketUrl}`);
 
     ws.onopen = () => {

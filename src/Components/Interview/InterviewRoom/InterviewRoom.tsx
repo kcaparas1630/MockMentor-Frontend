@@ -173,64 +173,10 @@ const InterviewRoom: FC = () => {
     [handleQuestionSpoken]
   );
 
-  /**
-   * Processes transcription messages and forwards them to AI coach service.
-   *
-   * @function
-   * @param {WebSocketMessage} message - The WebSocket message containing transcription data.
-   * Constraints/Format: Must have type "transcript" and valid content
-   * @returns {void}
-   * @example
-   * // Example usage:
-   * handleTranscriptionSocket({ type: "transcript", content: "User spoke this text" });
-   *
-   * @throws {Error} May throw if WebSocket send operation fails.
-   * @remarks
-   * Side Effects:
-   * - Sends transcription data to main AI coach WebSocket
-   * - Logs errors for failed send operations
-   *
-   * Known Issues/Limitations:
-   * - No retry mechanism for failed sends
-   * - Limited error recovery options
-   *
-   * Design Decisions/Rationale:
-   * - Uses mainSocketRef.current to avoid stale closure issues
-   * - Checks WebSocket readyState before sending
-   * - Wraps send operation in try-catch for error handling
-   * - Memoized with mainSocketRef dependency
-   */
-
-  const handleTranscriptionSocket = useCallback(
-    (message: WebSocketMessage) => {
-      // Handle transcription messages
-      if (message.type === "transcript") {
-        // Use mainSocketRef.current to access the latest mainSocket instance
-        if (
-          mainSocketRef.current &&
-          mainSocketRef.current.readyState === WebSocket.OPEN
-        ) {
-          try {
-            mainSocketRef.current.send(
-              JSON.stringify({ content: message.content })
-            );
-          } catch (error) {
-            // TODO: Handle error sending transcription. Remove consoles in production.
-            console.error("Error sending transcription to AI service:", error);
-          }
-        }
-      }
-    },
-    [mainSocketRef] // Dependency to ensure latest mainSocket is used
-  );
-
   // ==================== WEBSOCKET CONNECTIONS ====================
 
   const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
-  const transcriptionSocket = useWebSocketConnection(
-    "ws/transcription",
-    handleTranscriptionSocket
-  );
+  const transcriptionSocket = useWebSocketConnection("ws/transcription");
 
   // ==================== INTERVIEW LIFECYCLE HANDLERS ====================
 
@@ -361,6 +307,7 @@ const InterviewRoom: FC = () => {
                 data: base64Audio,
               };
               try {
+                console.log("Sending audio data to transcription socket", JSON.stringify(audioMessage));
                 transcriptionSocket.send(JSON.stringify(audioMessage));
               } catch (error) {
                 console.error("Error sending audio data:", error);
