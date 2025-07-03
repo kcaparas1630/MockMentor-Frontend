@@ -172,11 +172,9 @@ const InterviewRoom: FC = () => {
     },
     [handleQuestionSpoken]
   );
-
   // ==================== WEBSOCKET CONNECTIONS ====================
 
   const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
-  const transcriptionSocket = useWebSocketConnection("ws/transcription");
 
   // ==================== INTERVIEW LIFECYCLE HANDLERS ====================
 
@@ -280,8 +278,8 @@ const InterviewRoom: FC = () => {
 
   const handleTranscriptionMessage = useCallback(() => {
     if (
-      !transcriptionSocket ||
-      transcriptionSocket.readyState !== WebSocket.OPEN ||
+      !mainSocket ||
+      mainSocket.readyState !== WebSocket.OPEN ||
       !streamRef.current
     ) {
       return;
@@ -307,8 +305,7 @@ const InterviewRoom: FC = () => {
                 data: base64Audio,
               };
               try {
-                console.log("Sending audio data to transcription socket", JSON.stringify(audioMessage));
-                transcriptionSocket.send(JSON.stringify(audioMessage));
+                mainSocket.send(JSON.stringify(audioMessage));
               } catch (error) {
                 console.error("Error sending audio data:", error);
               }
@@ -331,7 +328,7 @@ const InterviewRoom: FC = () => {
         stopDetectingAudio();
       }
     });
-  }, [transcriptionSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
+  }, [mainSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
 
   const handleAISpeechEnd = useCallback(() => {
     handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
