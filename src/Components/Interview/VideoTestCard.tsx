@@ -480,8 +480,8 @@ const VideoTestCard: FC = () => {
                 disabled={
                   !interviewType ||
                   !jobLevel ||
-                  !deviceSupport.hasCamera ||
-                  !deviceSupport.hasMicrophone
+                  !videoEnabled ||
+                  !audioEnabled
                 }
                 aria-describedby="start-button-requirements"
               >
