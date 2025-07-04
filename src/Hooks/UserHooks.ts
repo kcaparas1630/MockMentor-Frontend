@@ -23,7 +23,6 @@ import { auth } from "../Firebase/FirebaseAuth";
 import axios from "axios";
 import ProfileData from "@/Types/ProfileData";
 
-import useFirebaseAuthReady from "../Hooks/useFirebaseAuthReady";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
@@ -177,7 +176,6 @@ const UpdateUser = async (userData: ProfileData) => {
  * - Uses 'user' as query key for caching
  */
 const GetUserQuery = () => {
-    const authReady = useFirebaseAuthReady();
 
     const {
         data: users,
@@ -188,7 +186,7 @@ const GetUserQuery = () => {
     }: UseQueryResult<ProfileData, Error> = useQuery({
         queryKey: ['user'],
         queryFn: getUser,
-        enabled: authReady,
+        enabled: !!auth.currentUser,
     })
     return {
         users,
