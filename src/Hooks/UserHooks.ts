@@ -23,6 +23,7 @@ import { auth } from "../Firebase/FirebaseAuth";
 import axios from "axios";
 import ProfileData from "@/Types/ProfileData";
 
+
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
 /**
@@ -175,6 +176,7 @@ const UpdateUser = async (userData: ProfileData) => {
  * - Uses 'user' as query key for caching
  */
 const GetUserQuery = () => {
+
     const {
         data: users,
         isPending,
