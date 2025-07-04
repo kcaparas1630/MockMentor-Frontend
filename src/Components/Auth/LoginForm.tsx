@@ -21,7 +21,7 @@
  * - TanStack Router
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   SignUpContainer,
   Title,
@@ -182,23 +182,23 @@ const LoginForm = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const mutation = useMutation({
-    mutationFn: loginUser,
-    onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
-      await refetch();
-      if (
-        status === "success" &&
-        users?.profile?.name &&
-        users?.profile?.jobRole
-      ) {
+  // UseEffect to always fetch user data on user change.
+  useEffect(() => {
+    if (status === "success" && users) {
+     if (users?.profile?.name && users?.profile?.jobRole) {
         navigate({ to: "/video-test" });
       } else {
         navigate({ to: "/profile-create" });
       }
+    }
+  }, [status, users, navigate]);
+
+  const mutation = useMutation({
+    mutationFn: loginUser,
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
     },
     onError: (error: unknown) => {
-      console.log(error);
       setAuthError(error instanceof Error ? error.message : String(error));
     },
     onSettled: () => {
