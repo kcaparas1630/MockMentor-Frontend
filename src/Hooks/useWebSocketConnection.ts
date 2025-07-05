@@ -87,8 +87,7 @@ const useWebSocketConnection = (
   const onMessageRef = useRef(onMessage);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [, setReconnectAttempts] = useState(0);
   const maxReconnectAttempts = 5;
   const wsRef = useRef<WebSocket | null>(null);
 
