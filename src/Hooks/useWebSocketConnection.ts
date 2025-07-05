@@ -109,7 +109,6 @@ const useWebSocketConnection = (
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log(`WebSocket connected to ${socketUrl}`);
       setSocket(ws);
       setIsConnected(true);
       setIsConnecting(false);
@@ -122,7 +121,6 @@ const useWebSocketConnection = (
       
       heartbeatIntervalRef.current = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
-          console.log('Sending heartbeat...');
           try {
             ws.send(JSON.stringify({ type: 'heartbeat', content: 'ping' }));
           } catch (error) {
