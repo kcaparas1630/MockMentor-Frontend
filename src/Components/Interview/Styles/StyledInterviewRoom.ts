@@ -162,6 +162,14 @@ export const DurationText = styled.div`
   color: #6b7280;
 `;
 
+export const ConnectionStatus = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+`;
+
 export const ChatButton = styled.button<{ isOpen: boolean }>`
   display: flex;
   align-items: center;
