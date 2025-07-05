@@ -52,6 +52,7 @@ import {
   RecordingStatus,
   RecordingDot,
   DurationText,
+  ConnectionStatus,
   ChatButton,
   ChatOverlay,
   ActiveDevicesIndicator,
@@ -174,7 +175,7 @@ const InterviewRoom: FC = () => {
   );
   // ==================== WEBSOCKET CONNECTIONS ====================
 
-  const mainSocket = useWebSocketConnection("ws", handleAIWebSocket);
+  const { socket: mainSocket, isConnected, isConnecting, reconnect } = useWebSocketConnection("ws", handleAIWebSocket);
 
   // ==================== INTERVIEW LIFECYCLE HANDLERS ====================
 
@@ -278,8 +279,8 @@ const InterviewRoom: FC = () => {
 
   const handleTranscriptionMessage = useCallback(() => {
     if (
+      !isConnected ||
       !mainSocket ||
-      mainSocket.readyState !== WebSocket.OPEN ||
       !streamRef.current
     ) {
       return;
@@ -328,7 +329,7 @@ const InterviewRoom: FC = () => {
         stopDetectingAudio();
       }
     });
-  }, [mainSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
+  }, [isConnected, mainSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
 
   const handleAISpeechEnd = useCallback(() => {
     handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
@@ -351,7 +352,7 @@ const InterviewRoom: FC = () => {
   // but only when the socket connection is established.
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
+    if (isConnected) {
       timer = setTimeout(() => {
         handleInterviewStart();
       }, 5000);
@@ -362,7 +363,7 @@ const InterviewRoom: FC = () => {
         clearTimeout(timer);
       }
     };
-  }, [mainSocket, handleInterviewStart]); // Dependencies: socket for connection, handleInterviewStart for latest function instance
+  }, [isConnected, handleInterviewStart]); // Dependencies: connection status and handleInterviewStart for latest function instance
 
   // Effect to update ref for mainSocket changes
   useEffect(() => {
@@ -480,6 +481,35 @@ const InterviewRoom: FC = () => {
               <Mic size={16} />
               <span>Active</span>
             </ActiveDevicesIndicator>
+            <ConnectionStatus>
+              <div style={{ 
+                width: '8px', 
+                height: '8px', 
+                borderRadius: '50%', 
+                backgroundColor: isConnected ? '#10b981' : isConnecting ? '#f59e0b' : '#ef4444',
+                marginRight: '4px'
+              }} />
+              <span>
+                {isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Disconnected'}
+              </span>
+              {!isConnected && !isConnecting && (
+                <button 
+                  onClick={reconnect}
+                  style={{
+                    marginLeft: '8px',
+                    padding: '2px 8px',
+                    fontSize: '12px',
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Reconnect
+                </button>
+              )}
+            </ConnectionStatus>
           </StatusInfo>
 
           {/* Chat Button */}
