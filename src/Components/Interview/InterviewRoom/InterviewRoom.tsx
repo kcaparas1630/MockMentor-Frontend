@@ -348,14 +348,14 @@ const InterviewRoom: FC = () => {
     return () => clearInterval(interval);
   }, [streamReady]);
 
-  // Effect to trigger handleInterviewStart after 5 seconds,
+  // Effect to trigger handleInterviewStart after 2 seconds,
   // but only when the socket connection is established.
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isConnected) {
       timer = setTimeout(() => {
         handleInterviewStart();
-      }, 5000);
+      }, 2000);
     }
     // cleanup
     return () => {
