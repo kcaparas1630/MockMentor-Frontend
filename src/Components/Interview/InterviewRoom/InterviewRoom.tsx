@@ -492,6 +492,7 @@ const InterviewRoom: FC = () => {
               <span>
                 {isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Disconnected'}
               </span>
+              { /* TODO: Implement reconnection without going back at initial setup. */}
               {!isConnected && !isConnecting && (
                 <button 
                   onClick={reconnect}
