@@ -104,7 +104,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   // CONSTANTS
   const VAD_THRESHOLD: number = 15; // Threshold for minimum amplitude before it's considered voice
   const ANALYSIS_INTERVAL_MS: number = 30;
-  const SILENCE_INTERVAL_MS: number = 500; // 500ms of silence before considering user stopped speaking
+  const SILENCE_INTERVAL_MS: number = 500; // 500 ms of silence before considering user stopped speaking
 
   /**
    * Analyzes audio data in real-time to detect voice activity.
