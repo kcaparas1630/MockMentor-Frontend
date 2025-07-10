@@ -202,11 +202,9 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     }
 
     const averageAmplitude = (sum / (length / sampleStep)) * 100;
-    console.log("Average amplitude:", averageAmplitude);
 
     if (averageAmplitude > VAD_THRESHOLD) {
       // Voice detected
-      console.log("Voice detected");
       if (!stateRef.current.isSpeaking) {
         stateRef.current.isSpeaking = true;
         speakingChangeCallbackRef.current?.(true);

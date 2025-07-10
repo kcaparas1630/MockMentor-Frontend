@@ -297,7 +297,6 @@ const InterviewRoom: FC = () => {
       streamRef.current,
       (isSpeaking: boolean) => {
         if (isSpeaking) {
-          console.log("Voice detected");
           setIsStreaming(true);
           // Clear any existing timeout
           if (streamingTimeoutRef.current) {
