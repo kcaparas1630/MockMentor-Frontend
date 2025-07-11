@@ -44,7 +44,7 @@ interface UseDetectAudioReturn {
   startDetectingAudio: (
     stream: MediaStream,
     onSpeakingChange?: (isSpeaking: boolean) => void,
-    onAudioChunk?: (chunk: string) => void
+    onAudioChunk?: (chunk: string, isSpeaking: boolean) => void
   ) => Promise<void>;
   stopDetectingAudio: () => void;
 }
@@ -106,7 +106,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   const speakingChangeCallbackRef = useRef<
     ((isSpeaking: boolean) => void) | null
   >(null);
-  const audioChunkCallbackRef = useRef<((chunk: string) => void) | null>(null);
+  const audioChunkCallbackRef = useRef<((chunk: string, isSpeaking: boolean) => void) | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
   // Audio processing nodes
@@ -121,7 +121,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   // CONSTANTS
   const VAD_THRESHOLD: number = 15; // Threshold for minimum amplitude before it's considered voice
   const ANALYSIS_INTERVAL_MS: number = 50;
-  const SILENCE_INTERVAL_MS: number = 800; // 800 ms of silence before considering user stopped speaking
+  const SILENCE_INTERVAL_MS: number = 1500; // 150 ms of silence before considering user stopped speaking
   const CHUNK_DURATION_MS: number = 1000; // 1 second of audio chunk
 
   /**
@@ -137,6 +137,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
         mimeType: "audio/webm;codecs=opus",
         audioBitsPerSecond: 16000,
       };
+      
       const recorder = new MediaRecorder(audioOnlyStream, options);
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0 && audioChunkCallbackRef.current) {
@@ -145,7 +146,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
           reader.onload = () => {
             const base64Data = reader.result as string;
             const base64Audio = base64Data.split(",")[1];
-            audioChunkCallbackRef.current?.(base64Audio);
+            audioChunkCallbackRef.current?.(base64Audio, stateRef.current.isSpeaking);
           };
           reader.readAsDataURL(event.data);
         }
@@ -269,7 +270,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   const startDetectingAudio = async (
     stream: MediaStream,
     onSpeakingChange?: (isSpeaking: boolean) => void,
-    onAudioChunk?: (chunk: string) => void
+    onAudioChunk?: (chunk: string, isSpeaking: boolean) => void
   ) => {
     speakingChangeCallbackRef.current = onSpeakingChange || null;
     audioChunkCallbackRef.current = onAudioChunk || null;

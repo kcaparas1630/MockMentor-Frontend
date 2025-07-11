@@ -172,6 +172,8 @@ const InterviewRoom: FC = () => {
         handleQuestionSpoken(JSON.stringify(message.content));
       } else if (message.type === "transcript") {
         console.log("Transcript received:", message.content);
+      } else if(message.type === "incremental_transcript") {
+        console.log("Incremental transcript received:", message.content);
       } else if (message.type === "error") {
         console.error("Error received:", message.content);
       }
@@ -308,6 +310,12 @@ const InterviewRoom: FC = () => {
             if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
               try {
                 console.log("Sending audio end signal");
+                mainSocket.send(
+                  JSON.stringify({
+                    type: "audio_end",
+                    timeStamp: Date.now(),
+                  })
+                );
               } catch (error) {
                 console.error("Error sending audio end signal:", error);
               }
@@ -316,11 +324,22 @@ const InterviewRoom: FC = () => {
           }, 500);
         }
       },
-      (audioChunk: string) => {
+      (audioChunk: string, isSpeaking: boolean) => {
+        if (!isSpeaking) {
+          return;
+        }
+        
         // Stream audio chunks to server
         if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
           try {
-            console.log("Sending audio chunk:", audioChunk);
+            mainSocket.send(
+              JSON.stringify({
+                type: "audio_chunk",
+                data: audioChunk,
+                timeStamp: Date.now(),
+                isSpeaking: isSpeaking,
+              })
+            );
           } catch (error) {
             console.error("Error sending audio chunk:", error);
           }
