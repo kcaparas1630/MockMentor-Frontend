@@ -62,7 +62,6 @@ import useWebSocketConnection, {
   WebSocketMessage,
 } from "../../../Hooks/useWebSocketConnection";
 import { useDetectAudio } from "../../../Hooks/useDetectAudio";
-import { createRecorder } from "../Helper/createRecorder";
 import DeviceIssues from "./ComponentHandlers/DeviceIssues";
 import LoadingStream from "./ComponentHandlers/LoadingStream";
 import LoadingWhileCheckingDevice from "./ComponentHandlers/LoadingWhileCheckingDevice";
@@ -112,6 +111,8 @@ const InterviewRoom: FC = () => {
   // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
   const [duration, setDuration] = useState<number>(0);
+  const [isStreaming, setIsStreaming] = useState<boolean>(false);
+  const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ==================== REFS ====================
 
@@ -169,13 +170,24 @@ const InterviewRoom: FC = () => {
       if (message.type === "message") {
         // Handle question from AI coach
         handleQuestionSpoken(JSON.stringify(message.content));
+      } else if (message.type === "transcript") {
+        console.log("Transcript received:", message.content);
+      } else if(message.type === "incremental_transcript") {
+        console.log("Incremental transcript received:", message.content);
+      } else if (message.type === "error") {
+        console.error("Error received:", message.content);
       }
     },
     [handleQuestionSpoken]
   );
   // ==================== WEBSOCKET CONNECTIONS ====================
 
-  const { socket: mainSocket, isConnected, isConnecting, reconnect } = useWebSocketConnection("ws", handleAIWebSocket);
+  const {
+    socket: mainSocket,
+    isConnected,
+    isConnecting,
+    reconnect,
+  } = useWebSocketConnection("ws", handleAIWebSocket);
 
   // ==================== INTERVIEW LIFECYCLE HANDLERS ====================
 
@@ -278,63 +290,78 @@ const InterviewRoom: FC = () => {
    */
 
   const handleTranscriptionMessage = useCallback(() => {
-    if (
-      !isConnected ||
-      !mainSocket ||
-      !streamRef.current
-    ) {
+    if (!isConnected || !mainSocket || !streamRef.current) {
       return;
     }
-
-    let recorder: ReturnType<typeof createRecorder> | null = null;
-    let isRecording = false;
-
     // Start VAD and listen for speaking changes
-    startDetectingAudio(streamRef.current, (isSpeaking: boolean) => {
-      if (isSpeaking && !isRecording) {
-        // Start recording
-        recorder = createRecorder(
-          streamRef.current!,
-          (blob) => {
-            // On stop, send audio to server
-            const reader = new FileReader();
-            reader.onload = () => {
-              const base64Data = reader.result as string;
-              const base64Audio = base64Data.split(",")[1];
-              const audioMessage = {
-                type: "audio",
-                data: base64Audio,
-              };
-              try {
-                mainSocket.send(JSON.stringify(audioMessage));
-              } catch (error) {
-                console.error("Error sending audio data:", error);
-              }
-            };
-            reader.onerror = () => {
-              console.error("Error reading blob data");
-            };
-            reader.readAsDataURL(blob);
-          },
-          (err) => {
-            console.error("Recorder error:", err);
+    // Start audio detection with streaming callback
+    startDetectingAudio(
+      streamRef.current,
+      (isSpeaking: boolean) => {
+        if (isSpeaking) {
+          setIsStreaming(true);
+          // Clear any existing timeout
+          if (streamingTimeoutRef.current) {
+            clearTimeout(streamingTimeoutRef.current);
           }
-        );
-        recorder.start();
-        isRecording = true;
-      } else if (!isSpeaking && isRecording) {
-        recorder?.stop();
-        isRecording = false;
-        // Stop VAD when user stops talking
-        stopDetectingAudio();
+        } else {
+          // User stopped speaking - send end signal after delay
+          streamingTimeoutRef.current = setTimeout(() => {
+            if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
+              try {
+                console.log("Sending audio end signal");
+                mainSocket.send(
+                  JSON.stringify({
+                    type: "audio_end",
+                    timeStamp: Date.now(),
+                  })
+                );
+              } catch (error) {
+                console.error("Error sending audio end signal:", error);
+              }
+            }
+            setIsStreaming(false);
+          }, 500);
+        }
+      },
+      (audioChunk: string, isSpeaking: boolean) => {
+        if (!isSpeaking) {
+          return;
+        }
+        
+        // Stream audio chunks to server
+        if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
+          try {
+            mainSocket.send(
+              JSON.stringify({
+                type: "audio_chunk",
+                data: audioChunk,
+                timeStamp: Date.now(),
+                isSpeaking: isSpeaking,
+              })
+            );
+          } catch (error) {
+            console.error("Error sending audio chunk:", error);
+          }
+        }
       }
-    });
-  }, [isConnected, mainSocket, streamRef, startDetectingAudio, stopDetectingAudio]);
+    );
+
+    // cleanup function
+    return () => {
+      stopDetectingAudio();
+    };
+  }, [
+    isConnected,
+    mainSocket,
+    streamRef,
+    startDetectingAudio,
+    stopDetectingAudio,
+  ]);
 
   const handleAISpeechEnd = useCallback(() => {
     handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
   }, [handleTranscriptionMessage]);
-
 
   // ==================== CONDITIONAL USE EFFECTS ====================
 
@@ -407,7 +434,7 @@ const InterviewRoom: FC = () => {
   }
 
   // ==================== MAIN RENDER ====================
-  
+
   return (
     <InterviewRoomContainer>
       {/* Header */}
@@ -481,30 +508,60 @@ const InterviewRoom: FC = () => {
               <Mic size={16} />
               <span>Active</span>
             </ActiveDevicesIndicator>
+            {isStreaming && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  color: "#10b981",
+                }}
+              >
+                <div
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    borderRadius: "50%",
+                    backgroundColor: "#10b981",
+                    animation: "pulse 1s infinite",
+                  }}
+                />
+                <span style={{ fontSize: "12px" }}>Streaming</span>
+              </div>
+            )}
             <ConnectionStatus>
-              <div style={{ 
-                width: '8px', 
-                height: '8px', 
-                borderRadius: '50%', 
-                backgroundColor: isConnected ? '#10b981' : isConnecting ? '#f59e0b' : '#ef4444',
-                marginRight: '4px'
-              }} />
+              <div
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  backgroundColor: isConnected
+                    ? "#10b981"
+                    : isConnecting
+                      ? "#f59e0b"
+                      : "#ef4444",
+                  marginRight: "4px",
+                }}
+              />
               <span>
-                {isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Disconnected'}
+                {isConnected
+                  ? "Connected"
+                  : isConnecting
+                    ? "Connecting..."
+                    : "Disconnected"}
               </span>
-              { /* TODO: Implement reconnection without going back at initial setup. */}
               {!isConnected && !isConnecting && (
-                <button 
+                <button
                   onClick={reconnect}
                   style={{
-                    marginLeft: '8px',
-                    padding: '2px 8px',
-                    fontSize: '12px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
+                    marginLeft: "8px",
+                    padding: "2px 8px",
+                    fontSize: "12px",
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
                   }}
                 >
                   Reconnect

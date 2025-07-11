@@ -27,7 +27,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
  * @property {string} [audioFormat] - Optional audio format specification.
  */
 export interface WebSocketMessage {
-  type: "message" | "error" | "transcription" | "audio" | "transcript" | "heartbeat";
+  type: "message" | "error" | "incremental_transcript" | "audio" | "transcript" | "heartbeat";
   content: string | object;
   audioData?: string;
   audioFormat?: string;
