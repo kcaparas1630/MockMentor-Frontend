@@ -151,6 +151,9 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
           reader.readAsDataURL(event.data);
         }
       };
+      recorder.onerror = (event) => {
+        console.error("Error in MediaRecorder:", event);
+      };
       return recorder;
     },
     []
