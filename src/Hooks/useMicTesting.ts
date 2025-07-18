@@ -113,7 +113,7 @@ export const useMicTesting = (): UseMicTestingReturn => {
    * - Starts real-time monitoring
    * - Updates testing state
    */
-  const startMicTest = async (stream: MediaStream) => {
+  const startMicTest = useCallback(async (stream: MediaStream) => {
     const audioTracks = stream.getAudioTracks();
 
     if (audioTracks.length === 0) {
@@ -163,7 +163,7 @@ export const useMicTesting = (): UseMicTestingReturn => {
       setIsMicTesting(false);
       micTestingRef.current = false;
     }
-  };
+  }, []);
 
   /**
    * Stops microphone testing and cleans up resources.
