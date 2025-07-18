@@ -16,7 +16,8 @@
  * - Web Audio API
  */
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import CalibrationThresholds from "../Types/CalibrationThresholds";
 
 /**
  * Interface for microphone testing hook return value.
@@ -26,6 +27,9 @@ import { useState, useRef, useEffect } from "react";
  * @property {string|null} error - Error message if testing fails.
  * @property {Function} startMicTest - Function to start microphone testing.
  * @property {Function} stopMicTest - Function to stop microphone testing.
+ * @property {Function} calibrate - Function to perform calibration and return thresholds.
+ * @property {CalibrationThresholds|null} calibrationThresholds - Current calibration thresholds.
+ * @property {boolean} isCalibrating - Whether calibration is currently in progress.
  */
 export interface UseMicTestingReturn {
   isMicTesting: boolean;
@@ -33,6 +37,9 @@ export interface UseMicTestingReturn {
   error: string | null;
   startMicTest: (stream: MediaStream) => Promise<void>;
   stopMicTest: () => void;
+  calibrate: (stream: MediaStream) => Promise<CalibrationThresholds>;
+  calibrationThresholds: CalibrationThresholds | null;
+  isCalibrating: boolean;
 }
 
 /**
@@ -78,12 +85,16 @@ export const useMicTesting = (): UseMicTestingReturn => {
   const [isMicTesting, setIsMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [calibrationThresholds, setCalibrationThresholds] = useState<CalibrationThresholds | null>(null);
+  const [isCalibrating, setIsCalibrating] = useState(false);
   
   // Audio monitoring refs
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const micTestingRef = useRef<boolean>(false);
+  
+
 
   /**
    * Starts microphone testing with the provided stream.
@@ -190,6 +201,137 @@ export const useMicTesting = (): UseMicTestingReturn => {
   };
 
   /**
+   * Calculates spectral centroid from frequency data.
+   * @param frequencyData - Frequency domain data
+   * @param sampleRate - Audio sample rate
+   * @returns Spectral centroid value
+   */
+  const calculateSpectralCentroid = useCallback((frequencyData: Uint8Array, sampleRate: number): number => {
+    const fftSize = frequencyData.length * 2;
+    const binWidth = sampleRate / fftSize;
+    
+    let weightedSum = 0;
+    let magnitudeSum = 0;
+    
+    for (let i = 0; i < frequencyData.length; i++) {
+      const frequency = i * binWidth;
+      const magnitude = frequencyData[i] / 255;
+      weightedSum += frequency * magnitude;
+      magnitudeSum += magnitude;
+    }
+    
+    return magnitudeSum > 0 ? weightedSum / magnitudeSum : 0;
+  }, []);
+
+  /**
+   * Calculates zero-crossing rate from time domain data.
+   * @param timeData - Time domain data
+   * @returns Zero-crossing rate value
+   */
+  const calculateZeroCrossingRate = useCallback((timeData: Uint8Array): number => {
+    let crossings = 0;
+    const length = timeData.length;
+    
+    for (let i = 1; i < length; i++) {
+      const current = timeData[i] - 128;
+      const previous = timeData[i - 1] - 128;
+      
+      if ((current >= 0 && previous < 0) || (current < 0 && previous >= 0)) {
+        crossings++;
+      }
+    }
+    
+    return crossings / length;
+  }, []);
+
+  /**
+   * Calculates amplitude from time domain data.
+   * @param timeData - Time domain data
+   * @returns Amplitude value
+   */
+  const calculateAmplitude = useCallback((timeData: Uint8Array): number => {
+    let sum = 0;
+    const length = timeData.length;
+    const sampleStep = 4;
+    
+    for (let i = 0; i < length; i += sampleStep) {
+      sum += Math.abs((timeData[i] - 128) / 128);
+    }
+    
+    return (sum / (length / sampleStep)) * 100;
+  }, []);
+
+  /**
+   * Performs calibration by collecting audio samples and calculating optimal thresholds.
+   * @param stream - Audio stream to calibrate
+   * @returns Promise resolving to calibration thresholds
+   */
+  const calibrate = useCallback(async (stream: MediaStream): Promise<CalibrationThresholds> => {
+    return new Promise((resolve) => {
+      setIsCalibrating(true);
+      setError(null);
+      
+      // Start mic test if not already running
+      if (!isMicTesting) {
+        startMicTest(stream);
+      }
+      
+      const samples: Array<{amplitude: number, spectralCentroid: number, zcr: number}> = [];
+      let sampleCount = 0;
+      const maxSamples = 100; // 5 seconds at 20fps
+      
+      const collectSample = () => {
+        if (!analyserRef.current || sampleCount >= maxSamples) {
+          // Calculate optimal thresholds
+          const thresholds = calculateOptimalThresholds(samples);
+          setCalibrationThresholds(thresholds);
+          setIsCalibrating(false);
+          resolve(thresholds);
+          return;
+        }
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const frequencyData = new Uint8Array(bufferLength);
+        const timeData = new Uint8Array(analyserRef.current.fftSize);
+        
+        analyserRef.current.getByteFrequencyData(frequencyData);
+        analyserRef.current.getByteTimeDomainData(timeData);
+        
+        const amplitude = calculateAmplitude(timeData);
+        const spectralCentroid = calculateSpectralCentroid(frequencyData, audioContextRef.current?.sampleRate || 44100);
+        const zcr = calculateZeroCrossingRate(timeData);
+        
+        samples.push({ amplitude, spectralCentroid, zcr });
+        sampleCount++;
+        
+        setTimeout(collectSample, 50); // 20fps
+      };
+      
+      // Start collecting samples after a short delay
+      setTimeout(collectSample, 100);
+    });
+  }, [isMicTesting, calculateAmplitude, calculateSpectralCentroid, calculateZeroCrossingRate]);
+
+  /**
+   * Calculates optimal thresholds from collected samples.
+   * @param samples - Array of audio samples
+   * @returns Calibration thresholds
+   */
+  const calculateOptimalThresholds = useCallback((samples: Array<{amplitude: number, spectralCentroid: number, zcr: number}>): CalibrationThresholds => {
+    const amplitudes = samples.map(s => s.amplitude).sort((a, b) => a - b);
+    const spectralCentroids = samples.map(s => s.spectralCentroid).sort((a, b) => a - b);
+    const zcrs = samples.map(s => s.zcr).sort((a, b) => a - b);
+    
+    return {
+      amplitudeThreshold: amplitudes[Math.floor(amplitudes.length * 0.7)], // 70th percentile
+      spectralCentroidMin: spectralCentroids[Math.floor(spectralCentroids.length * 0.1)],
+      spectralCentroidMax: spectralCentroids[Math.floor(spectralCentroids.length * 0.9)],
+      zcrMin: zcrs[Math.floor(zcrs.length * 0.1)],
+      zcrMax: zcrs[Math.floor(zcrs.length * 0.9)]
+    };
+  }, []);
+
+  /**
    * Real-time audio level monitoring using frequency and time domain analysis.
    *
    * @function
@@ -255,5 +397,8 @@ export const useMicTesting = (): UseMicTestingReturn => {
     error,
     startMicTest,
     stopMicTest,
+    calibrate,
+    calibrationThresholds,
+    isCalibrating,
   };
 }; 
