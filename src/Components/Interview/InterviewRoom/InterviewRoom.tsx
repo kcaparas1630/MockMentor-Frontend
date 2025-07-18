@@ -110,6 +110,7 @@ const InterviewRoom: FC = () => {
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
+  const [isAISpeaking, setIsAISpeaking] = useState<boolean>(false);
   const [duration, setDuration] = useState<number>(0);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -122,8 +123,14 @@ const InterviewRoom: FC = () => {
    * @type {React.MutableRefObject<WebSocket | null>} mainSocketRef
    */
   const mainSocketRef = useRef<WebSocket | null>(null);
+  const isAISpeakingRef = useRef<boolean>(false);
 
   const { users } = GetUserQuery();
+
+  const setIsAISpeakingState = useCallback((speaking: boolean) => {
+    setIsAISpeaking(speaking);
+    isAISpeakingRef.current = speaking;
+  }, []);
 
   // ==================== CUSTOM HOOKS ====================
 
@@ -162,6 +169,7 @@ const InterviewRoom: FC = () => {
 
   const handleQuestionSpoken = useCallback((speechText: string) => {
     setAICoachMessage(speechText);
+    setIsAISpeaking(true);
   }, []);
 
   const handleAIWebSocket = useCallback(
@@ -293,6 +301,10 @@ const InterviewRoom: FC = () => {
     if (!isConnected || !mainSocket || !streamRef.current) {
       return;
     }
+    if (isAISpeakingRef.current) {
+      console.log("AI is speaking, skipping transcription");
+      return;
+    }
     // Start VAD and listen for speaking changes
     // Start audio detection with streaming callback
     startDetectingAudio(
@@ -360,8 +372,17 @@ const InterviewRoom: FC = () => {
   ]);
 
   const handleAISpeechEnd = useCallback(() => {
-    handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
-  }, [handleTranscriptionMessage]);
+    // stop any ongoing audio detection first
+    stopDetectingAudio();
+
+    // update ai speaking state
+    setIsAISpeakingState(false);
+
+    // Use a small delay to ensure all state updates are processed
+    setTimeout(() => {
+      handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
+    }, 100);
+  }, [handleTranscriptionMessage, setIsAISpeakingState, stopDetectingAudio]);
 
   // ==================== CONDITIONAL USE EFFECTS ====================
 
@@ -396,6 +417,19 @@ const InterviewRoom: FC = () => {
   useEffect(() => {
     mainSocketRef.current = mainSocket;
   }, [mainSocket]);
+
+  // cleanup effect to stop audio detection when AI starts speaking
+  useEffect(() => {
+    if (isAISpeaking) {
+      stopDetectingAudio();
+      setIsStreaming(false);
+      
+      // Clear any pending timeout
+      if (streamingTimeoutRef.current) {
+        clearTimeout(streamingTimeoutRef.current);
+      }
+    }
+  }, [isAISpeaking, stopDetectingAudio]);
 
   // ==================== CONDITIONAL RENDERING ====================
 
