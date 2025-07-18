@@ -33,6 +33,8 @@ import noiseGateWorkletPath from "@sapphi-red/web-noise-suppressor/noiseGateWork
 import rnnoiseWorkletPath from "@sapphi-red/web-noise-suppressor/rnnoiseWorklet.js?url";
 import rnnoiseWasmPath from "@sapphi-red/web-noise-suppressor/rnnoise.wasm?url";
 import rnnoiseWasmSimdPath from "@sapphi-red/web-noise-suppressor/rnnoise_simd.wasm?url";
+import VoiceDetectionMetrics from "../Types/VoiceDetectionMetrics";
+import { useCalibration } from "../Context/CalibrationContext";
 
 /**
  * Interface for voice activity detection hook return value.
@@ -87,9 +89,14 @@ interface UseDetectAudioReturn {
  * - Pre-allocates arrays to reduce GC pressure
  */
 export const useDetectAudio = (): UseDetectAudioReturn => {
+  // Get calibration thresholds from context
+  const { thresholds } = useCalibration();
+  
   // REFERENCES TO AUDIO
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
+  const frequencyDataArrayRef = useRef<Uint8Array | null>(null);
+  const frequencyFloatArrayRef = useRef<Float32Array | null>(null);
 
   // Audio Streaming Refs
   const streamingRecorderRef = useRef<MediaRecorder | null>(null);
@@ -106,7 +113,9 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   const speakingChangeCallbackRef = useRef<
     ((isSpeaking: boolean) => void) | null
   >(null);
-  const audioChunkCallbackRef = useRef<((chunk: string, isSpeaking: boolean) => void) | null>(null);
+  const audioChunkCallbackRef = useRef<
+    ((chunk: string, isSpeaking: boolean) => void) | null
+  >(null);
   const animationFrameRef = useRef<number | null>(null);
 
   // Audio processing nodes
@@ -119,10 +128,91 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   const lastAnalysisTimeRef = useRef<number>(0);
 
   // CONSTANTS
-  const VAD_THRESHOLD: number = 15; // Threshold for minimum amplitude before it's considered voice
   const ANALYSIS_INTERVAL_MS: number = 50;
   const SILENCE_INTERVAL_MS: number = 1500; // 150 ms of silence before considering user stopped speaking
   const CHUNK_DURATION_MS: number = 1000; // 1 second of audio chunk
+
+  const calculateSpectralCentroid = useCallback(
+    (frequencyData: Uint8Array, sampleRate: number): number => {
+      const fftSize = frequencyData.length * 2; // fftSize is twice the frequency bin count.
+      const binWidth = sampleRate / fftSize;
+
+      let weightedSum = 0;
+      let magnitudeSum = 0;
+
+      for (let i = 0; i < frequencyData.length; i++) {
+        const frequency = i * binWidth;
+        const magnitude = frequencyData[i] / 255; // Normalize to 0-1 range
+        // Calculate weighted sum and magnitude sum
+        weightedSum += frequency * magnitude;
+        magnitudeSum += magnitude;
+      }
+      return magnitudeSum > 0 ? weightedSum / magnitudeSum : 0;
+    },
+    []
+  );
+
+  const calculateAmplitude = useCallback((timeData: Uint8Array): number => {
+    let sum = 0;
+    const length = timeData.length;
+    const sampleStep = 4; // Sample every 4th value for efficiency
+
+    for (let i = 0; i < length; i += sampleStep) {
+      sum += Math.abs((timeData[i] - 128) / 128);
+    }
+
+    return (sum / (length / sampleStep)) * 100;
+  }, []);
+
+  const calculateZeroCrossingRate = useCallback(
+    (timeData: Uint8Array): number => {
+      let crossings = 0;
+      const length = timeData.length;
+
+      for (let i = 1; i < length; i++) {
+        const current = timeData[i] - 128; // Center around 0
+        const previous = timeData[i - 1] - 128;
+
+        if ((current >= 0 && previous < 0) || (current < 0 && previous >= 0)) {
+          crossings++;
+        }
+      }
+
+      return crossings / length; // Normalize by length
+    },
+    []
+  );
+
+  const detectVoiceActivity = useCallback(
+    (metrics: VoiceDetectionMetrics): boolean => {
+      const { amplitude, spectralCentroid, zeroCrossingRate } = metrics;
+      
+      // Get calibration thresholds from context, otherwise use defaults
+      const currentThresholds = thresholds || {
+        amplitudeThreshold: 15,
+        spectralCentroidMin: 800,
+        spectralCentroidMax: 5000,
+        zcrMin: 0.05,
+        zcrMax: 0.35
+      };
+
+      // Check each condition
+      const amplitudeCheck = amplitude > currentThresholds.amplitudeThreshold;
+      const spectralCheck =
+        spectralCentroid >= currentThresholds.spectralCentroidMin &&
+        spectralCentroid <= currentThresholds.spectralCentroidMax;
+      const zcrCheck =
+        zeroCrossingRate >= currentThresholds.zcrMin &&
+        zeroCrossingRate <= currentThresholds.zcrMax;
+
+      // Combined decision logic
+      // Require amplitude AND (spectral centroid OR zero-crossing rate)
+      // This allows for different types of speech while filtering out noise
+      return amplitudeCheck && (spectralCheck || zcrCheck);
+    },
+    [thresholds]
+  );
+
 
   /**
    * Creates a streaming recorder for the audio stream.
@@ -137,7 +227,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
         mimeType: "audio/webm;codecs=opus",
         audioBitsPerSecond: 16000,
       };
-      
+
       const recorder = new MediaRecorder(audioOnlyStream, options);
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0 && audioChunkCallbackRef.current) {
@@ -146,7 +236,10 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
           reader.onload = () => {
             const base64Data = reader.result as string;
             const base64Audio = base64Data.split(",")[1];
-            audioChunkCallbackRef.current?.(base64Audio, stateRef.current.isSpeaking);
+            audioChunkCallbackRef.current?.(
+              base64Audio,
+              stateRef.current.isSpeaking
+            );
           };
           reader.readAsDataURL(event.data);
         }
@@ -194,52 +287,63 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       return;
     }
 
-    analyserRef.current.getByteTimeDomainData(timeDataArray);
+    // Get frequency domain data (new FFT analysis)
+    const frequencyDataArray = frequencyDataArrayRef.current;
+    const frequencyFloatArray = frequencyFloatArrayRef.current;
 
-    // Optimized amplitude calculation with early exit
-    let sum = 0;
-    const length = timeDataArray.length;
-    const sampleStep = 4; // Sample every 4th value for efficiency
-
-    for (let i = 0; i < length; i += sampleStep) {
-      sum += Math.abs((timeDataArray[i] - 128) / 128);
+    if (!frequencyDataArray || !frequencyFloatArray) {
+      animationFrameRef.current = requestAnimationFrame(analyzeAudio);
+      return;
     }
 
-    const averageAmplitude = (sum / (length / sampleStep)) * 100;
+    analyserRef.current.getByteTimeDomainData(timeDataArray);
+    analyserRef.current.getByteFrequencyData(frequencyDataArray);
+    analyserRef.current.getFloatFrequencyData(frequencyFloatArray);
 
-    if (averageAmplitude > VAD_THRESHOLD) {
-      // Voice detected
+    // Calculate amplitude using the extracted function
+    const averageAmplitude = calculateAmplitude(timeDataArray);
+
+    const spectralCentroid = calculateSpectralCentroid(
+      frequencyDataArray,
+      audioContextRef.current.sampleRate
+    );
+    const zeroCrossingRate = calculateZeroCrossingRate(timeDataArray);
+
+    const isVoiceDetected = detectVoiceActivity({
+      amplitude: averageAmplitude,
+      spectralCentroid,
+      zeroCrossingRate,
+      currentTime,
+    });
+
+    // Update speaking state based on combined analysis
+    if (isVoiceDetected) {
       if (!stateRef.current.isSpeaking) {
         stateRef.current.isSpeaking = true;
         speakingChangeCallbackRef.current?.(true);
-        // stateRef.current.silenceStartTime = 0; // Reset silence timer
 
         if (streamingRecorderRef.current && !isStreamingRef.current) {
           streamingRecorderRef.current.start(CHUNK_DURATION_MS);
           isStreamingRef.current = true;
         }
       }
-      stateRef.current.silenceStartTime = currentTime; // Update silence timer
+      stateRef.current.silenceStartTime = currentTime;
     } else {
-      // No voice detected
       if (stateRef.current.isSpeaking) {
         if (stateRef.current.silenceStartTime === 0) {
-          // First silence detection
-          stateRef.current.silenceStartTime = currentTime; // Start silence timer
+          stateRef.current.silenceStartTime = currentTime;
         } else if (
           currentTime - stateRef.current.silenceStartTime >
           SILENCE_INTERVAL_MS
         ) {
-          // Silence detected for longer than threshold
           stateRef.current.isSpeaking = false;
-          speakingChangeCallbackRef.current?.(false); // Notify that user stopped speaking and need to stop recording
+          speakingChangeCallbackRef.current?.(false);
 
-          // Stop streaming recorder
           if (streamingRecorderRef.current && isStreamingRef.current) {
             streamingRecorderRef.current.stop();
             isStreamingRef.current = false;
           }
-          stateRef.current.silenceStartTime = 0; // Reset silence timer
+          stateRef.current.silenceStartTime = 0;
         }
       }
     }
@@ -247,7 +351,12 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
       animationFrameRef.current = requestAnimationFrame(analyzeAudio);
     }
-  }, []);
+  }, [
+    calculateAmplitude,
+    calculateSpectralCentroid,
+    calculateZeroCrossingRate,
+    detectVoiceActivity,
+  ]);
 
   /**
    * Starts voice activity detection on the provided audio stream.
@@ -277,7 +386,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
   ) => {
     speakingChangeCallbackRef.current = onSpeakingChange || null;
     audioChunkCallbackRef.current = onAudioChunk || null;
-    
+
     const audioTracks = stream.getAudioTracks();
 
     if (!audioTracks || audioTracks.length === 0) {
@@ -330,6 +439,12 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       timeDataArrayRef.current = new Uint8Array(
         analyserRef.current.frequencyBinCount
       );
+      frequencyDataArrayRef.current = new Uint8Array(
+        analyserRef.current.frequencyBinCount
+      );
+      frequencyFloatArrayRef.current = new Float32Array(
+        analyserRef.current.frequencyBinCount
+      );
 
       // create streaming recorder
       streamingRecorderRef.current = createStreamingRecorder(stream);
@@ -357,6 +472,8 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
    * - Disconnects audio nodes
    * - Resets state
    */
+
+
   const stopDetectingAudio = () => {
     // Stop streaming recorder
     if (streamingRecorderRef.current && isStreamingRef.current) {
@@ -364,19 +481,19 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       isStreamingRef.current = false;
     }
     streamingRecorderRef.current = null;
-    
+
     // Cancel animation frame
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
-    
+
     // Close audio context
     if (audioContextRef.current) {
       audioContextRef.current.close();
       audioContextRef.current = null;
     }
-    
+
     // Disconnect nodes
     if (sourceRef.current) {
       sourceRef.current.disconnect();
@@ -390,7 +507,7 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
       noiseGateRef.current.disconnect();
       noiseGateRef.current = null;
     }
-    
+
     // Reset refs
     analyserRef.current = null;
     timeDataArrayRef.current = null;
@@ -400,6 +517,8 @@ export const useDetectAudio = (): UseDetectAudioReturn => {
     };
     speakingChangeCallbackRef.current = null;
     audioChunkCallbackRef.current = null;
+    frequencyDataArrayRef.current = null;
+    frequencyFloatArrayRef.current = null;
   };
   return {
     startDetectingAudio,
