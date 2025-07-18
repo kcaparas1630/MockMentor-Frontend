@@ -66,6 +66,7 @@ import { getUserToken } from "@/Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
+import { useCalibration } from "@/Context/CalibrationContext";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
@@ -118,7 +119,12 @@ const VideoTestCard: FC = () => {
     error: micError,
     startMicTest: startMicTestHook,
     stopMicTest,
+    calibrate,
+    isCalibrating,
   } = useMicTesting();
+
+  // Use calibration context
+  const { setThresholds } = useCalibration();
 
   // Component-specific refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -170,6 +176,21 @@ const VideoTestCard: FC = () => {
     // Start mic testing with the current stream
     if (streamRef.current) {
       await startMicTestHook(streamRef.current);
+    }
+  };
+
+  // Wrapper function for calibration
+  const startCalibration = async () => {
+    if (!deviceSupport.hasMicrophone || !streamRef.current) return;
+
+    try {
+      const thresholds = await calibrate(streamRef.current);
+      console.log('Calibration completed:', thresholds);
+      
+      // Store thresholds in context
+      setThresholds(thresholds);
+    } catch (err) {
+      console.error('Calibration failed:', err);
     }
   };
 
@@ -398,6 +419,17 @@ const VideoTestCard: FC = () => {
                     >
                       {isMicTesting ? "Stop Testing" : "Start Testing"}
                     </MicTestButton>
+                    {isMicTesting && !isCalibrating && (
+                      <MicTestButton
+                        onClick={startCalibration}
+                        disabled={!deviceSupport.hasMicrophone || !audioEnabled}
+                        isRecording={false}
+                        aria-label="Start microphone calibration"
+                        style={{ marginLeft: '10px' }}
+                      >
+                        Calibrate
+                      </MicTestButton>
+                    )}
                   </MicTestControls>
                   {isMicTesting && audioEnabled && (
                     <AudioLevelContainer role="progressbar" aria-label="Audio level">
@@ -409,9 +441,11 @@ const VideoTestCard: FC = () => {
                         aria-label={`Audio level: ${Math.round(audioLevel * 100)}%`}
                       />
                       <AudioLevelText id="audio-level-status">
-                        {audioLevel > 0.1
-                          ? "Voice detected!"
-                          : "Speak to test your microphone..."}
+                        {isCalibrating 
+                          ? "Calibrating... Please speak naturally for 5 seconds"
+                          : audioLevel > 0.1
+                            ? "Voice detected!"
+                            : "Speak to test your microphone..."}
                       </AudioLevelText>
                     </AudioLevelContainer>
                   )}
