@@ -66,7 +66,7 @@ import { getUserToken } from "@/Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
-import { useCalibration } from "@/Context/CalibrationContext";
+import { useCalibration } from "@/Hooks/useCalibration";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 

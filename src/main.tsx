@@ -28,7 +28,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 // import the generated  route tree
 import { routeTree } from './routeTree.gen'
 import { MediaDevicesProvider } from './Context/MediaDevicesContext'
-import { CalibrationProvider } from './Context/CalibrationContext'
+import { CalibrationProvider } from './Context/CalibrationContext.tsx'
 
 /**
  * Query client instance for managing server state and caching.

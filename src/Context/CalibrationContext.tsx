@@ -1,19 +1,10 @@
 /**
- * @fileoverview Simple calibration context for storing audio calibration thresholds.
+ * @fileoverview Calibration provider component for storing audio calibration thresholds.
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import CalibrationThresholds from '../Types/CalibrationThresholds';
-
-// Context interface
-interface CalibrationContextType {
-  thresholds: CalibrationThresholds | null;
-  setThresholds: (thresholds: CalibrationThresholds) => void;
-  clearThresholds: () => void;
-}
-
-// Create context
-const CalibrationContext = createContext<CalibrationContextType | undefined>(undefined);
+import { CalibrationContext } from './CalibrationContext';
 
 // Storage key
 const STORAGE_KEY = 'audio_calibration_thresholds';
@@ -63,15 +54,6 @@ export const CalibrationProvider: React.FC<CalibrationProviderProps> = ({ childr
       {children}
     </CalibrationContext.Provider>
   );
-};
-
-// Custom hook to use the calibration context
-export const useCalibration = (): CalibrationContextType => {
-  const context = useContext(CalibrationContext);
-  if (context === undefined) {
-    throw new Error('useCalibration must be used within a CalibrationProvider');
-  }
-  return context;
 };
 
  
