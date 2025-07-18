@@ -419,19 +419,17 @@ const VideoTestCard: FC = () => {
                     >
                       {isMicTesting ? "Stop Testing" : "Start Testing"}
                     </MicTestButton>
-                    {isMicTesting && !isCalibrating && (
-                      <MicTestButton
-                        onClick={startCalibration}
-                        disabled={!deviceSupport.hasMicrophone || !audioEnabled}
-                        isRecording={false}
-                        aria-label="Start microphone calibration"
-                        style={{ marginLeft: '10px' }}
-                      >
-                        Calibrate
-                      </MicTestButton>
-                    )}
+                    <MicTestButton
+                      onClick={startCalibration}
+                      disabled={!deviceSupport.hasMicrophone || !audioEnabled || isCalibrating}
+                      isRecording={isCalibrating}
+                      aria-label={isCalibrating ? "Calibration in progress" : "Start microphone calibration"}
+                      style={{ marginLeft: '10px' }}
+                    >
+                      {isCalibrating ? "Calibrating..." : "Calibrate"}
+                    </MicTestButton>
                   </MicTestControls>
-                  {isMicTesting && audioEnabled && (
+                  {(isMicTesting && audioEnabled) && (
                     <AudioLevelContainer role="progressbar" aria-label="Audio level">
                       <AudioLevelBar 
                         level={audioLevel} 
@@ -441,11 +439,23 @@ const VideoTestCard: FC = () => {
                         aria-label={`Audio level: ${Math.round(audioLevel * 100)}%`}
                       />
                       <AudioLevelText id="audio-level-status">
-                        {isCalibrating 
-                          ? "Calibrating... Please speak naturally for 5 seconds"
-                          : audioLevel > 0.1
-                            ? "Voice detected!"
-                            : "Speak to test your microphone..."}
+                        {audioLevel > 0.1
+                          ? "Voice detected!"
+                          : "Speak to test your microphone..."}
+                      </AudioLevelText>
+                    </AudioLevelContainer>
+                  )}
+                  {(isCalibrating && audioEnabled) && (
+                    <AudioLevelContainer role="progressbar" aria-label="Audio level">
+                      <AudioLevelBar 
+                        level={audioLevel} 
+                        aria-valuenow={Math.round(audioLevel * 100)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Audio level: ${Math.round(audioLevel * 100)}%`}
+                      />
+                      <AudioLevelText id="audio-level-status">
+                        Calibrating... Please speak naturally for 5 seconds
                       </AudioLevelText>
                     </AudioLevelContainer>
                   )}

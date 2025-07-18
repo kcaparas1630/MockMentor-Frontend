@@ -94,26 +94,18 @@ export const useMicTesting = (): UseMicTestingReturn => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const micTestingRef = useRef<boolean>(false);
+  const calibrationRef = useRef<boolean>(false);
 
   /**
-   * Starts microphone testing with the provided stream.
+   * Starts audio analysis without setting mic testing state.
+   * Used internally by calibration and other processes that need audio analysis.
    *
    * @function
-   * @param {MediaStream} stream - Audio stream to test.
-   * @returns {Promise<void>} Resolves when testing is started.
-   * @example
-   * // Start testing:
-   * await startMicTest(stream);
-   *
-   * @throws {Error} Logs errors to console but doesn't throw.
-   * @remarks
-   * Side Effects:
-   * - Creates AudioContext
-   * - Sets up audio analysis pipeline
-   * - Starts real-time monitoring
-   * - Updates testing state
+   * @param {MediaStream} stream - Audio stream to analyze.
+   * @returns {Promise<void>} Resolves when analysis is started.
+   * @private
    */
-  const startMicTest = useCallback(async (stream: MediaStream) => {
+  const startAudioAnalysis = useCallback(async (stream: MediaStream) => {
     const audioTracks = stream.getAudioTracks();
 
     if (audioTracks.length === 0) {
@@ -130,14 +122,14 @@ export const useMicTesting = (): UseMicTestingReturn => {
       return;
     }
 
-    setIsMicTesting(true);
-    micTestingRef.current = true;
     setAudioLevel(0);
     setError(null);
 
     try {
-      // Create AudioContext
-      audioContextRef.current = new AudioContext();
+      // Create AudioContext if not exists
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
 
       // Resume if suspended
       if (audioContextRef.current.state === "suspended") {
@@ -159,11 +151,34 @@ export const useMicTesting = (): UseMicTestingReturn => {
       startAudioLevelMonitoring();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error";
-      setError(`Unable to start microphone test: ${errorMessage}`);
-      setIsMicTesting(false);
-      micTestingRef.current = false;
+      setError(`Unable to start audio analysis: ${errorMessage}`);
     }
   }, []);
+
+  /**
+   * Starts microphone testing with the provided stream.
+   *
+   * @function
+   * @param {MediaStream} stream - Audio stream to test.
+   * @returns {Promise<void>} Resolves when testing is started.
+   * @example
+   * // Start testing:
+   * await startMicTest(stream);
+   *
+   * @throws {Error} Logs errors to console but doesn't throw.
+   * @remarks
+   * Side Effects:
+   * - Creates AudioContext
+   * - Sets up audio analysis pipeline
+   * - Starts real-time monitoring
+   * - Updates testing state
+   */
+  const startMicTest = useCallback(async (stream: MediaStream) => {
+    setIsMicTesting(true);
+    micTestingRef.current = true;
+    
+    await startAudioAnalysis(stream);
+  }, [startAudioAnalysis]);
 
   /**
    * Stops microphone testing and cleans up resources.
@@ -455,12 +470,17 @@ export const useMicTesting = (): UseMicTestingReturn => {
     async (stream: MediaStream): Promise<CalibrationThresholds> => {
       return new Promise((resolve) => {
         setIsCalibrating(true);
+        calibrationRef.current = true;
         setError(null);
 
-        // Start mic test if not already running
-        if (!isMicTesting) {
-          startMicTest(stream);
-        }
+        // Start audio analysis if not already running
+        const initializeAnalysis = async () => {
+          if (!analyserRef.current) {
+            await startAudioAnalysis(stream);
+          }
+        };
+        
+        initializeAnalysis();
 
         const samples: Array<{
           amplitude: number;
@@ -476,6 +496,7 @@ export const useMicTesting = (): UseMicTestingReturn => {
             const thresholds = calculateOptimalThresholds(samples);
             setCalibrationThresholds(thresholds);
             setIsCalibrating(false);
+            calibrationRef.current = false;
             resolve(thresholds);
             return;
           }
@@ -505,12 +526,11 @@ export const useMicTesting = (): UseMicTestingReturn => {
       });
     },
     [
-      isMicTesting,
       calculateAmplitude,
       calculateSpectralCentroid,
       calculateZeroCrossingRate,
       calculateOptimalThresholds,
-      startMicTest,
+      startAudioAnalysis,
     ]
   );
 
@@ -537,7 +557,7 @@ export const useMicTesting = (): UseMicTestingReturn => {
     const timeDataArray = new Uint8Array(analyserRef.current.fftSize);
 
     const monitorAudioLevel = () => {
-      if (!analyserRef.current || !micTestingRef.current) return;
+      if (!analyserRef.current || (!micTestingRef.current && !calibrationRef.current)) return;
 
       // Frequency domain analysis
       analyserRef.current.getByteFrequencyData(dataArray);
