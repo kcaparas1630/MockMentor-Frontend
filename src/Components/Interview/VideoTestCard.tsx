@@ -134,6 +134,8 @@ const VideoTestCard: FC = () => {
   // Interview settings state
   const [jobLevel, setJobLevel] = useState<string>("");
   const [interviewType, setInterviewType] = useState<string>("");
+  // Check if calibration thresholds exist in localStorage
+  const [hasCalibrationThresholds, setHasCalibrationThresholds] = useState<boolean>(false);
   // TODO: Add interview types to Database and fetch from there.
   const interviewTypes = [
     { value: "technical", label: "Technical Interview" },
@@ -189,6 +191,10 @@ const VideoTestCard: FC = () => {
       
       // Store thresholds in context
       setThresholds(thresholds);
+      
+      // Store thresholds in localStorage
+      localStorage.setItem("audio_calibration_thresholds", JSON.stringify(thresholds));
+      setHasCalibrationThresholds(true);
     } catch (err) {
       console.error('Calibration failed:', err);
     }
@@ -208,6 +214,12 @@ const VideoTestCard: FC = () => {
       });
     }
   }, [videoEnabled, streamReady, streamRef]);
+
+  // Check for existing calibration thresholds in localStorage
+  useEffect(() => {
+    const storedThresholds = localStorage.getItem("audio_calibration_thresholds");
+    setHasCalibrationThresholds(!!storedThresholds);
+  }, []);
 
   // Auto-stop mic testing when audio is disabled
   useEffect(() => {
@@ -426,7 +438,7 @@ const VideoTestCard: FC = () => {
                       aria-label={isCalibrating ? "Calibration in progress" : "Start microphone calibration"}
                       style={{ marginLeft: '10px' }}
                     >
-                      {isCalibrating ? "Calibrating..." : "Calibrate"}
+                      {isCalibrating ? "Calibrating..." : hasCalibrationThresholds ? "Recalibrate" : "Calibrate"}
                     </MicTestButton>
                   </MicTestControls>
                   {(isMicTesting && audioEnabled) && (
@@ -525,7 +537,8 @@ const VideoTestCard: FC = () => {
                   !interviewType ||
                   !jobLevel ||
                   !videoEnabled ||
-                  !audioEnabled
+                  !audioEnabled ||
+                  !hasCalibrationThresholds
                 }
                 aria-describedby="start-button-requirements"
               >
@@ -539,6 +552,7 @@ const VideoTestCard: FC = () => {
                 <StartButtonRequirements id="start-button-requirements">
                 {(!interviewType || !jobLevel) && "Please select job level and interview type. "}
                 {(!deviceSupport.hasCamera || !deviceSupport.hasMicrophone) && "Camera and microphone are required."}
+                {(!hasCalibrationThresholds) && "Please calibrate your microphone first."}
               </StartButtonRequirements>
             </ButtonContainer>
           </InterviewSettingsContainer>
