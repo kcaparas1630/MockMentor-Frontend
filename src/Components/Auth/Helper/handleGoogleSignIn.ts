@@ -59,7 +59,7 @@ const handleGoogleSignIn = async (baseUrl: string) => {
 
     // Get ID token from the authenticated user.
     const idToken = await result.user.getIdToken();
-    // TODO: Send this ID token to your backend for session management.
+    // Send this ID token to your backend for session management.
     axios.post(`${baseUrl}/api/google`, { idToken });
   } catch (error: unknown) {
     if (isFirebaseAuthError(error)) {

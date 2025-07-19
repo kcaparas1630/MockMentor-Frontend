@@ -295,7 +295,7 @@ const ProfileCreator = () => {
 
   // Check if profile.name is already set
   useEffect(() => {
-    if (users && users.profile.name && users.profile.name.trim() !== "") {
+    if (users?.profile.name && users?.profile.name.trim() !== "") {
       setSteps(2);
       setProfileData(users);
     }
