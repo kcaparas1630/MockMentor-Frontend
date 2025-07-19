@@ -66,6 +66,8 @@ import { getUserToken } from "@/Hooks/UserHooks";
 import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
+import { useCalibration } from "@/Hooks/useCalibration";
+import { ToastContainer, toast } from "react-toastify";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
@@ -118,7 +120,12 @@ const VideoTestCard: FC = () => {
     error: micError,
     startMicTest: startMicTestHook,
     stopMicTest,
+    calibrate,
+    isCalibrating,
   } = useMicTesting();
+
+  // Use calibration context
+  const { setThresholds } = useCalibration();
 
   // Component-specific refs
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -128,6 +135,8 @@ const VideoTestCard: FC = () => {
   // Interview settings state
   const [jobLevel, setJobLevel] = useState<string>("");
   const [interviewType, setInterviewType] = useState<string>("");
+  // Check if calibration thresholds exist in localStorage
+  const [hasCalibrationThresholds, setHasCalibrationThresholds] = useState<boolean>(false);
   // TODO: Add interview types to Database and fetch from there.
   const interviewTypes = [
     { value: "technical", label: "Technical Interview" },
@@ -173,6 +182,26 @@ const VideoTestCard: FC = () => {
     }
   };
 
+  // Wrapper function for calibration
+  const startCalibration = async () => {
+    if (!deviceSupport.hasMicrophone || !streamRef.current) return;
+
+    try {
+      const thresholds = await calibrate(streamRef.current);
+      toast.success('Calibration completed successfully');
+      // Store thresholds in context
+      setThresholds(thresholds);
+      
+      // Store thresholds in localStorage
+      localStorage.setItem("audio_calibration_thresholds", JSON.stringify(thresholds));
+      setHasCalibrationThresholds(true);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Calibration failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  };
+
   // Connect the media stream to the video element when both are ready
   useEffect(() => {
     if (videoRef.current && streamRef.current && videoEnabled && streamReady) {
@@ -187,6 +216,12 @@ const VideoTestCard: FC = () => {
       });
     }
   }, [videoEnabled, streamReady, streamRef]);
+
+  // Check for existing calibration thresholds in localStorage
+  useEffect(() => {
+    const storedThresholds = localStorage.getItem("audio_calibration_thresholds");
+    setHasCalibrationThresholds(!!storedThresholds);
+  }, []);
 
   // Auto-stop mic testing when audio is disabled
   useEffect(() => {
@@ -322,6 +357,7 @@ const VideoTestCard: FC = () => {
 
   return (
     <Container>
+      <ToastContainer />
       <main>
         <GridContainer>
           <Card as="section" aria-labelledby="device-test-title">
@@ -398,8 +434,17 @@ const VideoTestCard: FC = () => {
                     >
                       {isMicTesting ? "Stop Testing" : "Start Testing"}
                     </MicTestButton>
+                    <MicTestButton
+                      onClick={startCalibration}
+                      disabled={!deviceSupport.hasMicrophone || !audioEnabled || isCalibrating}
+                      isRecording={isCalibrating}
+                      aria-label={isCalibrating ? "Calibration in progress" : "Start microphone calibration"}
+                      style={{ marginLeft: '10px' }}
+                    >
+                      {isCalibrating ? "Calibrating..." : hasCalibrationThresholds ? "Recalibrate" : "Calibrate"}
+                    </MicTestButton>
                   </MicTestControls>
-                  {isMicTesting && audioEnabled && (
+                  {(isMicTesting && audioEnabled) && (
                     <AudioLevelContainer role="progressbar" aria-label="Audio level">
                       <AudioLevelBar 
                         level={audioLevel} 
@@ -412,6 +457,20 @@ const VideoTestCard: FC = () => {
                         {audioLevel > 0.1
                           ? "Voice detected!"
                           : "Speak to test your microphone..."}
+                      </AudioLevelText>
+                    </AudioLevelContainer>
+                  )}
+                  {(isCalibrating && audioEnabled) && (
+                    <AudioLevelContainer role="progressbar" aria-label="Audio level">
+                      <AudioLevelBar 
+                        level={audioLevel} 
+                        aria-valuenow={Math.round(audioLevel * 100)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-label={`Audio level: ${Math.round(audioLevel * 100)}%`}
+                      />
+                      <AudioLevelText id="audio-level-status">
+                        Calibrating... Please speak naturally for 5 seconds
                       </AudioLevelText>
                     </AudioLevelContainer>
                   )}
@@ -481,7 +540,8 @@ const VideoTestCard: FC = () => {
                   !interviewType ||
                   !jobLevel ||
                   !videoEnabled ||
-                  !audioEnabled
+                  !audioEnabled ||
+                  !hasCalibrationThresholds
                 }
                 aria-describedby="start-button-requirements"
               >
@@ -495,6 +555,7 @@ const VideoTestCard: FC = () => {
                 <StartButtonRequirements id="start-button-requirements">
                 {(!interviewType || !jobLevel) && "Please select job level and interview type. "}
                 {(!deviceSupport.hasCamera || !deviceSupport.hasMicrophone) && "Camera and microphone are required."}
+                {(!hasCalibrationThresholds) && "Please calibrate your microphone first."}
               </StartButtonRequirements>
             </ButtonContainer>
           </InterviewSettingsContainer>
