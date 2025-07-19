@@ -15,7 +15,7 @@ const GridContainer = styled.div`
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.5rem;
-  margin: 2rem 0;
+  margin: 2rem auto;
 
   @media (min-width: 1024px) {
     grid-template-columns: repeat(3, 1fr);
@@ -288,6 +288,11 @@ const MicTestControls = styled.div`
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  flex-direction: column;
+
+  @media (min-width: 1024px) {
+    flex-direction: row;
+  }
 `;
 
 const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean }>`
@@ -298,6 +303,7 @@ const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean 
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
+  width: 100%;
   border-radius: 0.375rem;
   border: none;
   cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
@@ -315,6 +321,10 @@ const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean 
   &:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
+  }
+
+  @media (min-width: 1024px) {
+    width: auto;
   }
 `;
 
@@ -348,6 +358,7 @@ const AudioLevelContainer = styled.div`
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0;
+  
 `;
 
 const AudioLevelBar = styled.div<{ level: number }>`

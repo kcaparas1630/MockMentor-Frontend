@@ -439,7 +439,6 @@ const VideoTestCard: FC = () => {
                       disabled={!deviceSupport.hasMicrophone || !audioEnabled || isCalibrating}
                       isRecording={isCalibrating}
                       aria-label={isCalibrating ? "Calibration in progress" : "Start microphone calibration"}
-                      style={{ marginLeft: '10px' }}
                     >
                       {isCalibrating ? "Calibrating..." : hasCalibrationThresholds ? "Recalibrate" : "Calibrate"}
                     </MicTestButton>
