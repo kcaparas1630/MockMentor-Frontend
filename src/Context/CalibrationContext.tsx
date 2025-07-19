@@ -46,11 +46,15 @@ export const CalibrationProvider: React.FC<CalibrationProviderProps> = ({ childr
 
   const clearThresholds = () => {
     setThresholdsState(null);
-    localStorage.removeItem(STORAGE_KEY);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn('Failed to clear calibration thresholds:', error);
+    }
   };
 
   return (
-    <CalibrationContext.Provider value={{ thresholds, setThresholds, clearThresholds }}>
+    <CalibrationContext.Provider value={{ thresholds, setThresholds: setThresholds, clearThresholds }}>
       {children}
     </CalibrationContext.Provider>
   );
