@@ -288,7 +288,7 @@ const LoginForm = () => {
       <Divider>or continue with</Divider>
       <GoogleButton
         type="button"
-        onClick={() => googleSignInMutation.mutate()}
+        onClick={() => googleSignInMutation.mutate(baseUrl)}
         disabled={googleSignInMutation.isPending}
       >
         {googleSignInMutation.isPending ? (
