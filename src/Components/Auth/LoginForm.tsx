@@ -21,7 +21,7 @@
  * - TanStack Router
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   SignUpContainer,
   Title,
@@ -178,25 +178,21 @@ const LoginForm = () => {
   const [password, setPassword] = useState<string>("");
   const [authError, setAuthError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const { users, refetch, status } = GetUserQuery();
+  const { refetch } = GetUserQuery();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-
-  // UseEffect to always fetch user data on user change.
-  useEffect(() => {
-    if (status === "success" && users) {
-     if (users?.profile?.name && users?.profile?.jobRole) {
-        navigate({ to: "/video-test" });
-      } else {
-        navigate({ to: "/profile-create" });
-      }
-    }
-  }, [status, users, navigate]);
 
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
+      await refetch();
+      const userData = await refetch();
+      if (userData.data?.profile?.name && userData.data?.profile?.jobRole) {
+        navigate({ to: "/video-test" });
+      } else {
+        navigate({ to: "/profile-create" });
+      }
     },
     onError: (error: unknown) => {
       setAuthError(error instanceof Error ? error.message : String(error));
@@ -210,12 +206,8 @@ const LoginForm = () => {
     mutationFn: handleGoogleSignIn,
     onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ["user"] });
-      await refetch();
-      if (
-        status === "success" &&
-        users?.profile?.name &&
-        users?.profile?.jobRole
-      ) {
+      const userData = await refetch();
+      if (userData.data?.profile?.name && userData.data?.profile?.jobRole) {
         navigate({ to: "/video-test" });
       } else {
         navigate({ to: "/profile-create" });
@@ -288,7 +280,7 @@ const LoginForm = () => {
       <Divider>or continue with</Divider>
       <GoogleButton
         type="button"
-        onClick={() => googleSignInMutation.mutate()}
+        onClick={() => googleSignInMutation.mutate(baseUrl)}
         disabled={googleSignInMutation.isPending}
       >
         {googleSignInMutation.isPending ? (

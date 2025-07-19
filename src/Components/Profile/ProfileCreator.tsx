@@ -31,8 +31,8 @@ import {
   FormGroup,
 } from "./Styles/StyledProfile";
 import ReusableInput from "../../Commons/ReusableInputField";
-import { useState } from "react";
-import { UpdateUser } from "@/Hooks/UserHooks";
+import { useState, useEffect } from "react";
+import { UpdateUser, GetUserQuery } from "@/Hooks/UserHooks";
 import ReusableButton from "@/Commons/Button";
 import { Dispatch, SetStateAction } from "react";
 import { AxiosError } from "axios";
@@ -290,6 +290,20 @@ const ProfileCreator = () => {
       jobRole: "",
     },
   });
+
+  const { users, isPending } = GetUserQuery();
+
+  // Check if profile.name is already set
+  useEffect(() => {
+    if (users?.profile.name && users?.profile.name.trim() !== "") {
+      setSteps(2);
+      setProfileData(users);
+    }
+  }, [users]);
+
+  if (isPending) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <ProfileContainer>

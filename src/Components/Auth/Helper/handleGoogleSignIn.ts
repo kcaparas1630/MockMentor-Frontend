@@ -21,7 +21,7 @@
 import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/Firebase/FirebaseAuth";
 import isFirebaseAuthError from "@/Types/Firebase/FirebaseError";
-
+import axios from "axios";
 /**
  * Initiates Google OAuth sign-in using Firebase Auth popup.
  *
@@ -51,15 +51,22 @@ import isFirebaseAuthError from "@/Types/Firebase/FirebaseError";
  * - Wraps Firebase errors in user-friendly messages
  * - Returns Firebase User object for consistency
  */
-const handleGoogleSignIn = async () => {
+const handleGoogleSignIn = async (baseUrl: string) => {
   try {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
-    return result.user;
+    GoogleAuthProvider.credentialFromResult(result);
+
+    // Get ID token from the authenticated user.
+    const idToken = await result.user.getIdToken();
+    // Send this ID token to your backend for session management.
+    axios.post(`${baseUrl}/api/google`, { idToken });
   } catch (error: unknown) {
     if (isFirebaseAuthError(error)) {
       if (error.code === "auth/popup-closed-by-user") {
         throw new Error("Authentication was cancelled");
+      } else if (error.code === "auth/user-not-found") {
+        throw new Error("No user found with this email. Please sign up first.");
       } else {
         throw new Error("Failed to sign in with Google. Please try again.");
       }
