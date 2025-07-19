@@ -67,6 +67,7 @@ import axios from "axios";
 import { useRouter } from "@tanstack/react-router";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import { useCalibration } from "@/Hooks/useCalibration";
+import { ToastContainer, toast } from "react-toastify";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
@@ -187,8 +188,7 @@ const VideoTestCard: FC = () => {
 
     try {
       const thresholds = await calibrate(streamRef.current);
-      console.log('Calibration completed:', thresholds);
-      
+      toast.success('Calibration completed successfully');
       // Store thresholds in context
       setThresholds(thresholds);
       
@@ -196,7 +196,9 @@ const VideoTestCard: FC = () => {
       localStorage.setItem("audio_calibration_thresholds", JSON.stringify(thresholds));
       setHasCalibrationThresholds(true);
     } catch (err) {
-      console.error('Calibration failed:', err);
+      const errorMessage = err instanceof Error ? err.message : "Calibration failed. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -355,6 +357,7 @@ const VideoTestCard: FC = () => {
 
   return (
     <Container>
+      <ToastContainer />
       <main>
         <GridContainer>
           <Card as="section" aria-labelledby="device-test-title">
