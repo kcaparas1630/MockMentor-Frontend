@@ -500,10 +500,10 @@ const InterviewRoom: FC = () => {
           <VideoGrid>
             {/* AI Coach/Interviewer */}
             <VideoWrapper>
-              <VideoLabel>AI Interview Coach</VideoLabel>
+              <VideoLabel>MockMentor</VideoLabel>
               <VideoDisplayContainer>
                 <VideoDisplay
-                  name="AI Coach"
+                  name="MockMentor"
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
                   onQuestionSpoken={handleQuestionSpoken}

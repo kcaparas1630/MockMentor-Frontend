@@ -282,7 +282,7 @@ const AICoach: React.FC<AICoachProps> = ({
 
       {/* AI Coach Information */}
       <AICoachInfo>
-        <AICoachTitle id="coach-title">AI Interview Coach</AICoachTitle>
+        <AICoachTitle id="coach-title">MockMentor</AICoachTitle>
         <AICoachStatus id="coach-status">
           <span className="text">
             {isSpeaking ? "AI is Speaking" : "Your turn to speak"}
@@ -293,6 +293,12 @@ const AICoach: React.FC<AICoachProps> = ({
             <div className="bar" />
           </div>
         </AICoachStatus>
+        <div >
+          <h3>Question:</h3>
+          <p>
+            This is the question... {/* TODO: Replace this with the questions */}
+          </p>
+        </div>
       </AICoachInfo>
     </AICoachContainer>
   );
