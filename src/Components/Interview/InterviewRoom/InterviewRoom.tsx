@@ -67,6 +67,7 @@ import LoadingStream from "./ComponentHandlers/LoadingStream";
 import LoadingWhileCheckingDevice from "./ComponentHandlers/LoadingWhileCheckingDevice";
 import BlockInterview from "./ComponentHandlers/BlockInterview";
 import formatDuration from "./Utils/FormatDuration";
+import { useNavigate } from "@tanstack/react-router";
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -114,6 +115,7 @@ const InterviewRoom: FC = () => {
   const [duration, setDuration] = useState<number>(0);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigate = useNavigate();
 
   // ==================== REFS ====================
 
@@ -162,7 +164,7 @@ const InterviewRoom: FC = () => {
 
   const handleEndInterview = () => {
     stopStream(); // Stop media stream
-    // TODO: GO back to previous page. Do Cleanup
+    navigate({ to: "/video-test" });
   };
 
   // ==================== WEBSOCKET MESSAGE HANDLERS ====================
