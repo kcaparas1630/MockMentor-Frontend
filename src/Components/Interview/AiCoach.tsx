@@ -32,6 +32,9 @@ import {
   AICoachTitle,
   AICoachStatus,
   VisuallyHidden,
+  AICoachQuestionContainer,
+  AICoachQuestionHeader,
+  AICoachQuestionText,
 } from "./Styles/StyledAICoach";
 
 /**
@@ -293,12 +296,12 @@ const AICoach: React.FC<AICoachProps> = ({
             <div className="bar" />
           </div>
         </AICoachStatus>
-        <div >
-          <h3>Question:</h3>
-          <p>
+        <AICoachQuestionContainer>
+          <AICoachQuestionHeader>Question:</AICoachQuestionHeader>
+          <AICoachQuestionText>
             This is the question... {/* TODO: Replace this with the questions */}
-          </p>
-        </div>
+          </AICoachQuestionText>
+        </AICoachQuestionContainer>
       </AICoachInfo>
     </AICoachContainer>
   );

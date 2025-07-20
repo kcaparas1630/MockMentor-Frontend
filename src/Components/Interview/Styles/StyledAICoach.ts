@@ -142,14 +142,27 @@ export const AICoachInfo = styled.div`
   text-align: center;
   margin: 1.5rem 0;
   color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2.5rem;
+
+  @media (min-width: 1024px) {
+    gap: 24px;
+  }
 `;
 
 export const AICoachTitle = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 0;
   color: #0f172a;
   line-height: 1.3;
+
+  @media (min-width: 1024px) {
+    font-size: 1.25rem;
+    
+  }
 `;
 
 export const AICoachStatus = styled.div`
@@ -162,7 +175,7 @@ export const AICoachStatus = styled.div`
   line-height: 1.4;
 
   .text {
-    font-size: 1.05rem;
+    font-size: 0.85rem;
     color: #64748b;
     margin: 0;
     line-height: 1.4;
@@ -191,8 +204,38 @@ export const AICoachStatus = styled.div`
   .bar:nth-of-type(3) {
     animation-delay: 0.45s;
   }
+
+  @media (min-width: 1024px) {
+    .text {
+      font-size: 1.05rem;
+    }
+  }
 `;
 
+export const AICoachQuestionContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+`;
+
+export const AICoachQuestionHeader = styled.h3`
+  font-size: 1rem;
+  margin: 0;
+  
+  @media (min-width: 1024px) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+  }
+`;
+export const AICoachQuestionText = styled.p`
+  font-size: 0.85rem;
+  margin: 0;
+  color: #64748b;
+  @media (min-width: 1024px) {
+    font-size: 1rem;
+  }
+`;
 // Controls section
 export const ControlsSection = styled.div`
   display: flex;

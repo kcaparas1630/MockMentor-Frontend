@@ -116,7 +116,7 @@ export const VideoDisplayContainer = styled.div`
 
 export const BottomControls = styled.footer`
   border-top: 1px solid #e5e7eb;
-  padding: 0.75rem 1rem;
+  padding: 1.5rem 1rem;
   flex-shrink: 0;
 `;
 
@@ -142,10 +142,6 @@ export const StatusInfo = styled.div`
   justify-content: center;
 `;
 
-export const ChatButtonContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-`;
 
 export const RecordingStatus = styled.div`
   display: flex;
@@ -187,15 +183,21 @@ export const ConnectionStatus = styled.div`
 
 export const ChatButton = styled.button<{ isOpen: boolean }>`
   display: flex;
+  position: fixed;
+  bottom: 1rem;
+  right: 2rem;
+  width: 3.5rem;
+  height: 3.5rem;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
+  border-radius: 50%;
   border: 1px solid ${(props) => (props.isOpen ? "#3b82f6" : "#d1d5db")};
   background-color: ${(props) => (props.isOpen ? "#3b82f6" : "#ffffff")};
   color: ${(props) => (props.isOpen ? "#ffffff" : "#374151")};
   font-size: 0.875rem;
   cursor: pointer;
+  z-index: 50;
   transition: all 0.2s;
   &:hover {
     background-color: ${(props) => (props.isOpen ? "#2563eb" : "#f9fafb")};
