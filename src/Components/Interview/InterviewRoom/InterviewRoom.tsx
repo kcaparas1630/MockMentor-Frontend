@@ -54,6 +54,7 @@ import {
   DurationText,
   ConnectionStatus,
   ChatButton,
+  ChatButtonContainer,
   ChatOverlay,
   ActiveDevicesIndicator,
 } from "../Styles/StyledInterviewRoom";
@@ -470,7 +471,7 @@ const InterviewRoom: FC = () => {
   // ==================== MAIN RENDER ====================
 
   return (
-    <InterviewRoomContainer>
+    <InterviewRoomContainer>      
       {/* Header */}
       <Header>
         <HeaderContent>
@@ -530,93 +531,93 @@ const InterviewRoom: FC = () => {
 
       {/* Bottom Controls */}
       <BottomControls>
-        <ControlsContent>
-          <StatusInfo>
-            <RecordingStatus>
-              <RecordingDot />
-              <span>Recording</span>
-            </RecordingStatus>
-            <DurationText>Duration: {formatDuration(duration)}</DurationText>
-            <ActiveDevicesIndicator>
-              <Video size={16} />
-              <Mic size={16} />
-              <span>Active</span>
-            </ActiveDevicesIndicator>
-            {isStreaming && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "4px",
-                  color: "#10b981",
-                }}
-              >
-                <div
-                  style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    backgroundColor: "#10b981",
-                    animation: "pulse 1s infinite",
-                  }}
-                />
-                <span style={{ fontSize: "12px" }}>Streaming</span>
-              </div>
-            )}
-            <ConnectionStatus>
-              <div
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: isConnected
-                    ? "#10b981"
-                    : isConnecting
-                      ? "#f59e0b"
-                      : "#ef4444",
-                  marginRight: "4px",
-                }}
-              />
-              <span>
-                {isConnected
-                  ? "Connected"
-                  : isConnecting
-                    ? "Connecting..."
-                    : "Disconnected"}
-              </span>
-              {!isConnected && !isConnecting && (
-                <button
-                  onClick={reconnect}
-                  style={{
-                    marginLeft: "8px",
-                    padding: "2px 8px",
-                    fontSize: "12px",
-                    backgroundColor: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Reconnect
-                </button>
-              )}
-            </ConnectionStatus>
-          </StatusInfo>
-
-          {/* Chat Button */}
-          <ChatButton
-            isOpen={isChatOpen}
-            onClick={toggleChat}
-            aria-label={isChatOpen ? "Close chat" : "Open chat"}
-            aria-expanded={isChatOpen}
+  <ControlsContent>
+    <StatusInfo>
+      <RecordingStatus>
+        <RecordingDot />
+        <span>Recording</span>
+      </RecordingStatus>
+      <DurationText>Duration: {formatDuration(duration)}</DurationText>
+      <ActiveDevicesIndicator>
+        <Video size={16} />
+        <Mic size={16} />
+        <span>Active</span>
+      </ActiveDevicesIndicator>
+      {isStreaming && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            color: "#10b981",
+          }}
+        >
+          <div
+            style={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              backgroundColor: "#10b981",
+              animation: "pulse 1s infinite",
+            }}
+          />
+          <span style={{ fontSize: "12px" }}>Streaming</span>
+        </div>
+      )}
+      <ConnectionStatus>
+        <div
+          style={{
+            width: "8px",
+            height: "8px",
+            borderRadius: "50%",
+            backgroundColor: isConnected
+              ? "#10b981"
+              : isConnecting
+                ? "#f59e0b"
+                : "#ef4444",
+            marginRight: "4px",
+          }}
+        />
+        <span>
+          {isConnected
+            ? "Connected"
+            : isConnecting
+              ? "Connecting..."
+              : "Disconnected"}
+        </span>
+        {!isConnected && !isConnecting && (
+          <button
+            onClick={reconnect}
+            style={{
+              marginLeft: "8px",
+              padding: "2px 8px",
+              fontSize: "12px",
+              backgroundColor: "#3b82f6",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
           >
-            <MessageCircleIcon />
-            <span>Chat</span>
-          </ChatButton>
-        </ControlsContent>
-      </BottomControls>
-
+            Reconnect
+          </button>
+        )}
+      </ConnectionStatus>
+    </StatusInfo>
+    
+    <ChatButtonContainer>
+      <ChatButton
+        isOpen={isChatOpen}
+        onClick={toggleChat}
+        aria-label={isChatOpen ? "Close chat" : "Open chat"}
+        aria-expanded={isChatOpen}
+      >
+        <MessageCircleIcon />
+        <span>Chat</span>
+      </ChatButton>
+    </ChatButtonContainer>
+  </ControlsContent>
+</BottomControls>
       {/* Chat Panel */}
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 

@@ -2,7 +2,8 @@ import styled from "@emotion/styled";
 
 // Main container
 export const InterviewRoomContainer = styled.div`
-  height: 100vh;
+  height: 100%;
+  max-width: 100%;
   background-color: #f3f4f6;
   display: flex;
   flex-direction: column;
@@ -37,7 +38,7 @@ export const HeaderInfo = styled.div`
     color: #1f2937;
     margin: 0 0 0.25rem 0;
   }
-  
+
   p {
     font-size: 0.875rem;
     color: #6b7280;
@@ -74,9 +75,12 @@ export const VideoSection = styled.main`
 `;
 
 export const VideoContainer = styled.div`
-  max-width: 72rem;
+  max-width: 90%;
   margin: 0 auto;
   height: 100%;
+
+  @media (min-width: 768px) {
+    max-width: 72rem;
 `;
 
 export const VideoGrid = styled.div`
@@ -110,9 +114,7 @@ export const VideoDisplayContainer = styled.div`
   position: relative;
 `;
 
-// Bottom controls
 export const BottomControls = styled.footer`
-  background-color: #ffffff;
   border-top: 1px solid #e5e7eb;
   padding: 0.75rem 1rem;
   flex-shrink: 0;
@@ -120,16 +122,29 @@ export const BottomControls = styled.footer`
 
 export const ControlsContent = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.75rem;
   max-width: 72rem;
   margin: 0 auto;
+
+  @media (min-width: 1024px) {
+    max-width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
 `;
 
 export const StatusInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+export const ChatButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
 `;
 
 export const RecordingStatus = styled.div`
@@ -146,9 +161,9 @@ export const RecordingDot = styled.div`
   background-color: #ef4444;
   border-radius: 50%;
   animation: pulse 2s infinite;
-
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
     }
     50% {
@@ -176,17 +191,15 @@ export const ChatButton = styled.button<{ isOpen: boolean }>`
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
-  border: 1px solid ${props => props.isOpen ? '#3b82f6' : '#d1d5db'};
-  background-color: ${props => props.isOpen ? '#3b82f6' : '#ffffff'};
-  color: ${props => props.isOpen ? '#ffffff' : '#374151'};
+  border: 1px solid ${(props) => (props.isOpen ? "#3b82f6" : "#d1d5db")};
+  background-color: ${(props) => (props.isOpen ? "#3b82f6" : "#ffffff")};
+  color: ${(props) => (props.isOpen ? "#ffffff" : "#374151")};
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
-
   &:hover {
-    background-color: ${props => props.isOpen ? '#2563eb' : '#f9fafb'};
+    background-color: ${(props) => (props.isOpen ? "#2563eb" : "#f9fafb")};
   }
-
   &:focus {
     outline: 2px solid #3b82f6;
     outline-offset: 2px;
@@ -199,7 +212,7 @@ export const ChatOverlay = styled.div<{ isOpen: boolean }>`
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 40;
-  display: ${props => props.isOpen ? 'block' : 'none'};
+  display: ${(props) => (props.isOpen ? "block" : "none")};
 
   @media (min-width: 768px) {
     display: none;
@@ -267,7 +280,7 @@ export const ControlButton = styled.button<{ active: boolean }>`
   height: 2.5rem;
   border-radius: 50%;
   border: none;
-  background-color: ${props => props.active ? '#3b82f6' : '#6b7280'};
+  background-color: ${(props) => (props.active ? "#3b82f6" : "#6b7280")};
   color: white;
   display: flex;
   align-items: center;
@@ -276,7 +289,7 @@ export const ControlButton = styled.button<{ active: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    background-color: ${props => props.active ? '#2563eb' : '#4b5563'};
+    background-color: ${(props) => (props.active ? "#2563eb" : "#4b5563")};
   }
 
   &:focus {
@@ -444,7 +457,7 @@ export const MissingDevicesAlert = styled.aside`
   padding: 1rem;
   background-color: #fef3c7;
   border-radius: 0.5rem;
-  
+
   p {
     margin: 0;
     font-size: 0.875rem;
