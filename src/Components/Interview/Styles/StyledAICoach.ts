@@ -1,4 +1,14 @@
 import styled from "@emotion/styled";
+import { keyframes } from "@emotion/react";
+
+const waveOpacity = keyframes`
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+`;
 
 // Main container
 export const AICoachContainer = styled.div`
@@ -15,20 +25,22 @@ export const AICoachContainer = styled.div`
   padding: 2rem;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 0;
 
-  @media (max-width: 768px) {
+  @media (min-width: 1024px) {
     padding: 1.5rem;
   }
 `;
 
 // AI Coach visual circle
-export const AICoachCircle = styled.div<{ 
-  isAnimating: boolean; 
-  audioLevel: number; 
+export const AICoachCircle = styled.div<{
+  isAnimating: boolean;
+  audioLevel: number;
 }>`
   position: relative;
-  width: 12rem;
-  height: 12rem;
+  top: 25%;
+  width: 5rem;
+  height: 5rem;
   border-radius: 50%;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   display: flex;
@@ -36,14 +48,16 @@ export const AICoachCircle = styled.div<{
   justify-content: center;
   border: 2px solid #60a5fa;
   transition: all 100ms ease-out;
-  
-  transform: scale(${props => 1 + props.audioLevel / 200});
-  box-shadow: 0 0 ${props => 20 + props.audioLevel * 0.3}px rgba(59, 130, 246, ${props => 0.3 + props.audioLevel * 0.007});
-  
-  ${props => props.isAnimating && `
+
+  transform: scale(${(props) => 1 + props.audioLevel / 200});
+  box-shadow: 0 0 ${(props) => 20 + props.audioLevel * 0.3}px
+    rgba(59, 130, 246, ${(props) => 0.3 + props.audioLevel * 0.007});
+
+  ${(props) =>
+    props.isAnimating &&
+    `
     animation: glow 2s ease-in-out infinite;
   `}
-
 
   @keyframes glow {
     0% {
@@ -57,9 +71,10 @@ export const AICoachCircle = styled.div<{
     }
   }
 
-  @media (max-width: 768px) {
+  @media (min-width: 1024px) {
     width: 10rem;
     height: 10rem;
+    top: 0;
   }
 `;
 
@@ -70,13 +85,15 @@ export const IconWrapper = styled.div<{ audioLevel: number }>`
   justify-content: center;
   color: white;
   transition: all 100ms ease-out;
-  
-  filter: drop-shadow(0 0 ${props => 5 + props.audioLevel * 0.1}px rgba(255, 255, 255, 0.8));
+
+  filter: drop-shadow(
+    0 0 ${(props) => 5 + props.audioLevel * 0.1}px rgba(255, 255, 255, 0.8)
+  );
 
   svg {
     width: 4rem;
     height: 4rem;
-    
+
     @media (max-width: 768px) {
       width: 3rem;
       height: 3rem;
@@ -99,8 +116,8 @@ export const RippleRing = styled.div<{ delay?: string }>`
   border: 2px solid #60a5fa;
   animation: ripple 1.5s ease-out infinite;
   opacity: 0.3;
-  
-  animation-delay: ${props => props.delay || '0s'};
+
+  animation-delay: ${(props) => props.delay || "0s"};
 
   @keyframes ripple {
     0% {
@@ -125,23 +142,100 @@ export const AICoachInfo = styled.div`
   text-align: center;
   margin: 1.5rem 0;
   color: #1e293b;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 2.5rem;
+
+  @media (min-width: 1024px) {
+    gap: 24px;
+  }
 `;
 
 export const AICoachTitle = styled.h3`
-  font-size: 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 0;
   color: #0f172a;
   line-height: 1.3;
+
+  @media (min-width: 1024px) {
+    font-size: 1.25rem;
+    
+  }
 `;
 
-export const AICoachStatus = styled.p`
-  font-size: 0.875rem;
+export const AICoachStatus = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.05rem;
   color: #64748b;
   margin: 0;
   line-height: 1.4;
+
+  .text {
+    font-size: 0.85rem;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .animated-bars {
+    display: flex;
+    gap: 0.25rem;
+    margin-left: auto;
+  }
+
+  .bar {
+    width: 0.25rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background-color: #64748b;
+    animation: ${waveOpacity} 1.2s ease-in-out infinite;
+  }
+
+  .bar:nth-of-type(1) {
+    animation-delay: 0.15s;
+  }
+  .bar:nth-of-type(2) {
+    animation-delay: 0.3s;
+  }
+  .bar:nth-of-type(3) {
+    animation-delay: 0.45s;
+  }
+
+  @media (min-width: 1024px) {
+    .text {
+      font-size: 1.05rem;
+    }
+  }
 `;
 
+export const AICoachQuestionContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+`;
+
+export const AICoachQuestionHeader = styled.h3`
+  font-size: 1rem;
+  margin: 0;
+  
+  @media (min-width: 1024px) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+  }
+`;
+export const AICoachQuestionText = styled.p`
+  font-size: 0.85rem;
+  margin: 0;
+  color: #64748b;
+  @media (min-width: 1024px) {
+    font-size: 1rem;
+  }
+`;
 // Controls section
 export const ControlsSection = styled.div`
   display: flex;
@@ -189,7 +283,9 @@ export const PrimaryButton = styled.button<{ isAnimating: boolean }>`
     outline-offset: 2px;
   }
 
-  ${props => props.isAnimating && `
+  ${(props) =>
+    props.isAnimating &&
+    `
     animation: pulse 2s ease-in-out infinite;
   `}
 
@@ -260,7 +356,7 @@ export const QuestionText = styled.p`
   line-height: 1.5;
   margin: 0;
   font-style: italic;
-  
+
   strong {
     color: #475569;
     font-weight: 600;

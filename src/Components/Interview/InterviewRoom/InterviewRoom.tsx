@@ -180,7 +180,7 @@ const InterviewRoom: FC = () => {
         handleQuestionSpoken(JSON.stringify(message.content));
       } else if (message.type === "transcript") {
         console.log("Transcript received:", message.content);
-      } else if(message.type === "incremental_transcript") {
+      } else if (message.type === "incremental_transcript") {
         console.log("Incremental transcript received:", message.content);
       } else if (message.type === "error") {
         console.error("Error received:", message.content);
@@ -340,7 +340,7 @@ const InterviewRoom: FC = () => {
         if (!isSpeaking) {
           return;
         }
-        
+
         // Stream audio chunks to server
         if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
           try {
@@ -423,7 +423,7 @@ const InterviewRoom: FC = () => {
     if (isAISpeaking) {
       stopDetectingAudio();
       setIsStreaming(false);
-      
+
       // Clear any pending timeout
       if (streamingTimeoutRef.current) {
         clearTimeout(streamingTimeoutRef.current);
@@ -471,6 +471,14 @@ const InterviewRoom: FC = () => {
 
   return (
     <InterviewRoomContainer>
+      <ChatButton
+        isOpen={isChatOpen}
+        onClick={toggleChat}
+        aria-label={isChatOpen ? "Close chat" : "Open chat"}
+        aria-expanded={isChatOpen}
+      >
+        <MessageCircleIcon />
+      </ChatButton>
       {/* Header */}
       <Header>
         <HeaderContent>
@@ -499,10 +507,10 @@ const InterviewRoom: FC = () => {
           <VideoGrid>
             {/* AI Coach/Interviewer */}
             <VideoWrapper>
-              <VideoLabel>AI Interview Coach</VideoLabel>
+              <VideoLabel>MockMentor</VideoLabel>
               <VideoDisplayContainer>
                 <VideoDisplay
-                  name="AI Coach"
+                  name="MockMentor"
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
                   onQuestionSpoken={handleQuestionSpoken}
@@ -603,20 +611,8 @@ const InterviewRoom: FC = () => {
               )}
             </ConnectionStatus>
           </StatusInfo>
-
-          {/* Chat Button */}
-          <ChatButton
-            isOpen={isChatOpen}
-            onClick={toggleChat}
-            aria-label={isChatOpen ? "Close chat" : "Open chat"}
-            aria-expanded={isChatOpen}
-          >
-            <MessageCircleIcon />
-            <span>Chat</span>
-          </ChatButton>
         </ControlsContent>
       </BottomControls>
-
       {/* Chat Panel */}
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 

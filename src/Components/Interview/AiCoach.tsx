@@ -32,6 +32,9 @@ import {
   AICoachTitle,
   AICoachStatus,
   VisuallyHidden,
+  AICoachQuestionContainer,
+  AICoachQuestionHeader,
+  AICoachQuestionText,
 } from "./Styles/StyledAICoach";
 
 /**
@@ -59,7 +62,7 @@ interface AICoachProps {
  * @returns {JSX.Element} The rendered AI coach interface with speech and visual feedback.
  * @example
  * // Basic usage:
- * <AICoach 
+ * <AICoach
  *   AICoachMessage="Hello, let's begin your technical interview"
  *   onQuestionSpoken={handleSpeechComplete}
  *   onTranscriptionEnd={startUserRecording}
@@ -92,7 +95,7 @@ interface AICoachProps {
 const AICoach: React.FC<AICoachProps> = ({
   AICoachMessage,
   onQuestionSpoken,
-  onTranscriptionEnd
+  onTranscriptionEnd,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -266,9 +269,7 @@ const AICoach: React.FC<AICoachProps> = ({
           <IconWrapper audioLevel={audioLevel}>
             <Volume2 aria-hidden="true" />
             <VisuallyHidden>
-              {isSpeaking
-                ? "AI Coach is speaking."
-                : "AI Coach is ready to help you practice."}
+              {isSpeaking ? "AI Coach is speaking." : "User is speaking."}
             </VisuallyHidden>
           </IconWrapper>
         </AICoachCircle>
@@ -284,10 +285,23 @@ const AICoach: React.FC<AICoachProps> = ({
 
       {/* AI Coach Information */}
       <AICoachInfo>
-        <AICoachTitle id="coach-title">AI Interview Coach</AICoachTitle>
+        <AICoachTitle id="coach-title">MockMentor</AICoachTitle>
         <AICoachStatus id="coach-status">
-          {isSpeaking ? "Speaking question..." : "Ready to help you practice"}
+          <span className="text">
+            {isSpeaking ? "AI is Speaking" : "Your turn to speak"}
+          </span>
+          <div className="animated-bars">
+            <div className="bar" />
+            <div className="bar" />
+            <div className="bar" />
+          </div>
         </AICoachStatus>
+        <AICoachQuestionContainer>
+          <AICoachQuestionHeader>Question:</AICoachQuestionHeader>
+          <AICoachQuestionText>
+            This is the question... {/* TODO: Replace this with the questions */}
+          </AICoachQuestionText>
+        </AICoachQuestionContainer>
       </AICoachInfo>
     </AICoachContainer>
   );
