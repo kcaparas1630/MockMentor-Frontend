@@ -50,6 +50,7 @@ import {
  */
 interface AICoachProps {
   AICoachMessage?: string;
+  currentQuestionText?: string;
   onQuestionSpoken?: (speechText: string) => void;
   onTranscriptionEnd?: () => void;
 }
@@ -94,6 +95,7 @@ interface AICoachProps {
 
 const AICoach: React.FC<AICoachProps> = ({
   AICoachMessage,
+  currentQuestionText,
   onQuestionSpoken,
   onTranscriptionEnd,
 }) => {
@@ -299,7 +301,7 @@ const AICoach: React.FC<AICoachProps> = ({
         <AICoachQuestionContainer>
           <AICoachQuestionHeader>Question:</AICoachQuestionHeader>
           <AICoachQuestionText>
-            This is the question... {/* TODO: Replace this with the questions */}
+            { currentQuestionText }
           </AICoachQuestionText>
         </AICoachQuestionContainer>
       </AICoachInfo>
