@@ -107,7 +107,7 @@ const InterviewRoom: FC = () => {
   // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
   // Get job level and interview type from search params. Check routes.
-  const { jobLevel, interviewType } = useSearch({ from: Route.id });
+  const { jobLevel, interviewType, currentQuestion } = useSearch({ from: Route.id });
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
@@ -115,7 +115,10 @@ const InterviewRoom: FC = () => {
   const [duration, setDuration] = useState<number>(0);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentQuestionText, setCurrentQuestionText] = useState<string | undefined>( currentQuestion || "" );
   const navigate = useNavigate();
+
+ 
 
   // ==================== REFS ====================
 
@@ -128,6 +131,8 @@ const InterviewRoom: FC = () => {
   const isAISpeakingRef = useRef<boolean>(false);
 
   const { users } = GetUserQuery();
+
+  const currentQuestionTextRef = useRef<string | undefined>(currentQuestionText || "");
 
   const setIsAISpeakingState = useCallback((speaking: boolean) => {
     setIsAISpeaking(speaking);
@@ -167,12 +172,19 @@ const InterviewRoom: FC = () => {
     navigate({ to: "/video-test" });
   };
 
+  const updateCurrentQuestionText = useCallback((questionText: string | undefined) => {
+    setCurrentQuestionText(questionText);
+    currentQuestionTextRef.current = questionText;
+  }, []);
+
   // ==================== WEBSOCKET MESSAGE HANDLERS ====================
 
   const handleQuestionSpoken = useCallback((speechText: string) => {
+    const questionToUse = currentQuestionTextRef.current || currentQuestion;
+    updateCurrentQuestionText(questionToUse);
     setAICoachMessage(speechText);
     setIsAISpeaking(true);
-  }, []);
+  }, [currentQuestion, updateCurrentQuestionText]);
 
   const handleAIWebSocket = useCallback(
     (message: WebSocketMessage) => {
@@ -433,6 +445,13 @@ const InterviewRoom: FC = () => {
     }
   }, [isAISpeaking, stopDetectingAudio]);
 
+  // Initialize the question from search params
+  useEffect(() => {
+    if (currentQuestion) {
+      updateCurrentQuestionText(currentQuestion);
+    }
+  }, [currentQuestion, updateCurrentQuestionText]);
+
   // ==================== CONDITIONAL RENDERING ====================
 
   // Show error state if there are device issues
@@ -515,6 +534,7 @@ const InterviewRoom: FC = () => {
                   name="MockMentor"
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
+                  currentQuestionText={currentQuestionText}
                   onQuestionSpoken={handleQuestionSpoken}
                   onTranscriptionEnd={handleAISpeechEnd}
                 />
