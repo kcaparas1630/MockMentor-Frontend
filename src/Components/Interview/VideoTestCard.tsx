@@ -303,7 +303,7 @@ const VideoTestCard: FC = () => {
       if (response.data?.sessionId) {
         router.navigate({
           to: `/interview-room/${response.data.sessionId}`,
-          search: { interviewType, jobLevel }
+          search: { interviewType, jobLevel, currentQuestion: response.data.currentQuestion },
         });
           }
       }, 1000); // 1 seconds delay 
