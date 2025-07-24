@@ -36,6 +36,7 @@ import {
   AICoachQuestionHeader,
   AICoachQuestionText,
 } from "./Styles/StyledAICoach";
+import SessionState from "@/Types/SessionState";
 
 /**
  * Props interface for the AICoach component.
@@ -51,6 +52,7 @@ import {
 interface AICoachProps {
   AICoachMessage?: string;
   currentQuestionText?: string;
+  sessionState?: SessionState;
   onQuestionSpoken?: (speechText: string) => void;
   onTranscriptionEnd?: () => void;
 }
@@ -96,6 +98,7 @@ interface AICoachProps {
 const AICoach: React.FC<AICoachProps> = ({
   AICoachMessage,
   currentQuestionText,
+  sessionState,
   onQuestionSpoken,
   onTranscriptionEnd,
 }) => {
@@ -298,10 +301,24 @@ const AICoach: React.FC<AICoachProps> = ({
             <div className="bar" />
           </div>
         </AICoachStatus>
-        <AICoachQuestionContainer>
-          <AICoachQuestionHeader>Question:</AICoachQuestionHeader>
-          <AICoachQuestionText>
-            { currentQuestionText }
+        <AICoachQuestionContainer
+          isVisible={
+            sessionState?.userReady && !sessionState?.userAnsweredQuestion
+          }
+        >
+          <AICoachQuestionHeader
+            isVisible={
+              sessionState?.userReady && !sessionState?.userAnsweredQuestion
+            }
+          >
+            Question:
+          </AICoachQuestionHeader>
+          <AICoachQuestionText
+            isVisible={
+              sessionState?.userReady && !sessionState?.userAnsweredQuestion
+            }
+          >
+            {currentQuestionText}
           </AICoachQuestionText>
         </AICoachQuestionContainer>
       </AICoachInfo>

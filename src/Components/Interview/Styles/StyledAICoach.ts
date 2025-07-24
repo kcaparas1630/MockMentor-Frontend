@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { keyframes } from "@emotion/react";
+import { keyframes, css } from "@emotion/react";
 
 const waveOpacity = keyframes`
   0%, 100% {
@@ -7,6 +7,16 @@ const waveOpacity = keyframes`
   }
   50% {
     opacity: 1;
+  }
+`;
+const slideFromLeft = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 `;
 
@@ -215,15 +225,19 @@ export const AICoachStatus = styled.div`
   }
 `;
 
-export const AICoachQuestionContainer = styled.div`
-    display: flex;
+export const AICoachQuestionContainer = styled.div<{isVisible: boolean | undefined}>`
+    display: ${(props) => (props.isVisible ? "flex" : "none")};
     flex-direction: column;
     gap: 0.5rem;
 `;
 
-export const AICoachQuestionHeader = styled.h3`
+export const AICoachQuestionHeader = styled.h3<{isVisible: boolean | undefined}>`
   font-size: 1rem;
   margin: 0;
+  
+  ${(props) => props.isVisible && css`
+    animation: ${slideFromLeft} 0.6s ease-out;
+  `}
   
   @media (min-width: 1024px) {
     font-size: 1.25rem;
@@ -231,10 +245,16 @@ export const AICoachQuestionHeader = styled.h3`
     margin-top: 1.5rem;
   }
 `;
-export const AICoachQuestionText = styled.p`
+
+export const AICoachQuestionText = styled.p<{isVisible: boolean | undefined}>`
   font-size: 0.75rem;
   margin: 0;
   color: #64748b;
+  
+  ${(props) => props.isVisible && css`
+    animation: ${slideFromLeft} 0.6s ease-out 0.2s both;
+  `}
+  
   @media (min-width: 1024px) {
     font-size: 1rem;
   }

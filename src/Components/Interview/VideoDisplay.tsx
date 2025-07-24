@@ -38,6 +38,7 @@ import {
   PlaceholderError,
 } from "./Styles/StyledVideoDisplay";
 import AICoach from "./AiCoach";
+import SessionState from "@/Types/SessionState";
 
 /**
  * Props interface for the VideoDisplay component.
@@ -66,6 +67,7 @@ interface VideoDisplayProps {
   audioEnabled?: boolean;
   AICoachMessage?: string;
   currentQuestionText?: string;
+  sessionState?: SessionState;
   stream?: MediaStream | null;
   onTranscriptionEnd?: () => void;
   onToggleVideo?: () => void;
@@ -121,6 +123,7 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   videoEnabled = true,
   audioEnabled = true,
   stream,
+  sessionState,
   AICoachMessage,
   currentQuestionText,
   onQuestionSpoken,
@@ -185,6 +188,7 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
         <AICoach
           AICoachMessage={AICoachMessage}
           currentQuestionText={currentQuestionText}
+          sessionState={sessionState}
           onQuestionSpoken={onQuestionSpoken}
           onTranscriptionEnd={onTranscriptionEnd}
         />
