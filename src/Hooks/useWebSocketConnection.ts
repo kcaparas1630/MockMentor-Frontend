@@ -29,6 +29,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export interface WebSocketMessage {
   type: "message" | "error" | "incremental_transcript" | "audio" | "transcript" | "heartbeat";
   content: string | object;
+  state: {
+    ready: boolean;
+    waiting_for_answer: boolean;
+    question_answered: boolean;
+  };
   audioData?: string;
   audioFormat?: string;
 }
