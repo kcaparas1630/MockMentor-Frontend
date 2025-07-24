@@ -67,6 +67,7 @@ import LoadingStream from "./ComponentHandlers/LoadingStream";
 import LoadingWhileCheckingDevice from "./ComponentHandlers/LoadingWhileCheckingDevice";
 import BlockInterview from "./ComponentHandlers/BlockInterview";
 import formatDuration from "./Utils/FormatDuration";
+import SessionState from "../../../Types/SessionState";
 import { useNavigate } from "@tanstack/react-router";
 
 // Updated icon component using lucide-react
@@ -103,6 +104,7 @@ const MessageCircleIcon = () => <MessageCircle size={20} />;
  * - Conditional rendering based on device status and permissions
  * - Centralized error handling for device and network issues
  */
+
 const InterviewRoom: FC = () => {
   // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
@@ -116,6 +118,11 @@ const InterviewRoom: FC = () => {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [currentQuestionText, setCurrentQuestionText] = useState<string | undefined>( currentQuestion || "" );
+  const [sessionState, setSessionState] = useState<SessionState>({
+    userReady: false,
+    waitingForUserAnswer: false,
+    userAnsweredQuestion: false,
+  });
   const navigate = useNavigate();
 
  
@@ -192,6 +199,12 @@ const InterviewRoom: FC = () => {
       if (message.type === "message") {
         // Handle question from AI coach
         handleQuestionSpoken(JSON.stringify(message.content));
+        setSessionState((prev) => ({
+          ...prev,
+          userReady: message.state?.ready,
+          waitingForUserAnswer: message.state?.waiting_for_answer,
+          userAnsweredQuestion: message.state?.question_answered,
+        }));
       } else if (message.type === "transcript") {
         console.log("Transcript received:", message.content);
       } else if (message.type === "incremental_transcript") {
@@ -534,6 +547,7 @@ const InterviewRoom: FC = () => {
                   name="MockMentor"
                   isAICoach={true}
                   AICoachMessage={AICoachMessage}
+                  sessionState={sessionState}
                   currentQuestionText={currentQuestionText}
                   onQuestionSpoken={handleQuestionSpoken}
                   onTranscriptionEnd={handleAISpeechEnd}
