@@ -22,6 +22,7 @@ import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth } from "@/Firebase/FirebaseAuth";
 import isFirebaseAuthError from "@/Types/Firebase/FirebaseError";
 import axios from "axios";
+import tokenStorage from "@/Utils/TokenStorage";
 /**
  * Initiates Google OAuth sign-in using Firebase Auth popup.
  *
@@ -59,6 +60,10 @@ const handleGoogleSignIn = async (baseUrl: string) => {
 
     // Get ID token from the authenticated user.
     const idToken = await result.user.getIdToken();
+    
+    // Store token securely for future API calls
+    await tokenStorage.storeToken(idToken, 3600); // 1 hour expiry
+    
     // Send this ID token to your backend for session management.
     axios.post(`${baseUrl}/api/google`, { idToken });
   } catch (error: unknown) {
