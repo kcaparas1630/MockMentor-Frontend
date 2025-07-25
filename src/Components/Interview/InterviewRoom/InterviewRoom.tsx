@@ -57,7 +57,7 @@ import {
   ChatOverlay,
   ActiveDevicesIndicator,
 } from "../Styles/StyledInterviewRoom";
-import { GetUserQuery } from "../../../Hooks/UserHooks";
+import { getAuthHeaders, GetUserQuery } from "../../../Hooks/UserHooks";
 import useWebSocketConnection, {
   WebSocketMessage,
 } from "../../../Hooks/useWebSocketConnection";
@@ -69,6 +69,9 @@ import BlockInterview from "./ComponentHandlers/BlockInterview";
 import formatDuration from "./Utils/FormatDuration";
 import SessionState from "../../../Types/SessionState";
 import { useNavigate } from "@tanstack/react-router";
+import axios from "axios";
+
+const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -109,7 +112,7 @@ const InterviewRoom: FC = () => {
   // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
   // Get job level and interview type from search params. Check routes.
-  const { jobLevel, interviewType, currentQuestion } = useSearch({ from: Route.id });
+  const { jobLevel, interviewType, currentQuestion, questionNumber, currentQuestionId } = useSearch({ from: Route.id });
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
   const [AICoachMessage, setAICoachMessage] = useState<string>("");
@@ -118,14 +121,14 @@ const InterviewRoom: FC = () => {
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [currentQuestionText, setCurrentQuestionText] = useState<string | undefined>( currentQuestion || "" );
+  const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number | undefined>(questionNumber);
+  const [currentQuestionID, setCurrentQuestionID] = useState<string | undefined>(currentQuestionId);
   const [sessionState, setSessionState] = useState<SessionState>({
     userReady: false,
     waitingForUserAnswer: false,
     userAnsweredQuestion: false,
   });
   const navigate = useNavigate();
-
- 
 
   // ==================== REFS ====================
 
@@ -207,13 +210,44 @@ const InterviewRoom: FC = () => {
         }));
       } else if (message.type === "transcript") {
         console.log("Transcript received:", message.content);
+
+        const userResponse = {
+          sessionId: sessionId,
+          questionId: currentQuestionID,
+          answerResponse: message.content,
+          currentQuestionIndex: currentQuestionNumber != null ? currentQuestionNumber - 1 : undefined, // Adjusting for zero-based index
+        }
+        console.log("User response to be sent:", userResponse);
+        // Send user response to the server if user state is ready
+        if (!sessionState.userReady) {
+          console.warn("User is not ready, skipping response submission.");
+          return;
+        }
+        getAuthHeaders().then((headers) => {
+          axios.post(`${baseUrl}/api/submit-user-response`, userResponse, {
+            headers: headers,
+          })
+          .then((response) => {
+            console.log("User response submitted successfully:", response.data);
+            // Update question state after successful submission
+            if (response.data && response.data.currentQuestion) {
+              const responseData = response.data;
+              setCurrentQuestionText(responseData.currentQuestion.questionText);
+              setCurrentQuestionNumber(responseData.questionNumber);
+              setCurrentQuestionID(responseData.currentQuestion.questionId);
+            }
+          })
+          .catch((error) => {
+            console.error("Error submitting user response:", error);
+          });
+        });
       } else if (message.type === "incremental_transcript") {
         console.log("Incremental transcript received:", message.content);
       } else if (message.type === "error") {
         console.error("Error received:", message.content);
       }
     },
-    [handleQuestionSpoken]
+    [handleQuestionSpoken, sessionId, currentQuestionID, currentQuestionNumber, sessionState.userReady]
   );
   // ==================== WEBSOCKET CONNECTIONS ====================
 
@@ -354,6 +388,12 @@ const InterviewRoom: FC = () => {
                     type: "audio_end",
                     timeStamp: Date.now(),
                   })
+                // axios.post(`${baseUrl}/api/submit-user-reponse`, {
+                //   headers: {
+                //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+                //   },
+                  
+                // )
                 );
               } catch (error) {
                 console.error("Error sending audio end signal:", error);
