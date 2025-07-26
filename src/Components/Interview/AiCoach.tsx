@@ -117,6 +117,7 @@ const AICoach: React.FC<AICoachProps> = ({
 
   const onTranscriptionEndRef = useRef(onTranscriptionEnd);
   onTranscriptionEndRef.current = onTranscriptionEnd;
+  const isVisible = sessionState?.userReady && !sessionState?.userAnsweredQuestion;
 
   useEffect(() => {
     if (AICoachMessage) {
@@ -307,16 +308,12 @@ const AICoach: React.FC<AICoachProps> = ({
           }
         >
           <AICoachQuestionHeader
-            isVisible={
-              sessionState?.userReady && !sessionState?.userAnsweredQuestion
-            }
+            isVisible={isVisible}
           >
             Question:
           </AICoachQuestionHeader>
           <AICoachQuestionText
-            isVisible={
-              sessionState?.userReady && !sessionState?.userAnsweredQuestion
-            }
+            isVisible={isVisible}
           >
             {currentQuestionText}
           </AICoachQuestionText>
