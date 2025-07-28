@@ -29,7 +29,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export interface WebSocketMessage {
   type: "message" | "error" | "incremental_transcript" | "audio" | "transcript" | "heartbeat" | "next_question";
   content: string | object;
-  question_data: {
+  next_question: {
     question: string;
     questionNumber: number;
     totalQuestions: number;
