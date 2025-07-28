@@ -39,18 +39,32 @@ import {
 import SessionState from "@/Types/SessionState";
 
 /**
+ * AI Coach Message state interface
+ *
+ * @interface
+ * @property {boolean} isAISpeaking - Whether AI is currently speaking
+ * @property {boolean} isWaitingForAI - Whether system is waiting for AI to start speaking
+ * @property {string} [text] - Text message to be spoken by the AI coach
+ */
+export interface AICoachMessageState {
+  isAISpeaking: boolean;
+  isWaitingForAI: boolean;
+  text?: string;
+}
+
+/**
  * Props interface for the AICoach component.
  *
  * @interface
- * @property {string} [AICoachMessage] - Text message to be spoken by the AI coach.
- * Constraints/Format: Must be valid text for speech synthesis, supports SSML markup
+ * @property {AICoachMessageState} [AICoachMessage] - AI coach state object containing speaking states and text
+ * Constraints/Format: Must contain valid boolean values for state flags and optional text for speech synthesis
  * @property {function} [onQuestionSpoken] - Callback triggered when AI finishes speaking.
  * Constraints/Format: Function that accepts speechText string parameter
  * @property {function} [onTranscriptionEnd] - Callback triggered to signal transcription should start.
  * Constraints/Format: Function with no parameters, called after speech ends
  */
 interface AICoachProps {
-  AICoachMessage?: string;
+  AICoachMessage?: AICoachMessageState;
   currentQuestionText?: string;
   sessionState?: SessionState;
   onQuestionSpoken?: (speechText: string) => void;
@@ -117,11 +131,11 @@ const AICoach: React.FC<AICoachProps> = ({
 
   const onTranscriptionEndRef = useRef(onTranscriptionEnd);
   onTranscriptionEndRef.current = onTranscriptionEnd;
-  const isVisible = sessionState?.userReady && !sessionState?.userAnsweredQuestion;
+  const isVisible = sessionState?.userReady;
 
   useEffect(() => {
-    if (AICoachMessage) {
-      AICoachSpeak(AICoachMessage);
+    if (AICoachMessage?.text && AICoachMessage.isAISpeaking) {
+      AICoachSpeak(AICoachMessage.text);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [AICoachMessage]);
@@ -275,7 +289,11 @@ const AICoach: React.FC<AICoachProps> = ({
           <IconWrapper audioLevel={audioLevel}>
             <Volume2 aria-hidden="true" />
             <VisuallyHidden>
-              {isSpeaking ? "AI Coach is speaking." : "User is speaking."}
+              {AICoachMessage?.isAISpeaking
+                ? "AI Coach is speaking."
+                : AICoachMessage?.isWaitingForAI
+                  ? "Waiting for AI Coach."
+                  : "User is speaking."}
             </VisuallyHidden>
           </IconWrapper>
         </AICoachCircle>
@@ -294,7 +312,11 @@ const AICoach: React.FC<AICoachProps> = ({
         <AICoachTitle id="coach-title">MockMentor</AICoachTitle>
         <AICoachStatus id="coach-status">
           <span className="text">
-            {isSpeaking ? "AI is Speaking" : "Your turn to speak"}
+            {AICoachMessage?.isAISpeaking
+              ? "AI is Speaking"
+              : AICoachMessage?.isWaitingForAI
+                ? "Waiting for AI"
+                : "Your turn to speak"}
           </span>
           <div className="animated-bars">
             <div className="bar" />
@@ -303,9 +325,7 @@ const AICoach: React.FC<AICoachProps> = ({
           </div>
         </AICoachStatus>
         <AICoachQuestionContainer
-          isVisible={
-            sessionState?.userReady && !sessionState?.userAnsweredQuestion
-          }
+          isVisible={isVisible}
         >
           <AICoachQuestionHeader
             isVisible={isVisible}
