@@ -198,7 +198,6 @@ const InterviewRoom: FC = () => {
     (message: WebSocketMessage) => {
       // Handle different types of messages from the server
       if (message.type === "message") {
-        console.log("Message content", message);
         // Handle question from AI coach
         handleQuestionSpoken(JSON.stringify(message.content));
         setSessionState((prev) => ({
@@ -206,8 +205,7 @@ const InterviewRoom: FC = () => {
           userReady: message.state.ready,
       }));
       } else if (message.type === "next_question") {
-        console.log("Message:", message);
-        const fullMessage = `${message.content} ${message.next_question.question}`;
+        const fullMessage = `${message.content} Here's your next question ${message.next_question.question}`;
         handleQuestionSpoken(fullMessage);
         // Handle new question data
         updateCurrentQuestionText(message.next_question.question);
