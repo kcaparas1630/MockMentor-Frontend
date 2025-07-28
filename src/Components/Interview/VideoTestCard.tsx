@@ -313,9 +313,7 @@ const VideoTestCard: FC = () => {
           const searchParams = {
             interviewType,
             jobLevel,
-            currentQuestionId: response.data.currentQuestion?.id,
             currentQuestion: response.data.currentQuestion?.question,
-            questionNumber: response.data.questionNumber,
           };
           router.navigate({
             to: `/interview-room/${response.data.sessionId}`,
