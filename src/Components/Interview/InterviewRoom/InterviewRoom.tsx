@@ -57,7 +57,7 @@ import {
   ChatOverlay,
   ActiveDevicesIndicator,
 } from "../Styles/StyledInterviewRoom";
-import { getAuthHeaders, GetUserQuery } from "../../../Hooks/UserHooks";
+import { GetUserQuery } from "../../../Hooks/UserHooks";
 import useWebSocketConnection, {
   WebSocketMessage,
 } from "../../../Hooks/useWebSocketConnection";
@@ -67,11 +67,10 @@ import LoadingStream from "./ComponentHandlers/LoadingStream";
 import LoadingWhileCheckingDevice from "./ComponentHandlers/LoadingWhileCheckingDevice";
 import BlockInterview from "./ComponentHandlers/BlockInterview";
 import formatDuration from "./Utils/FormatDuration";
-import SessionState from "../../../Types/SessionState";
 import { useNavigate } from "@tanstack/react-router";
-import axios from "axios";
+import SessionState from "@/Types/SessionState";
+import { AICoachMessageState } from "../AiCoach";
 
-const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
 // Updated icon component using lucide-react
 const MessageCircleIcon = () => <MessageCircle size={20} />;
@@ -112,22 +111,19 @@ const InterviewRoom: FC = () => {
   // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
   // Get job level and interview type from search params. Check routes.
-  const { jobLevel, interviewType, currentQuestion, questionNumber, currentQuestionId } = useSearch({ from: Route.id });
+  const { jobLevel, interviewType, currentQuestion } = useSearch({ from: Route.id });
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
-  // Text message to be sent to AI Coach Component. Message coming from AI Coach WebSocket
-  const [AICoachMessage, setAICoachMessage] = useState<string>("");
-  const [isAISpeaking, setIsAISpeaking] = useState<boolean>(false);
+  // AI Coach message state object containing speaking states and text
+  const [AICoachMessage, setAICoachMessage] = useState<AICoachMessageState>({ 
+    isAISpeaking: false, 
+    isWaitingForAI: true 
+  });
   const [duration, setDuration] = useState<number>(0);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [currentQuestionText, setCurrentQuestionText] = useState<string | undefined>( currentQuestion || "" );
-  // const [currentQuestionNumber, setCurrentQuestionNumber] = useState<number | undefined>(questionNumber);
-  // const [currentQuestionID, setCurrentQuestionID] = useState<string | undefined>(currentQuestionId);
-  const [sessionState, setSessionState] = useState<SessionState>({
+  const [sessionState, setSessionState] = useState<SessionState> ({
     userReady: false,
-    waitingForUserAnswer: false,
-    userAnsweredQuestion: false,
-    currentQuestionIndex: 0,
   });
   const navigate = useNavigate();
 
@@ -147,10 +143,6 @@ const InterviewRoom: FC = () => {
 
   const currentQuestionTextRef = useRef<string | undefined>(currentQuestionText || "");
 
-  const setIsAISpeakingState = useCallback((speaking: boolean) => {
-    setIsAISpeaking(speaking);
-    isAISpeakingRef.current = speaking;
-  }, []);
 
   // ==================== CUSTOM HOOKS ====================
 
@@ -195,45 +187,39 @@ const InterviewRoom: FC = () => {
   const handleQuestionSpoken = useCallback((speechText: string) => {
     const questionToUse = currentQuestionTextRef.current || currentQuestion;
     updateCurrentQuestionText(questionToUse);
-    setAICoachMessage(speechText);
-    setIsAISpeaking(true);
+    setAICoachMessage({
+      isAISpeaking: true,
+      isWaitingForAI: false,
+      text: speechText
+    });
   }, [currentQuestion, updateCurrentQuestionText]);
   
   const handleAIWebSocket = useCallback(
     (message: WebSocketMessage) => {
       // Handle different types of messages from the server
       if (message.type === "message") {
+        console.log("Message content", message);
         // Handle question from AI coach
         handleQuestionSpoken(JSON.stringify(message.content));
         setSessionState((prev) => ({
           ...prev,
-          userReady: message.state?.ready,
-          waitingForUserAnswer: message.state?.waiting_for_answer,
-          userAnsweredQuestion: message.state?.question_answered,
-          currentQuestionIndex: message.state?.currentQuestionIndex || prev.currentQuestionIndex,
-        }));
-        console.log("user answered?:", message.state?.question_answered);
+          userReady: message.state.ready,
+      }));
       } else if (message.type === "next_question") {
+        console.log("Message:", message);
+        const fullMessage = `${message.content} ${message.next_question.question}`;
+        handleQuestionSpoken(fullMessage);
         // Handle new question data
-        updateCurrentQuestionText(message.question_data.question);
-
-        setSessionState((prev) => ({
-          ...prev,
-          waitingForUserAnswer: true,
-          userAnsweredQuestion: false,
-          currentQuestionIndex: message.question_data.questionIndex
-        })); 
+        updateCurrentQuestionText(message.next_question.question);
       } else if (message.type === "transcript") {
         console.log("Transcript received:", message.content);
-
-        
       } else if (message.type === "incremental_transcript") {
         console.log("Incremental transcript received:", message.content);
       } else if (message.type === "error") {
         console.error("Error received:", message.content);
       }
     },
-    [handleQuestionSpoken, updateCurrentQuestionText, setSessionState]
+    [handleQuestionSpoken, updateCurrentQuestionText]
   );
   // ==================== WEBSOCKET CONNECTIONS ====================
 
@@ -369,6 +355,12 @@ const InterviewRoom: FC = () => {
             if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
               try {
                 console.log("Sending audio end signal");
+                // Set AI speaking to false and waiting for AI to true when audio_end is sent
+                setAICoachMessage(prev => ({
+                  ...prev,
+                  isAISpeaking: false,
+                  isWaitingForAI: true
+                }));
                 mainSocket.send(
                   JSON.stringify({
                     type: "audio_end",
@@ -423,13 +415,17 @@ const InterviewRoom: FC = () => {
     stopDetectingAudio();
 
     // update ai speaking state
-    setIsAISpeakingState(false);
+    setAICoachMessage(prev => ({
+      ...prev,
+      isAISpeaking: false,
+      isWaitingForAI: false
+    }));
 
     // Use a small delay to ensure all state updates are processed
     setTimeout(() => {
       handleTranscriptionMessage(); // Call transcription message handler when AI speech ends
     }, 100);
-  }, [handleTranscriptionMessage, setIsAISpeakingState, stopDetectingAudio]);
+  }, [handleTranscriptionMessage, stopDetectingAudio]);
 
   // ==================== CONDITIONAL USE EFFECTS ====================
 
@@ -443,14 +439,21 @@ const InterviewRoom: FC = () => {
     return () => clearInterval(interval);
   }, [streamReady]);
 
-  // Effect to trigger handleInterviewStart after 2 seconds,
+  // Effect to trigger handleInterviewStart after 5 seconds and set waiting state,
   // but only when the socket connection is established.
   useEffect(() => {
     let timer: NodeJS.Timeout;
     if (isConnected) {
+      // Set waiting for AI state immediately when connected
+      setAICoachMessage(prev => ({
+        ...prev,
+        isAISpeaking: false,
+        isWaitingForAI: true
+      }));
+      
       timer = setTimeout(() => {
         handleInterviewStart();
-      }, 2000);
+      }, 5000); // Changed to 5 seconds as per user request
     }
     // cleanup
     return () => {
@@ -467,7 +470,7 @@ const InterviewRoom: FC = () => {
 
   // cleanup effect to stop audio detection when AI starts speaking
   useEffect(() => {
-    if (isAISpeaking) {
+    if (AICoachMessage.isAISpeaking) {
       stopDetectingAudio();
       setIsStreaming(false);
 
@@ -476,7 +479,7 @@ const InterviewRoom: FC = () => {
         clearTimeout(streamingTimeoutRef.current);
       }
     }
-  }, [isAISpeaking, stopDetectingAudio]);
+  }, [AICoachMessage.isAISpeaking, stopDetectingAudio]);
 
   // Initialize the question from search params
   useEffect(() => {
@@ -566,8 +569,8 @@ const InterviewRoom: FC = () => {
                 <VideoDisplay
                   name="MockMentor"
                   isAICoach={true}
-                  AICoachMessage={AICoachMessage}
                   sessionState={sessionState}
+                  AICoachMessage={AICoachMessage}
                   currentQuestionText={currentQuestionText}
                   onQuestionSpoken={handleQuestionSpoken}
                   onTranscriptionEnd={handleAISpeechEnd}
