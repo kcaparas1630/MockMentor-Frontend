@@ -35,20 +35,6 @@ class SecureTokenStorage {
   private encryptionKey: CryptoKey | null = null;
 
   /**
-   * Generates a new encryption key for token storage.
-   */
-  private async generateEncryptionKey(): Promise<CryptoKey> {
-    return await window.crypto.subtle.generateKey(
-      {
-        name: 'AES-GCM',
-        length: 256,
-      },
-      true,
-      ['encrypt', 'decrypt']
-    );
-  }
-
-  /**
    * Derives an encryption key from a password and salt.
    */
   private async deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
