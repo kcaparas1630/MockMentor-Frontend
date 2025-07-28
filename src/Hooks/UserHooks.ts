@@ -103,10 +103,11 @@ const getAuthHeaders = async (): Promise<Record<string, string>> => {
     try {
         return await tokenStorage.getAuthHeaders();
     } catch (error) {
+        console.warn('Failed to get auth headers from token storage:', error);
         // Fallback to getUserToken if tokenStorage fails
         const token = await getUserToken();
         if (!token) {
-            throw new Error('No valid authentication token available');
+            throw new Error('No valid authentication token available', );
         }
         
         return {
