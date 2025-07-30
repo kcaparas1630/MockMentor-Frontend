@@ -44,6 +44,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useNavigate } from "@tanstack/react-router";
 import { GetUserQuery } from "@/Hooks/UserHooks";
+import tokenStorage from "@/Utils/TokenStorage";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
@@ -83,6 +84,10 @@ const AuthenticateUser = async (email: string, password: string) => {
       password
     );
     const idToken = await userCredential.user.getIdToken();
+    
+    // Store token securely for future API calls
+    await tokenStorage.storeToken(idToken, 3600); // 1 hour expiry
+    
     return idToken;
   } catch (error) {
     if (isFirebaseAuthError(error)) {

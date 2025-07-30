@@ -37,7 +37,8 @@ import {
   PlaceholderText,
   PlaceholderError,
 } from "./Styles/StyledVideoDisplay";
-import AICoach from "./AiCoach";
+import AICoach, { AICoachMessageState } from "./AiCoach";
+import SessionState from "@/Types/SessionState";
 
 /**
  * Props interface for the VideoDisplay component.
@@ -49,8 +50,8 @@ import AICoach from "./AiCoach";
  * @property {boolean} [isAICoach=false] - Whether this display represents the AI coach.
  * @property {boolean} [videoEnabled=true] - Whether video is enabled for this participant.
  * @property {boolean} [audioEnabled=true] - Whether audio is enabled for this participant.
- * @property {string} [AICoachMessage] - Message from AI coach to be spoken.
- * Constraints/Format: Must be valid text for speech synthesis
+ * @property {AICoachMessageState} [AICoachMessage] - AI coach state object containing speaking states and text.
+ * Constraints/Format: Must contain valid boolean values for state flags and optional text for speech synthesis
  * @property {MediaStream|null} [stream] - Video stream to display.
  * @property {function} [onTranscriptionEnd] - Callback when AI speech transcription ends.
  * @property {function} [onToggleVideo] - Callback to toggle video state.
@@ -64,7 +65,9 @@ interface VideoDisplayProps {
   isAICoach?: boolean;
   videoEnabled?: boolean;
   audioEnabled?: boolean;
-  AICoachMessage?: string;
+  AICoachMessage?: AICoachMessageState;
+  currentQuestionText?: string;
+  sessionState?: SessionState;
   stream?: MediaStream | null;
   onTranscriptionEnd?: () => void;
   onToggleVideo?: () => void;
@@ -120,9 +123,12 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   videoEnabled = true,
   audioEnabled = true,
   stream,
+  sessionState,
   AICoachMessage,
+  currentQuestionText,
   onQuestionSpoken,
   onTranscriptionEnd
+
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -181,6 +187,8 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
         <NameLabel>{name}</NameLabel>
         <AICoach
           AICoachMessage={AICoachMessage}
+          currentQuestionText={currentQuestionText}
+          sessionState={sessionState}
           onQuestionSpoken={onQuestionSpoken}
           onTranscriptionEnd={onTranscriptionEnd}
         />

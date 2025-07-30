@@ -22,12 +22,13 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { auth } from "../Firebase/FirebaseAuth";
 import axios from "axios";
 import ProfileData from "@/Types/ProfileData";
+import tokenStorage from "@/Utils/TokenStorage";
 
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
 
 /**
- * Retrieves the current user's Firebase ID token for API authentication.
+ * Retrieves the current user's Firebase ID token with secure caching.
  *
  * @function
  * @returns {Promise<string>} Firebase ID token or empty string if no user.
@@ -39,23 +40,81 @@ const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
  *
  * @throws {Error} Throws if token retrieval fails.
  * @remarks
- * Side Effects: Requests Firebase ID token.
+ * Side Effects: 
+ * - Requests Firebase ID token
+ * - Stores token securely in encrypted storage
  *
  * Known Issues/Limitations:
  * - Returns empty string instead of throwing when no user
- * - No token refresh handling
+ * - Token refresh handled automatically by Firebase
  *
  * Design Decisions/Rationale:
- * - Uses Firebase currentUser for token access
- * - Returns empty string for graceful handling
+ * - Uses secure token storage for performance and security
+ * - Falls back to Firebase for fresh tokens
  * - Centralizes token retrieval logic
  */
 const getUserToken = async (): Promise<string> => {
-    const user = auth.currentUser;
-    if (user) {
-        return user.getIdToken();
+    try {
+        // Check if we have a valid cached token first
+        const cachedToken = await tokenStorage.getToken();
+        if (cachedToken) {
+            return cachedToken;
+        }
+
+        // Get fresh token from Firebase
+        const user = auth.currentUser;
+        if (user) {
+            const freshToken = await user.getIdToken();
+            
+            // Store the fresh token securely
+            await tokenStorage.storeToken(freshToken, 3600); // 1 hour expiry
+            
+            return freshToken;
+        }
+        
+        return "";
+    } catch (error) {
+        console.error('Error retrieving user token:', error);
+        return "";
     }
-    return "";
+}
+
+/**
+ * Gets authorization headers with secure token for API requests.
+ *
+ * @function
+ * @returns {Promise<Record<string, string>>} Headers object with Authorization and Content-Type.
+ * Example Return Value: `{ "Authorization": "Bearer token...", "Content-Type": "application/json" }`
+ * @example
+ * // Example usage:
+ * const headers = await getAuthHeaders();
+ * const response = await axios.get('/api/data', { headers });
+ *
+ * @throws {Error} Throws if no valid token is available.
+ * @remarks
+ * Side Effects: May refresh and store token if needed.
+ *
+ * Design Decisions/Rationale:
+ * - Centralizes header creation logic
+ * - Ensures consistent header format
+ * - Handles token retrieval automatically
+ */
+const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+        return await tokenStorage.getAuthHeaders();
+    } catch (error) {
+        console.warn('Failed to get auth headers from token storage:', error);
+        // Fallback to getUserToken if tokenStorage fails
+        const token = await getUserToken();
+        if (!token) {
+            throw new Error('No valid authentication token available', );
+        }
+        
+        return {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        };
+    }
 }
 
 /**
@@ -86,12 +145,8 @@ const getUserToken = async (): Promise<string> => {
  */
 const getUser = async (): Promise<ProfileData> => {
     try {
-        const userToken = await getUserToken();
-        const response = await axios.get(`${baseUrl}/api/user`, {
-            headers: {
-                'Authorization': `Bearer ${userToken}`
-            }
-        })
+        const headers = await getAuthHeaders();
+        const response = await axios.get(`${baseUrl}/api/user`, { headers });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -128,14 +183,8 @@ const getUser = async (): Promise<ProfileData> => {
  */
 const UpdateUser = async (userData: ProfileData) => {
     try {
-        const userToken = await getUserToken();
-        const response = await axios.put(`${baseUrl}/api/update-user`,
-            userData,
-            {
-            headers: {
-                'Authorization': `Bearer ${userToken}`
-            }
-        })
+        const headers = await getAuthHeaders();
+        const response = await axios.put(`${baseUrl}/api/update-user`, userData, { headers });
         return response.data;
     } catch (error) {
         console.error(error);
@@ -197,4 +246,4 @@ const GetUserQuery = () => {
     }
 }
 
-export { GetUserQuery, UpdateUser, getUserToken };
+export { GetUserQuery, UpdateUser, getUserToken, getAuthHeaders };

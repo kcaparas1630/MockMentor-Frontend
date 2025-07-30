@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { keyframes } from "@emotion/react";
+import { keyframes, css } from "@emotion/react";
 
 const waveOpacity = keyframes`
   0%, 100% {
@@ -7,6 +7,16 @@ const waveOpacity = keyframes`
   }
   50% {
     opacity: 1;
+  }
+`;
+const slideFromLeft = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 `;
 
@@ -141,6 +151,7 @@ export const RippleRingSecondary = styled(RippleRing)`
 export const AICoachInfo = styled.div`
   text-align: center;
   margin: 1.5rem 0;
+  width: 90%;
   color: #1e293b;
   display: flex;
   flex-direction: column;
@@ -149,6 +160,7 @@ export const AICoachInfo = styled.div`
 
   @media (min-width: 1024px) {
     gap: 24px;
+    width: 70%;
   }
 `;
 
@@ -168,7 +180,7 @@ export const AICoachTitle = styled.h3`
 export const AICoachStatus = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
   font-size: 1.05rem;
   color: #64748b;
   margin: 0;
@@ -184,7 +196,7 @@ export const AICoachStatus = styled.div`
   .animated-bars {
     display: flex;
     gap: 0.25rem;
-    margin-left: auto;
+    margin-left: 0.8rem;
   }
 
   .bar {
@@ -206,21 +218,26 @@ export const AICoachStatus = styled.div`
   }
 
   @media (min-width: 1024px) {
+    
     .text {
       font-size: 1.05rem;
     }
   }
 `;
 
-export const AICoachQuestionContainer = styled.div`
-    display: flex;
+export const AICoachQuestionContainer = styled.div<{isVisible: boolean | undefined}>`
+    display: ${(props) => (props.isVisible ? "flex" : "none")};
     flex-direction: column;
     gap: 0.5rem;
 `;
 
-export const AICoachQuestionHeader = styled.h3`
+export const AICoachQuestionHeader = styled.h3<{isVisible: boolean | undefined}>`
   font-size: 1rem;
   margin: 0;
+  
+  ${(props) => props.isVisible && css`
+    animation: ${slideFromLeft} 0.6s ease-out;
+  `}
   
   @media (min-width: 1024px) {
     font-size: 1.25rem;
@@ -228,10 +245,16 @@ export const AICoachQuestionHeader = styled.h3`
     margin-top: 1.5rem;
   }
 `;
-export const AICoachQuestionText = styled.p`
-  font-size: 0.85rem;
+
+export const AICoachQuestionText = styled.p<{isVisible: boolean | undefined}>`
+  font-size: 0.75rem;
   margin: 0;
   color: #64748b;
+  
+  ${(props) => props.isVisible && css`
+    animation: ${slideFromLeft} 0.6s ease-out 0.2s both;
+  `}
+  
   @media (min-width: 1024px) {
     font-size: 1rem;
   }

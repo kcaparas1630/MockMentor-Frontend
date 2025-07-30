@@ -18,12 +18,7 @@
  * - Styled Components
  * - Axios
  */
-import {
-  FC,
-  useState,
-  useEffect,
-  useRef,
-} from "react";
+import { FC, useState, useEffect, useRef } from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
 import ReusableSelect from "@/Commons/Select";
 import LoadingSpinner from "@/Commons/Spinner";
@@ -69,7 +64,7 @@ import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import { useCalibration } from "@/Hooks/useCalibration";
 import { ToastContainer, toast } from "react-toastify";
 
-const baseUrl = import.meta.env.VITE_EXPRESS_URL || 'http://localhost:3000';
+const baseUrl = import.meta.env.VITE_EXPRESS_URL || "http://localhost:3000";
 
 /**
  * Video and microphone test card component for pre-interview device readiness.
@@ -111,7 +106,7 @@ const VideoTestCard: FC = () => {
     streamRef,
     toggleVideo,
     toggleAudio,
-  } = useMediaDevicesContext(); 
+  } = useMediaDevicesContext();
 
   // Use the custom hook for microphone testing
   const {
@@ -136,7 +131,8 @@ const VideoTestCard: FC = () => {
   const [jobLevel, setJobLevel] = useState<string>("");
   const [interviewType, setInterviewType] = useState<string>("");
   // Check if calibration thresholds exist in localStorage
-  const [hasCalibrationThresholds, setHasCalibrationThresholds] = useState<boolean>(false);
+  const [hasCalibrationThresholds, setHasCalibrationThresholds] =
+    useState<boolean>(false);
   // TODO: Add interview types to Database and fetch from there.
   const interviewTypes = [
     { value: "technical", label: "Technical Interview" },
@@ -188,15 +184,21 @@ const VideoTestCard: FC = () => {
 
     try {
       const thresholds = await calibrate(streamRef.current);
-      toast.success('Calibration completed successfully');
+      toast.success("Calibration completed successfully");
       // Store thresholds in context
       setThresholds(thresholds);
-      
+
       // Store thresholds in localStorage
-      localStorage.setItem("audio_calibration_thresholds", JSON.stringify(thresholds));
+      localStorage.setItem(
+        "audio_calibration_thresholds",
+        JSON.stringify(thresholds)
+      );
       setHasCalibrationThresholds(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Calibration failed. Please try again.";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "Calibration failed. Please try again.";
       setError(errorMessage);
       toast.error(errorMessage);
     }
@@ -219,7 +221,9 @@ const VideoTestCard: FC = () => {
 
   // Check for existing calibration thresholds in localStorage
   useEffect(() => {
-    const storedThresholds = localStorage.getItem("audio_calibration_thresholds");
+    const storedThresholds = localStorage.getItem(
+      "audio_calibration_thresholds"
+    );
     setHasCalibrationThresholds(!!storedThresholds);
   }, []);
 
@@ -240,7 +244,11 @@ const VideoTestCard: FC = () => {
    */
   const getStatusMessage = () => {
     if (error) {
-      return <StatusMessage type="error" role="alert">{error}</StatusMessage>;
+      return (
+        <StatusMessage type="error" role="alert">
+          {error}
+        </StatusMessage>
+      );
     }
 
     if (permissionStatus === "granted" && (videoEnabled || audioEnabled)) {
@@ -287,26 +295,32 @@ const VideoTestCard: FC = () => {
    */
   const handleStartInterview = async () => {
     try {
-    // Get User Token for Firebase Auth verification
-    const userToken = await getUserToken();
-    setIsInterviewStarted(true);
-    const response = await axios.post(
-    `${baseUrl}/api/start-interview`,
-      { jobLevel, interviewType },
-      {
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      }
-    );
-    setTimeout(() => {
-      if (response.data?.sessionId) {
-        router.navigate({
-          to: `/interview-room/${response.data.sessionId}`,
-          search: { interviewType, jobLevel }
-        });
-          }
-      }, 1000); // 1 seconds delay 
+      // Get User Token for Firebase Auth verification
+      const userToken = await getUserToken();
+      setIsInterviewStarted(true);
+      const response = await axios.post(
+        `${baseUrl}/api/start-interview`,
+        { jobLevel, interviewType },
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
+      
+      setTimeout(() => {
+        if (response.data?.sessionId) {
+          const searchParams = {
+            interviewType,
+            jobLevel,
+            currentQuestion: response.data.currentQuestion?.question,
+          };
+          router.navigate({
+            to: `/interview-room/${response.data.sessionId}`,
+            search: searchParams,
+          });
+        }
+      }, 1000);
     } catch (error) {
       setIsInterviewStarted(false);
       setError("Error starting interview. Please try again.");
@@ -334,11 +348,11 @@ const VideoTestCard: FC = () => {
 
     if (videoEnabled && streamRef.current && deviceSupport.hasCamera) {
       return (
-        <VideoElement 
-          ref={videoRef} 
-          autoPlay 
-          muted 
-          playsInline 
+        <VideoElement
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
           aria-label="Camera preview"
         />
       );
@@ -362,13 +376,18 @@ const VideoTestCard: FC = () => {
         <GridContainer>
           <Card as="section" aria-labelledby="device-test-title">
             <CardHeader>
-              <CardTitle id="device-test-title">Camera & Microphone Test</CardTitle>
+              <CardTitle id="device-test-title">
+                Camera & Microphone Test
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {getStatusMessage()}
               <VideoPreview>
                 {renderVideoContent()}
-                <ControlsContainer role="toolbar" aria-label="Media device controls">
+                <ControlsContainer
+                  role="toolbar"
+                  aria-label="Media device controls"
+                >
                   <ControlButton
                     isActive={videoEnabled}
                     disabled={!deviceSupport.hasCamera || isLoading}
@@ -388,7 +407,11 @@ const VideoTestCard: FC = () => {
                           : "Turn on camera"
                     }
                   >
-                    {videoEnabled ? <Video size={20} /> : <VideoOff size={20} />}
+                    {videoEnabled ? (
+                      <Video size={20} />
+                    ) : (
+                      <VideoOff size={20} />
+                    )}
                   </ControlButton>
                   <ControlButton
                     isActive={audioEnabled}
@@ -429,24 +452,43 @@ const VideoTestCard: FC = () => {
                       onClick={isMicTesting ? stopMicTest : startMicTest}
                       disabled={!deviceSupport.hasMicrophone || !audioEnabled}
                       isRecording={isMicTesting}
-                      aria-label={isMicTesting ? "Stop microphone test" : "Start microphone test"}
+                      aria-label={
+                        isMicTesting
+                          ? "Stop microphone test"
+                          : "Start microphone test"
+                      }
                       aria-describedby="mic-test-description"
                     >
                       {isMicTesting ? "Stop Testing" : "Start Testing"}
                     </MicTestButton>
                     <MicTestButton
                       onClick={startCalibration}
-                      disabled={!deviceSupport.hasMicrophone || !audioEnabled || isCalibrating}
+                      disabled={
+                        !deviceSupport.hasMicrophone ||
+                        !audioEnabled ||
+                        isCalibrating
+                      }
                       isRecording={isCalibrating}
-                      aria-label={isCalibrating ? "Calibration in progress" : "Start microphone calibration"}
+                      aria-label={
+                        isCalibrating
+                          ? "Calibration in progress"
+                          : "Start microphone calibration"
+                      }
                     >
-                      {isCalibrating ? "Calibrating..." : hasCalibrationThresholds ? "Recalibrate" : "Calibrate"}
+                      {isCalibrating
+                        ? "Calibrating..."
+                        : hasCalibrationThresholds
+                          ? "Recalibrate"
+                          : "Calibrate"}
                     </MicTestButton>
                   </MicTestControls>
-                  {(isMicTesting && audioEnabled) && (
-                    <AudioLevelContainer role="progressbar" aria-label="Audio level">
-                      <AudioLevelBar 
-                        level={audioLevel} 
+                  {isMicTesting && audioEnabled && (
+                    <AudioLevelContainer
+                      role="progressbar"
+                      aria-label="Audio level"
+                    >
+                      <AudioLevelBar
+                        level={audioLevel}
                         aria-valuenow={Math.round(audioLevel * 100)}
                         aria-valuemin={0}
                         aria-valuemax={100}
@@ -459,10 +501,13 @@ const VideoTestCard: FC = () => {
                       </AudioLevelText>
                     </AudioLevelContainer>
                   )}
-                  {(isCalibrating && audioEnabled) && (
-                    <AudioLevelContainer role="progressbar" aria-label="Audio level">
-                      <AudioLevelBar 
-                        level={audioLevel} 
+                  {isCalibrating && audioEnabled && (
+                    <AudioLevelContainer
+                      role="progressbar"
+                      aria-label="Audio level"
+                    >
+                      <AudioLevelBar
+                        level={audioLevel}
                         aria-valuenow={Math.round(audioLevel * 100)}
                         aria-valuemin={0}
                         aria-valuemax={100}
@@ -476,8 +521,19 @@ const VideoTestCard: FC = () => {
                 </MicTestContent>
               </MicTestContainer>
 
-              <InstructionsContainer as="section" aria-labelledby="instructions-title">
-                <h4 id="instructions-title" style={{ fontSize: "0.875rem", fontWeight: "600", margin: "0 0 0.5rem 0", color: "#374151" }}>
+              <InstructionsContainer
+                as="section"
+                aria-labelledby="instructions-title"
+              >
+                <h4
+                  id="instructions-title"
+                  style={{
+                    fontSize: "0.875rem",
+                    fontWeight: "600",
+                    margin: "0 0 0.5rem 0",
+                    color: "#374151",
+                  }}
+                >
                   Pre-Interview Checklist
                 </h4>
                 <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
@@ -502,10 +558,15 @@ const VideoTestCard: FC = () => {
           </Card>
 
           {/* Interview Settings */}
-          <InterviewSettingsContainer as="aside" aria-labelledby="settings-title">
+          <InterviewSettingsContainer
+            as="aside"
+            aria-labelledby="settings-title"
+          >
             <SettingsCard as="section">
               <SettingsCardHeader>
-                <SettingsCardTitle id="settings-title">Interview Details</SettingsCardTitle>
+                <SettingsCardTitle id="settings-title">
+                  Interview Details
+                </SettingsCardTitle>
               </SettingsCardHeader>
               <SettingsCardContent>
                 <form>
@@ -544,17 +605,22 @@ const VideoTestCard: FC = () => {
                 }
                 aria-describedby="start-button-requirements"
               >
-                {isInterviewStarted ? 
-                <>
-                <LoadingSpinner />
-                <span>Starting Interview...</span>
-                </>
-                : "Start Interview"}
+                {isInterviewStarted ? (
+                  <>
+                    <LoadingSpinner />
+                    <span>Starting Interview...</span>
+                  </>
+                ) : (
+                  "Start Interview"
+                )}
               </StartInterviewButton>
-                <StartButtonRequirements id="start-button-requirements">
-                {(!interviewType || !jobLevel) && "Please select job level and interview type. "}
-                {(!deviceSupport.hasCamera || !deviceSupport.hasMicrophone) && "Camera and microphone are required."}
-                {(!hasCalibrationThresholds) && "Please calibrate your microphone first."}
+              <StartButtonRequirements id="start-button-requirements">
+                {(!interviewType || !jobLevel) &&
+                  "Please select job level and interview type. "}
+                {(!deviceSupport.hasCamera || !deviceSupport.hasMicrophone) &&
+                  "Camera and microphone are required."}
+                {!hasCalibrationThresholds &&
+                  "Please calibrate your microphone first."}
               </StartButtonRequirements>
             </ButtonContainer>
           </InterviewSettingsContainer>
