@@ -204,7 +204,7 @@ const InterviewRoom: FC = () => {
           ...prev,
           userReady: message.state?.ready ?? false,
       }));
-      } else if (message.type === "next_question") {
+      } else if (message.next_question && message.type === "next_question") {
         const fullMessage = `${message.content} Here's your next question ${message.next_question.question}`;
         handleQuestionSpoken(fullMessage);
         // Handle new question data

@@ -29,13 +29,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 export interface WebSocketMessage {
   type: "message" | "error" | "incremental_transcript" | "audio" | "transcript" | "heartbeat" | "next_question";
   content: string | object;
-  next_question: {
+  next_question?: {
     question: string;
     questionNumber: number;
     totalQuestions: number;
     questionIndex: number;
   }
-  state: {
+  state?: {
     ready: boolean;
     waiting_for_answer: boolean;
     question_answered: boolean;
