@@ -202,7 +202,7 @@ const InterviewRoom: FC = () => {
         handleQuestionSpoken(JSON.stringify(message.content));
         setSessionState((prev) => ({
           ...prev,
-          userReady: message.state.ready,
+          userReady: message.state?.ready ?? false,
       }));
       } else if (message.type === "next_question") {
         const fullMessage = `${message.content} Here's your next question ${message.next_question.question}`;
