@@ -324,20 +324,16 @@ const AICoach: React.FC<AICoachProps> = ({
             <div className="bar" />
           </div>
         </AICoachStatus>
-        <AICoachQuestionContainer
-          isVisible={isVisible}
-        >
-          <AICoachQuestionHeader
-            isVisible={isVisible}
-          >
-            Question:
-          </AICoachQuestionHeader>
-          <AICoachQuestionText
-            isVisible={isVisible}
-          >
-            {currentQuestionText}
-          </AICoachQuestionText>
-        </AICoachQuestionContainer>
+        {currentQuestionText && (
+          <AICoachQuestionContainer isVisible={isVisible}>
+            <AICoachQuestionHeader isVisible={isVisible}>
+              Question:
+            </AICoachQuestionHeader>
+            <AICoachQuestionText isVisible={isVisible}>
+              {currentQuestionText}
+            </AICoachQuestionText>
+          </AICoachQuestionContainer>
+        )}
       </AICoachInfo>
     </AICoachContainer>
   );
