@@ -15,7 +15,7 @@
  * - Styled Components
  * - WebSocket message types
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send, X } from 'lucide-react';
 import {
   SessionTabsContainer,
@@ -77,6 +77,8 @@ const SessionTabs: React.FC<SessionTabsProps> = ({
   const [chatInput, setChatInput] = useState('');
   const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
   const [logs, setLogs] = useState<LogMessage[]>([]);
+
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   // Check if Chat tab should be available (only for Technical Interviews)
   const isTechnicalInterview = interviewType === 'technical' || interviewType.includes('technical');
@@ -172,9 +174,8 @@ const SessionTabs: React.FC<SessionTabsProps> = ({
       setChatInput('');
       
       // Reset textarea height
-      const textarea = document.querySelector('textarea');
-      if (textarea) {
-        textarea.style.height = 'auto';
+      if (textAreaRef.current) {
+        textAreaRef.current.style.height = 'auto';
       }
     }
   };
