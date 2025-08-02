@@ -72,6 +72,7 @@ export function sanitizeText(text: string): string {
   sanitized = sanitized.trim();
 
   // Remove null bytes and other control characters (except newlines and tabs)
+  // eslint-disable-next-line no-control-regex
   sanitized = sanitized.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
 
   // Normalize unicode characters
@@ -93,7 +94,7 @@ export class AIInstructionValidator {
     minLength: 10,
     maxLength: 3000,
     allowedPatterns: [
-      /^[\w\s\.,;:!?\-\(\)\[\]"'\n\r]+$/,  // Basic allowed characters
+      /^[\w\s.,;:!?\-()[\]"'\n\r]+$/,  // Basic allowed characters
       /\b(act as|follow|use|focus on|ask|evaluate|maintain|allow|ensure)\b/i,  // Professional instruction verbs
       /\b(STAR|method|experience|example|situation|task|action|result)\b/i,  // Interview methodology terms
     ],
@@ -107,7 +108,7 @@ export class AIInstructionValidator {
       /onclick\s*=/gi,
       
       // System command attempts
-      /\b(rm|del|delete|drop|truncate|exec|eval|system|shell)\s*[\(\[]/gi,
+      /\b(rm|del|delete|drop|truncate|exec|eval|system|shell)\s*[([]/gi,
       /\b(sudo|chmod|chown|kill|ps|ls|cd|pwd)\b/gi,
       
       // AI jailbreak attempts
@@ -221,8 +222,8 @@ export class AIInstructionValidator {
     }
 
     // Check for numbered lists or bullet points (good structure)
-    const hasNumberedList = /^\d+[\.\)]\s/m.test(instructions);
-    const hasBulletPoints = /^[\-\*\+]\s/m.test(instructions);
+    const hasNumberedList = /^\d+[.)]\s/m.test(instructions);
+    const hasBulletPoints = /^[-*+]\s/m.test(instructions);
     
     if (!hasNumberedList && !hasBulletPoints && sentences.length > 5) {
       result.warnings.push('Consider using numbered lists or bullet points for better organization');
