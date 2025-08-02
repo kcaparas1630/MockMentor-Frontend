@@ -436,7 +436,7 @@ const StartButtonRequirements = styled.div<{ show: boolean }>`
 const HelperText = styled.div`
   font-size: 12px;
   color: #6c757d;
-  margin-top: 6px;
+  margin-top: 8px;
   line-height: 1.4;
 
   strong {
@@ -450,6 +450,57 @@ const SaveIndicator = styled.span<{ show: boolean }>`
   color: #28a745;
   opacity: ${props => props.show ? 1 : 0};
   transition: all 0.3s ease;
+`;
+
+const ValidationFeedback = styled.div<{ type: 'error' | 'warning' | 'success' }>`
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  border-left: 3px solid;
+  
+  ${props => {
+    switch (props.type) {
+      case 'error':
+        return `
+          background-color: #fef2f2;
+          color: #dc2626;
+          border-left-color: #dc2626;
+        `;
+      case 'warning':
+        return `
+          background-color: #fffbeb;
+          color: #d97706;
+          border-left-color: #d97706;
+        `;
+      case 'success':
+        return `
+          background-color: #f0fdf4;
+          color: #16a34a;
+          border-left-color: #16a34a;
+        `;
+      default:
+        return `
+          background-color: #f8fafc;
+          color: #64748b;
+          border-left-color: #64748b;
+        `;
+    }
+  }}
+`;
+
+const ValidationList = styled.ul`
+  margin: 4px 0 0 0;
+  padding-left: 16px;
+  
+  li {
+    margin: 2px 0;
+  }
+`;
+
+const TextAreaContainer = styled.div`
+  display: flex;
+  flex-direction: column;
 `;
 
 export {
@@ -489,4 +540,7 @@ export {
   StartButtonRequirements,
   HelperText,
   SaveIndicator,
+  ValidationFeedback,
+  ValidationList,
+  TextAreaContainer,
 };

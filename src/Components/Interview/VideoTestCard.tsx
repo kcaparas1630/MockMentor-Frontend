@@ -57,6 +57,9 @@ import {
   StartButtonRequirements,
   HelperText,
   SaveIndicator,
+  ValidationFeedback,
+  ValidationList,
+  TextAreaContainer,
 } from "./Styles/StyledVideoTestCard";
 import { useMicTesting } from "@/Hooks/useMicTesting";
 import { getUserToken } from "@/Hooks/UserHooks";
@@ -66,6 +69,7 @@ import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import { useCalibration } from "@/Hooks/useCalibration";
 import { ToastContainer, toast } from "react-toastify";
 import ReusableTextArea from "@/Commons/ReusableTextArea";
+import { aiInstructionValidator, ValidationResult } from "@/Utils/AIInstructionValidator";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || "http://localhost:3000";
 const TEXTAREA_PLACEHOLDER = `Act as an experienced HR interviewer. Follow these guidelines:
@@ -146,6 +150,12 @@ const VideoTestCard: FC = () => {
     useState<string>("");
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [aiInstructionValidation, setAiInstructionValidation] = useState<ValidationResult>({
+    isValid: true,
+    errors: [],
+    warnings: []
+  });
+  const [showAiInstructionFeedback, setShowAiInstructionFeedback] = useState(false);
   // Check if calibration thresholds exist in localStorage
   const [hasCalibrationThresholds, setHasCalibrationThresholds] =
     useState<boolean>(false);
@@ -164,6 +174,14 @@ const VideoTestCard: FC = () => {
     { value: "staff", label: "Staff-Level" },
     { value: "principal", label: "Principal-Level" },
   ];
+
+  // Handle AI instruction validation
+  const validateAiInstructions = useCallback((instructions: string) => {
+    const validation = aiInstructionValidator.validateInstructions(instructions);
+    setAiInstructionValidation(validation);
+    setShowAiInstructionFeedback(instructions.length > 0);
+    return validation;
+  }, []);
 
   // Handle Validation errors for interview settings
   const validateForm = useCallback(() => {
@@ -185,6 +203,15 @@ const VideoTestCard: FC = () => {
         "Please calibrate your microphone before starting the interview."
       );
     }
+    
+    // Validate AI instructions if provided
+    if (interviewInstructions.trim()) {
+      const aiValidation = validateAiInstructions(interviewInstructions);
+      if (!aiValidation.isValid) {
+        errors.push("AI instructions contain errors. Please review and fix them.");
+      }
+    }
+    
     setValidationErrors(errors);
     return errors.length === 0;
   }, [
@@ -193,6 +220,8 @@ const VideoTestCard: FC = () => {
     videoEnabled,
     audioEnabled,
     hasCalibrationThresholds,
+    interviewInstructions,
+    validateAiInstructions,
   ]);
 
   const isFormValid = validationErrors.length === 0;
@@ -287,6 +316,23 @@ const VideoTestCard: FC = () => {
     validateForm();
   }, [validateForm]);
 
+  // Handle AI instruction changes with validation
+  const handleAiInstructionsChange = useCallback((value: string) => {
+    setInterviewInstructions(value);
+    
+    // Debounced validation for real-time feedback
+    const timeoutId = setTimeout(() => {
+      if (value.trim()) {
+        validateAiInstructions(value);
+      } else {
+        setShowAiInstructionFeedback(false);
+        setAiInstructionValidation({ isValid: true, errors: [], warnings: [] });
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [validateAiInstructions]);
+
   // TODO: Determine if this is needed, for now it's just a user feedback with no functionality.
   // Debounced save indicator
   useEffect(() => {
@@ -377,11 +423,23 @@ const VideoTestCard: FC = () => {
 
       setTimeout(() => {
         if (response.data?.sessionId) {
+          // Sanitize AI instructions before sending to interview room
+          let sanitizedInstructions = "";
+          if (interviewInstructions.trim()) {
+            try {
+              const validation = aiInstructionValidator.validateInstructions(interviewInstructions);
+              sanitizedInstructions = validation.sanitizedText || "";
+            } catch (error) {
+              console.warn("AI instruction sanitization failed:", error);
+              sanitizedInstructions = interviewInstructions.trim();
+            }
+          }
+          
           const searchParams = {
             interviewType,
             jobLevel,
             currentQuestion: response.data.currentQuestion?.question,
-            aiInstructions: interviewInstructions,
+            aiInstructions: sanitizedInstructions,
           };
           router.navigate({
             to: `/interview-room/${response.data.sessionId}`,
@@ -665,22 +723,60 @@ const VideoTestCard: FC = () => {
                       options={interviewTypes}
                       onChange={setInterviewType}
                     />
-                    <ReusableTextArea
-                      name="interview-instructions"
-                      placeholder={TEXTAREA_PLACEHOLDER}
-                      label="Interview Instructions"
-                      value={interviewInstructions}
-                      onChange={setInterviewInstructions}
-                    />
-                    <SaveIndicator show={showSaveIndicator}>
-                      ✓ Changes saved
-                    </SaveIndicator>
-                    <HelperText>
-                      💡 <strong>Tip:</strong> The more specific your
-                      instructions, the better the AI will follow your preferred
-                      interview style. Use numbered lists or bullet points for
-                      clarity.
-                    </HelperText>
+                    <TextAreaContainer>
+                      <ReusableTextArea
+                        name="interview-instructions"
+                        placeholder={TEXTAREA_PLACEHOLDER}
+                        label="Interview Instructions"
+                        value={interviewInstructions}
+                        onChange={handleAiInstructionsChange}
+                      />
+                      
+                      {/* Validation Feedback */}
+                      {showAiInstructionFeedback && (
+                        <>
+                          {aiInstructionValidation.errors.length > 0 && (
+                            <ValidationFeedback type="error">
+                              <strong>❌ Validation Errors:</strong>
+                              <ValidationList>
+                                {aiInstructionValidation.errors.map((error, index) => (
+                                  <li key={`error-${index}`}>{error}</li>
+                                ))}
+                              </ValidationList>
+                            </ValidationFeedback>
+                          )}
+                          
+                          {aiInstructionValidation.warnings.length > 0 && (
+                            <ValidationFeedback type="warning">
+                              <strong>⚠️ Suggestions:</strong>
+                              <ValidationList>
+                                {aiInstructionValidation.warnings.map((warning, index) => (
+                                  <li key={`warning-${index}`}>{warning}</li>
+                                ))}
+                              </ValidationList>
+                            </ValidationFeedback>
+                          )}
+                          
+                          {aiInstructionValidation.isValid && 
+                           aiInstructionValidation.errors.length === 0 && 
+                           aiInstructionValidation.warnings.length === 0 && (
+                            <ValidationFeedback type="success">
+                              ✅ Instructions look good! AI will use these guidelines during the interview.
+                            </ValidationFeedback>
+                          )}
+                        </>
+                      )}
+                      
+                      <SaveIndicator show={showSaveIndicator}>
+                        ✓ Changes saved
+                      </SaveIndicator>
+                      <HelperText>
+                        💡 <strong>Tip:</strong> The more specific your
+                        instructions, the better the AI will follow your preferred
+                        interview style. Use numbered lists or bullet points for
+                        clarity.
+                      </HelperText>
+                    </TextAreaContainer>
                   </fieldset>
                 </form>
                 {validationErrors.length > 0 && (
