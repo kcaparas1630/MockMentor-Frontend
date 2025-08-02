@@ -31,8 +31,8 @@ import { FC, useState, useEffect, useRef, useCallback } from "react";
 import { Route } from "@/routes/interview-room/$sessionId";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import VideoDisplay from "../VideoDisplay";
-import ChatPanel from "../ChatPanel";
-import { MessageCircle, Video, Mic } from "lucide-react";
+import SessionTabs from "../SessionTabs";
+import { ClipboardList, Video, Mic } from "lucide-react";
 import { useSearch } from "@tanstack/react-router";
 import {
   InterviewRoomContainer,
@@ -73,7 +73,7 @@ import { AICoachMessageState } from "../AiCoach";
 
 
 // Updated icon component using lucide-react
-const MessageCircleIcon = () => <MessageCircle size={20} />;
+const ClipboardListIcon = () => <ClipboardList size={20} />;
 
 /**
  * Main interview room component that provides the complete interview experience.
@@ -125,6 +125,9 @@ const InterviewRoom: FC = () => {
   const [sessionState, setSessionState] = useState<SessionState> ({
     userReady: false,
   });
+  // Track WebSocket messages for SessionTabs
+  const [wsMessages, setWsMessages] = useState<WebSocketMessage[]>([]);
+  const [wsTranscripts, setWsTranscripts] = useState<WebSocketMessage[]>([]);
   const navigate = useNavigate();
 
   
@@ -196,8 +199,9 @@ const InterviewRoom: FC = () => {
   
   const handleAIWebSocket = useCallback(
     (message: WebSocketMessage) => {
-      // Handle different types of messages from the server
+      // Store messages for SessionTabs
       if (message.type === "message") {
+        setWsMessages(prev => [...prev, message]);
         // Handle question from AI coach
         handleQuestionSpoken(JSON.stringify(message.content));
         setSessionState((prev) => ({
@@ -205,11 +209,13 @@ const InterviewRoom: FC = () => {
           userReady: message.state?.ready ?? false,
       }));
       } else if (message.next_question && message.type === "next_question") {
+        setWsMessages(prev => [...prev, message]);
         const fullMessage = `${message.content} Here's your next question ${message.next_question.question}`;
         handleQuestionSpoken(fullMessage);
         // Handle new question data
         updateCurrentQuestionText(message.next_question.question);
       } else if (message.type === "transcript") {
+        setWsTranscripts(prev => [...prev, message]);
         console.log("Transcript received:", message.content);
       } else if (message.type === "incremental_transcript") {
         console.log("Incremental transcript received:", message.content);
@@ -529,10 +535,10 @@ const InterviewRoom: FC = () => {
       <ChatButton
         isOpen={isChatOpen}
         onClick={toggleChat}
-        aria-label={isChatOpen ? "Close chat" : "Open chat"}
+        aria-label={isChatOpen ? "Close session panel" : "Open session panel"}
         aria-expanded={isChatOpen}
       >
-        <MessageCircleIcon />
+        <ClipboardListIcon />
       </ChatButton>
       {/* Header */}
       <Header>
@@ -670,10 +676,16 @@ const InterviewRoom: FC = () => {
           </StatusInfo>
         </ControlsContent>
       </BottomControls>
-      {/* Chat Panel */}
-      <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      {/* Session Tabs Panel */}
+      <SessionTabs 
+        isOpen={isChatOpen}
+        interviewType={interviewType}
+        messages={wsMessages}
+        transcripts={wsTranscripts}
+        onClose={() => setIsChatOpen(false)}
+      />
 
-      {/* Overlay when chat is open on mobile */}
+      {/* Overlay when tabs are open on mobile */}
       <ChatOverlay isOpen={isChatOpen} onClick={() => setIsChatOpen(false)} />
     </InterviewRoomContainer>
   );
