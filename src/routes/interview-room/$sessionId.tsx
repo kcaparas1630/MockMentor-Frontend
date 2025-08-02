@@ -7,6 +7,7 @@ interface SearchParams {
   jobLevel: string;
   interviewType: string;
   currentQuestion?: string;
+  aiInstructions?: string;
 }
 
 const ProtectedInterviewRoom = () => {
@@ -34,6 +35,10 @@ export const Route = createRoute({
       currentQuestion:
         typeof search.currentQuestion === "string"
           ? search.currentQuestion
+          : undefined,
+      aiInstructions:
+        typeof search.aiInstructions === "string"
+          ? search.aiInstructions
           : undefined,
     };
   },
