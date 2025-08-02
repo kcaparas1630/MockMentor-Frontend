@@ -84,14 +84,13 @@ const SessionTabs: React.FC<SessionTabsProps> = ({
   // Process WebSocket messages into logs
   useEffect(() => {
     const allMessages: LogMessage[] = [];
-    let messageCounter = 0;
-    const baseTime = Date.now() - (messages.length + transcripts.length) * 30000; // Start 30 seconds ago per message
+    let messageId = 0;
 
-    // Create an interleaved conversation flow
-    // For each AI message, we expect it to be followed by user transcripts
-    messages.forEach((msg, msgIndex) => {
+    // Process all AI messages (message and next_question types)
+    messages.forEach((msg) => {
       if (msg.type === 'message' || msg.type === 'next_question') {
-        const aiTimestamp = baseTime + (messageCounter * 30000); // Space AI messages 30 seconds apart
+        // Use actual timestamp from WebSocket message or current time as fallback
+        const timestamp = msg.timeStamp ? parseInt(msg.timeStamp) : Date.now();
         
         // Handle different message types
         let content = '';
@@ -105,46 +104,29 @@ const SessionTabs: React.FC<SessionTabsProps> = ({
         }
 
         allMessages.push({
-          id: `ai-${msgIndex}-${aiTimestamp}`,
+          id: `ai-${messageId++}`,
           speaker: 'ai',
           speakerName: 'MockMentor',
           content: content,
-          timestamp: new Date(aiTimestamp).toLocaleTimeString('en-US', {
+          timestamp: new Date(timestamp).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
             hour12: false,
           }),
-          rawTimestamp: aiTimestamp,
+          rawTimestamp: timestamp,
         });
-        messageCounter++;
-
-        // Find corresponding user transcript that should come after this AI message
-        if (msgIndex < transcripts.length && transcripts[msgIndex]?.type === 'transcript') {
-          const userTimestamp = aiTimestamp + 10000; // User responds 10 seconds after AI
-          allMessages.push({
-            id: `user-${msgIndex}-${userTimestamp}`,
-            speaker: 'user',
-            speakerName: 'You',
-            content: typeof transcripts[msgIndex].content === 'string' ? transcripts[msgIndex].content : JSON.stringify(transcripts[msgIndex].content),
-            timestamp: new Date(userTimestamp).toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false,
-            }),
-            rawTimestamp: userTimestamp,
-          });
-        }
       }
     });
 
-    // Add any remaining transcripts that don't have corresponding AI messages
-    transcripts.slice(messages.length).forEach((transcript, index) => {
+    // Process all transcript messages
+    transcripts.forEach((transcript) => {
       if (transcript.type === 'transcript') {
-        const timestamp = baseTime + ((messages.length + index) * 30000);
+        // Use actual timestamp from WebSocket message or current time as fallback
+        const timestamp = transcript.timeStamp ? parseInt(transcript.timeStamp) : Date.now();
+        
         allMessages.push({
-          id: `user-extra-${index}-${timestamp}`,
+          id: `user-${messageId++}`,
           speaker: 'user',
           speakerName: 'You',
           content: typeof transcript.content === 'string' ? transcript.content : JSON.stringify(transcript.content),
@@ -159,7 +141,7 @@ const SessionTabs: React.FC<SessionTabsProps> = ({
       }
     });
 
-    // Sort by rawTimestamp to maintain chronological order
+    // Sort by rawTimestamp to maintain true chronological order
     allMessages.sort((a, b) => a.rawTimestamp - b.rawTimestamp);
     setLogs(allMessages);
   }, [messages, transcripts]);
