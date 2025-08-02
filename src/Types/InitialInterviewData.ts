@@ -4,7 +4,7 @@ interface InitialInterviewData {
   jobRole: string | undefined;
   jobLevel: string;
   questionType: string;
-  aiInstructions: string;
+  aiInstructions?: string;
 }
 
 export default InitialInterviewData;

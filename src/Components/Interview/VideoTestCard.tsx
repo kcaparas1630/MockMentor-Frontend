@@ -281,6 +281,11 @@ const VideoTestCard: FC = () => {
     }
   };
 
+   // Handle AI instruction changes with validation
+  const handleAiInstructionsChange = useCallback((value: string) => {
+    setInterviewInstructions(value);
+  }, []);
+
   // Connect the media stream to the video element when both are ready
   useEffect(() => {
     if (videoRef.current && streamRef.current && videoEnabled && streamReady) {
@@ -316,14 +321,11 @@ const VideoTestCard: FC = () => {
     validateForm();
   }, [validateForm]);
 
-  // Handle AI instruction changes with validation
-  const handleAiInstructionsChange = useCallback((value: string) => {
-    setInterviewInstructions(value);
-    
+  useEffect(() => {
     // Debounced validation for real-time feedback
     const timeoutId = setTimeout(() => {
-      if (value.trim()) {
-        validateAiInstructions(value);
+      if (interviewInstructions.trim()) {
+        validateAiInstructions(interviewInstructions);
       } else {
         setShowAiInstructionFeedback(false);
         setAiInstructionValidation({ isValid: true, errors: [], warnings: [] });
@@ -331,7 +333,7 @@ const VideoTestCard: FC = () => {
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [validateAiInstructions]);
+  }, [interviewInstructions, validateAiInstructions]);
 
   // TODO: Determine if this is needed, for now it's just a user feedback with no functionality.
   // Debounced save indicator
@@ -430,8 +432,10 @@ const VideoTestCard: FC = () => {
               const validation = aiInstructionValidator.validateInstructions(interviewInstructions);
               sanitizedInstructions = validation.sanitizedText || "";
             } catch (error) {
-              console.warn("AI instruction sanitization failed:", error);
-              sanitizedInstructions = interviewInstructions.trim();
+              console.error("AI instruction sanitization failed:", error);
+              setError("Failed to process interview instructions. Please try again.")
+              setIsInterviewStarted(false);
+              return;
             }
           }
           

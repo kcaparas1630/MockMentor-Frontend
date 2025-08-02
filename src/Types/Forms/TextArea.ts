@@ -6,7 +6,6 @@ interface TextAreaProps {
   onChange: (value: string) => void;
   maxLength?: number;
   rows?: number;
-  resizable?: boolean;
 }
 
 export default TextAreaProps;
