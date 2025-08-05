@@ -34,6 +34,7 @@ import VideoDisplay from "../VideoDisplay";
 import SessionTabs from "../SessionTabs";
 import { ClipboardList, Video, Mic } from "lucide-react";
 import { useSearch } from "@tanstack/react-router";
+import InitialInterviewData from "@/Types/InitialInterviewData";
 import {
   InterviewRoomContainer,
   Header,
@@ -111,7 +112,7 @@ const InterviewRoom: FC = () => {
   // Get session ID from URL params. Check routes.
   const { sessionId } = Route.useParams();
   // Get job level and interview type from search params. Check routes.
-  const { jobLevel, interviewType, currentQuestion } = useSearch({ from: Route.id });
+  const { jobLevel, interviewType, currentQuestion, aiInstructions } = useSearch({ from: Route.id });
   const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
   // AI Coach message state object containing speaking states and text
   const [AICoachMessage, setAICoachMessage] = useState<AICoachMessageState>({ 
@@ -271,14 +272,16 @@ const InterviewRoom: FC = () => {
       if (isSent) return;
       // check if there is user. if not, return
       if (!users?.profile?.name) return;
+      
       // Check if socket is truly ready, not just existing.
       if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
-        const interviewData = {
+        const interviewData: InitialInterviewData = {
           session_id: sessionId,
           user_name: users?.profile?.name,
           jobRole: jobRole,
           jobLevel: jobLevel,
           questionType: interviewType,
+          aiInstructions: aiInstructions || "",
         };
         const initialUnifiedMessage = {
           content: interviewData,
@@ -301,6 +304,7 @@ const InterviewRoom: FC = () => {
     jobRole,
     jobLevel,
     interviewType,
+    aiInstructions,
   ]); // Dependencies for handleInterviewStart
 
   /**

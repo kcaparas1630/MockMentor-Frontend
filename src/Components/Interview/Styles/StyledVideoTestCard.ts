@@ -107,7 +107,7 @@ const ControlButton = styled.button<{ isActive: boolean; disabled?: boolean }>`
   cursor: pointer;
   transition: all 0.2s ease;
 
-  background-color: ${(props) => 
+  background-color: ${(props) =>
     props.disabled ? "#9ca3af" : props.isActive ? "#3b82f6" : "#6b7280"};
   color: white;
 
@@ -148,33 +148,43 @@ const InstructionItem = styled.li`
   }
 `;
 
-const StatusMessage = styled.output<{ type: 'error' | 'success' | 'warning' | 'info' }>`
+const StatusMessage = styled.output<{
+  type: "error" | "success" | "warning" | "info";
+}>`
   padding: 0.75rem;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 1rem;
   display: block;
-  
-  ${props => props.type === 'error' && `
+
+  ${(props) =>
+    props.type === "error" &&
+    `
     background-color: #fef2f2;
     color: #dc2626;
     border: 1px solid #fecaca;
   `}
-  
-  ${props => props.type === 'success' && `
+
+  ${(props) =>
+    props.type === "success" &&
+    `
     background-color: #f0fdf4;
     color: #16a34a;
     border: 1px solid #bbf7d0;
   `}
   
-  ${props => props.type === 'warning' && `
+  ${(props) =>
+    props.type === "warning" &&
+    `
     background-color: #fffbeb;
     color: #d97706;
     border: 1px solid #fed7aa;
   `}
 
-  ${props => props.type === 'info' && `
+  ${(props) =>
+    props.type === "info" &&
+    `
     background-color: #eff6ff;
     color: #2563eb;
     border: 1px solid #bfdbfe;
@@ -186,6 +196,11 @@ const InterviewSettingsContainer = styled.aside`
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 400px;
+
+  @media (min-width: 1024px) {
+    min-width: 450px;
+  }
 `;
 
 const SettingsCard = styled.section`
@@ -225,14 +240,14 @@ const StartInterviewButton = styled.button<{ disabled?: boolean }>`
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background-color: ${props => props.disabled ? '#9ca3af' : '#2563eb'};
+  background-color: ${(props) => (props.disabled ? "#9ca3af" : "#2563eb")};
   color: white;
   padding: 0.75rem 2rem;
   font-size: 1.125rem;
   font-weight: 500;
   border-radius: 0.5rem;
   border: none;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
@@ -295,10 +310,12 @@ const MicTestControls = styled.div`
   }
 `;
 
-const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean }>`
-  background-color: ${props => 
-    props.disabled ? '#9ca3af' : 
-    props.isRecording ? '#dc2626' : '#3b82f6'};
+const MicTestButton = styled.button<{
+  isRecording?: boolean;
+  disabled?: boolean;
+}>`
+  background-color: ${(props) =>
+    props.disabled ? "#9ca3af" : props.isRecording ? "#dc2626" : "#3b82f6"};
   color: white;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
@@ -306,12 +323,11 @@ const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean 
   width: 100%;
   border-radius: 0.375rem;
   border: none;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background-color: ${props => 
-      props.isRecording ? '#b91c1c' : '#2563eb'};
+    background-color: ${(props) => (props.isRecording ? "#b91c1c" : "#2563eb")};
   }
 
   &:active:not(:disabled) {
@@ -329,14 +345,14 @@ const MicTestButton = styled.button<{ isRecording?: boolean; disabled?: boolean 
 `;
 
 const PlaybackButton = styled.button<{ disabled?: boolean }>`
-  background-color: ${props => props.disabled ? '#9ca3af' : '#059669'};
+  background-color: ${(props) => (props.disabled ? "#9ca3af" : "#059669")};
   color: white;
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
   border-radius: 0.375rem;
   border: none;
-  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
@@ -358,7 +374,6 @@ const AudioLevelContainer = styled.div`
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0;
-  
 `;
 
 const AudioLevelBar = styled.div<{ level: number }>`
@@ -370,12 +385,12 @@ const AudioLevelBar = styled.div<{ level: number }>`
   position: relative;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     top: 0;
     height: 100%;
-    width: ${props => Math.min(props.level * 100, 100)}%;
+    width: ${(props) => Math.min(props.level * 100, 100)}%;
     background-color: #3b82f6;
     transition: width 0.1s ease;
   }
@@ -405,15 +420,87 @@ const TroubleshootingLink = styled.p`
   }
 `;
 
-const StartButtonRequirements = styled.p`
-  font-size: 0.75rem;
-  color: #6b7280;
-  background-color: #f8fafc;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  margin: 0;
+const StartButtonRequirements = styled.div<{ show: boolean }>`
+  background: #fff3cd;
+  color: #856404;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ffeaa7;
+  border-left: 4px solid #ffc107;
+  margin-top: 12px;
+  font-size: 14px;
+  display: ${(props) => (props.show ? "block" : "none")};
+`;
+
+// Text Area
+const HelperText = styled.div`
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 8px;
   line-height: 1.4;
-  margin: 1.5rem 0;
+
+  strong {
+    color: #495057;
+  }
+`;
+
+const SaveIndicator = styled.span<{ show: boolean }>`
+  display: ${props => props.show ? 'inline' : 'none'};
+  font-size: 12px;
+  color: #28a745;
+  opacity: ${props => props.show ? 1 : 0};
+  transition: all 0.3s ease;
+`;
+
+const ValidationFeedback = styled.div<{ type: 'error' | 'warning' | 'success' }>`
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  border-left: 3px solid;
+  
+  ${props => {
+    switch (props.type) {
+      case 'error':
+        return `
+          background-color: #fef2f2;
+          color: #dc2626;
+          border-left-color: #dc2626;
+        `;
+      case 'warning':
+        return `
+          background-color: #fffbeb;
+          color: #d97706;
+          border-left-color: #d97706;
+        `;
+      case 'success':
+        return `
+          background-color: #f0fdf4;
+          color: #16a34a;
+          border-left-color: #16a34a;
+        `;
+      default:
+        return `
+          background-color: #f8fafc;
+          color: #64748b;
+          border-left-color: #64748b;
+        `;
+    }
+  }}
+`;
+
+const ValidationList = styled.ul`
+  margin: 4px 0 0 0;
+  padding-left: 16px;
+  
+  li {
+    margin: 2px 0;
+  }
+`;
+
+const TextAreaContainer = styled.div`
+  display: flex;
+  flex-direction: column;
 `;
 
 export {
@@ -425,7 +512,7 @@ export {
   CardContent,
   VideoPreview,
   VideoElement,
-  VideoPlaceholder, 
+  VideoPlaceholder,
   ControlsContainer,
   ControlButton,
   InstructionsContainer,
@@ -451,4 +538,9 @@ export {
   AudioLevelText,
   TroubleshootingLink,
   StartButtonRequirements,
+  HelperText,
+  SaveIndicator,
+  ValidationFeedback,
+  ValidationList,
+  TextAreaContainer,
 };

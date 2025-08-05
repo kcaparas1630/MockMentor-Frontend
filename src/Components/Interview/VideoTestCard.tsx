@@ -18,7 +18,7 @@
  * - Styled Components
  * - Axios
  */
-import { FC, useState, useEffect, useRef } from "react";
+import { FC, useState, useEffect, useRef, useCallback } from "react";
 import { Video, Mic, VideoOff, MicOff } from "lucide-react";
 import ReusableSelect from "@/Commons/Select";
 import LoadingSpinner from "@/Commons/Spinner";
@@ -55,6 +55,11 @@ import {
   AudioLevelBar,
   AudioLevelText,
   StartButtonRequirements,
+  HelperText,
+  SaveIndicator,
+  ValidationFeedback,
+  ValidationList,
+  TextAreaContainer,
 } from "./Styles/StyledVideoTestCard";
 import { useMicTesting } from "@/Hooks/useMicTesting";
 import { getUserToken } from "@/Hooks/UserHooks";
@@ -63,9 +68,20 @@ import { useRouter } from "@tanstack/react-router";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import { useCalibration } from "@/Hooks/useCalibration";
 import { ToastContainer, toast } from "react-toastify";
+import ReusableTextArea from "@/Commons/ReusableTextArea";
+import { aiInstructionValidator, ValidationResult } from "@/Utils/AIInstructionValidator";
 
 const baseUrl = import.meta.env.VITE_EXPRESS_URL || "http://localhost:3000";
-
+const TEXTAREA_PLACEHOLDER = `Act as an experienced HR interviewer. Follow these guidelines:
+1. Use the STAR method (Situation, Task, Action, Result) for all behavioral questions
+2. Focus on past experiences and concrete examples
+3. Ask follow-up questions like:
+   - "What was your specific role in that situation?"
+   - "What would you do differently next time?"
+   - "How did you measure success?"
+4. Evaluate leadership, teamwork, problem-solving, and communication skills
+5. Maintain a warm but professional tone
+6. Allow time for thoughtful responses`;
 /**
  * Video and microphone test card component for pre-interview device readiness.
  *
@@ -130,6 +146,16 @@ const VideoTestCard: FC = () => {
   // Interview settings state
   const [jobLevel, setJobLevel] = useState<string>("");
   const [interviewType, setInterviewType] = useState<string>("");
+  const [interviewInstructions, setInterviewInstructions] =
+    useState<string>("");
+  const [showSaveIndicator, setShowSaveIndicator] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [aiInstructionValidation, setAiInstructionValidation] = useState<ValidationResult>({
+    isValid: true,
+    errors: [],
+    warnings: []
+  });
+  const [showAiInstructionFeedback, setShowAiInstructionFeedback] = useState(false);
   // Check if calibration thresholds exist in localStorage
   const [hasCalibrationThresholds, setHasCalibrationThresholds] =
     useState<boolean>(false);
@@ -148,6 +174,57 @@ const VideoTestCard: FC = () => {
     { value: "staff", label: "Staff-Level" },
     { value: "principal", label: "Principal-Level" },
   ];
+
+  // Handle AI instruction validation
+  const validateAiInstructions = useCallback((instructions: string) => {
+    const validation = aiInstructionValidator.validateInstructions(instructions);
+    setAiInstructionValidation(validation);
+    setShowAiInstructionFeedback(instructions.length > 0);
+    return validation;
+  }, []);
+
+  // Handle Validation errors for interview settings
+  const validateForm = useCallback(() => {
+    const errors: string[] = [];
+    if (!jobLevel) {
+      errors.push("Please select a job level.");
+    }
+    if (!interviewType) {
+      errors.push("Please select an interview type.");
+    }
+    if (!videoEnabled) {
+      errors.push("Camera is required for the interview.");
+    }
+    if (!audioEnabled) {
+      errors.push("Microphone is required for the interview.");
+    }
+    if (!hasCalibrationThresholds) {
+      errors.push(
+        "Please calibrate your microphone before starting the interview."
+      );
+    }
+    
+    // Validate AI instructions if provided
+    if (interviewInstructions.trim()) {
+      const aiValidation = validateAiInstructions(interviewInstructions);
+      if (!aiValidation.isValid) {
+        errors.push("AI instructions contain errors. Please review and fix them.");
+      }
+    }
+    
+    setValidationErrors(errors);
+    return errors.length === 0;
+  }, [
+    jobLevel,
+    interviewType,
+    videoEnabled,
+    audioEnabled,
+    hasCalibrationThresholds,
+    interviewInstructions,
+    validateAiInstructions,
+  ]);
+
+  const isFormValid = validationErrors.length === 0;
 
   // Combine errors from both hooks
   const [error, setError] = useState<string | null>(mediaError || micError);
@@ -204,6 +281,11 @@ const VideoTestCard: FC = () => {
     }
   };
 
+   // Handle AI instruction changes with validation
+  const handleAiInstructionsChange = useCallback((value: string) => {
+    setInterviewInstructions(value);
+  }, []);
+
   // Connect the media stream to the video element when both are ready
   useEffect(() => {
     if (videoRef.current && streamRef.current && videoEnabled && streamReady) {
@@ -233,6 +315,35 @@ const VideoTestCard: FC = () => {
       stopMicTest();
     }
   }, [audioEnabled, isMicTesting, stopMicTest]);
+
+  // Auto-Validate Form when settings change
+  useEffect(() => {
+    validateForm();
+  }, [validateForm]);
+
+  useEffect(() => {
+    // Debounced validation for real-time feedback
+    const timeoutId = setTimeout(() => {
+      if (interviewInstructions.trim()) {
+        validateAiInstructions(interviewInstructions);
+      } else {
+        setShowAiInstructionFeedback(false);
+        setAiInstructionValidation({ isValid: true, errors: [], warnings: [] });
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [interviewInstructions, validateAiInstructions]);
+
+  // TODO: Determine if this is needed, for now it's just a user feedback with no functionality.
+  // Debounced save indicator
+  useEffect(() => {
+    if (interviewInstructions.length > 0) {
+      setShowSaveIndicator(true);
+      const timer = setTimeout(() => setShowSaveIndicator(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [interviewInstructions]);
 
   /**
    * Returns appropriate status message based on current device and error state.
@@ -295,6 +406,10 @@ const VideoTestCard: FC = () => {
    */
   const handleStartInterview = async () => {
     try {
+      // Validate form before starting interview
+      if (!validateForm()) {
+        return;
+      }
       // Get User Token for Firebase Auth verification
       const userToken = await getUserToken();
       setIsInterviewStarted(true);
@@ -307,13 +422,28 @@ const VideoTestCard: FC = () => {
           },
         }
       );
-      
+
       setTimeout(() => {
         if (response.data?.sessionId) {
+          // Sanitize AI instructions before sending to interview room
+          let sanitizedInstructions = "";
+          if (interviewInstructions.trim()) {
+            try {
+              const validation = aiInstructionValidator.validateInstructions(interviewInstructions);
+              sanitizedInstructions = validation.sanitizedText || "";
+            } catch (error) {
+              console.error("AI instruction sanitization failed:", error);
+              setError("Failed to process interview instructions. Please try again.")
+              setIsInterviewStarted(false);
+              return;
+            }
+          }
+          
           const searchParams = {
             interviewType,
             jobLevel,
             currentQuestion: response.data.currentQuestion?.question,
+            aiInstructions: sanitizedInstructions,
           };
           router.navigate({
             to: `/interview-room/${response.data.sessionId}`,
@@ -570,7 +700,16 @@ const VideoTestCard: FC = () => {
               </SettingsCardHeader>
               <SettingsCardContent>
                 <form>
-                  <fieldset style={{ border: "none", margin: 0, padding: 0 }}>
+                  <fieldset
+                    style={{
+                      border: "none",
+                      margin: 0,
+                      padding: 0,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "1rem",
+                    }}
+                  >
                     <legend className="sr-only">Interview Configuration</legend>
                     <ReusableSelect
                       name="job-level"
@@ -588,21 +727,78 @@ const VideoTestCard: FC = () => {
                       options={interviewTypes}
                       onChange={setInterviewType}
                     />
+                    <TextAreaContainer>
+                      <ReusableTextArea
+                        name="interview-instructions"
+                        placeholder={TEXTAREA_PLACEHOLDER}
+                        label="Interview Instructions"
+                        value={interviewInstructions}
+                        onChange={handleAiInstructionsChange}
+                      />
+                      
+                      {/* Validation Feedback */}
+                      {showAiInstructionFeedback && (
+                        <>
+                          {aiInstructionValidation.errors.length > 0 && (
+                            <ValidationFeedback type="error">
+                              <strong>❌ Validation Errors:</strong>
+                              <ValidationList>
+                                {aiInstructionValidation.errors.map((error, index) => (
+                                  <li key={`error-${index}`}>{error}</li>
+                                ))}
+                              </ValidationList>
+                            </ValidationFeedback>
+                          )}
+                          
+                          {aiInstructionValidation.warnings.length > 0 && (
+                            <ValidationFeedback type="warning">
+                              <strong>⚠️ Suggestions:</strong>
+                              <ValidationList>
+                                {aiInstructionValidation.warnings.map((warning, index) => (
+                                  <li key={`warning-${index}`}>{warning}</li>
+                                ))}
+                              </ValidationList>
+                            </ValidationFeedback>
+                          )}
+                          
+                          {aiInstructionValidation.isValid && 
+                           aiInstructionValidation.errors.length === 0 && 
+                           aiInstructionValidation.warnings.length === 0 && (
+                            <ValidationFeedback type="success">
+                              ✅ Instructions look good! AI will use these guidelines during the interview.
+                            </ValidationFeedback>
+                          )}
+                        </>
+                      )}
+                      
+                      <SaveIndicator show={showSaveIndicator}>
+                        ✓ Changes saved
+                      </SaveIndicator>
+                      <HelperText>
+                        💡 <strong>Tip:</strong> The more specific your
+                        instructions, the better the AI will follow your preferred
+                        interview style. Use numbered lists or bullet points for
+                        clarity.
+                      </HelperText>
+                    </TextAreaContainer>
                   </fieldset>
                 </form>
+                {validationErrors.length > 0 && (
+                  <StartButtonRequirements show={true}>
+                    <ul style={{ margin: 0, paddingLeft: "20px" }}>
+                      {validationErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  </StartButtonRequirements>
+                )}
               </SettingsCardContent>
             </SettingsCard>
 
             <ButtonContainer>
               <StartInterviewButton
                 onClick={handleStartInterview}
-                disabled={
-                  !interviewType ||
-                  !jobLevel ||
-                  !videoEnabled ||
-                  !audioEnabled ||
-                  !hasCalibrationThresholds
-                }
+                disabled={!isFormValid}
                 aria-describedby="start-button-requirements"
               >
                 {isInterviewStarted ? (
@@ -614,14 +810,6 @@ const VideoTestCard: FC = () => {
                   "Start Interview"
                 )}
               </StartInterviewButton>
-              <StartButtonRequirements id="start-button-requirements">
-                {(!interviewType || !jobLevel) &&
-                  "Please select job level and interview type. "}
-                {(!deviceSupport.hasCamera || !deviceSupport.hasMicrophone) &&
-                  "Camera and microphone are required."}
-                {!hasCalibrationThresholds &&
-                  "Please calibrate your microphone first."}
-              </StartButtonRequirements>
             </ButtonContainer>
           </InterviewSettingsContainer>
         </GridContainer>
