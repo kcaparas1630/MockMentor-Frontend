@@ -43,6 +43,7 @@ export interface WebSocketMessage {
   };
   audioData?: string;
   audioFormat?: string;
+  timeStamp?: string;
 }
 
 /**
