@@ -27,7 +27,7 @@
  * - Custom Hooks (useMediaDevicesContext, useWebSocketConnection, useDetectAudio)
  * - Styled Components
  */
-import { FC, useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { FC, useState, useEffect, useRef, useCallback } from "react";
 import { Route } from "@/routes/interview-room/$sessionId";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import VideoDisplay from "../VideoDisplay";
@@ -77,6 +77,23 @@ import { LandmarkItem } from "@/Types/LandmarkData";
 
 // Updated icon component using lucide-react
 const ClipboardListIcon = () => <ClipboardList size={20} />;
+// Key landmark indices for behavioral analysis (eyes, mouth, nose, eyebrows)
+  const KEY_LANDMARK_INDICES = [
+    // Left eye (6 points): 362, 382, 381, 380, 374, 373
+    362, 382, 381, 380, 374, 373,
+    // Right eye (6 points): 33, 7, 163, 144, 145, 153
+    33, 7, 163, 144, 145, 153,
+    // Mouth outer (12 points): 61, 84, 17, 314, 405, 320, 307, 375, 321, 308, 324, 318
+    61, 84, 17, 314, 405, 320, 307, 375, 321, 308, 324, 318,
+    // Mouth inner (8 points): 78, 95, 88, 178, 87, 14, 317, 402
+    78, 95, 88, 178, 87, 14, 317, 402,
+    // Nose (5 points): 1, 2, 5, 4, 6
+    1, 2, 5, 4, 6,
+    // Left eyebrow (5 points): 46, 53, 54, 55, 56
+    46, 53, 54, 55, 56,
+    // Right eyebrow (5 points): 285, 295, 296, 334, 293
+    285, 295, 296, 334, 293
+  ];
 
 /**
  * Main interview room component that provides the complete interview experience.
@@ -174,23 +191,7 @@ const InterviewRoom: FC = () => {
   const lastCollectionTimeRef = useRef<number>(0);
   const COLLECTION_INTERVAL_MS = 3000; // Collect every 3000ms for smooth behavioral analysis
   
-  // Key landmark indices for behavioral analysis (eyes, mouth, nose, eyebrows)
-  const KEY_LANDMARK_INDICES = useMemo(() => [
-    // Left eye (6 points): 362, 382, 381, 380, 374, 373
-    362, 382, 381, 380, 374, 373,
-    // Right eye (6 points): 33, 7, 163, 144, 145, 153
-    33, 7, 163, 144, 145, 153,
-    // Mouth outer (12 points): 61, 84, 17, 314, 405, 320, 307, 375, 321, 308, 324, 318
-    61, 84, 17, 314, 405, 320, 307, 375, 321, 308, 324, 318,
-    // Mouth inner (8 points): 78, 95, 88, 178, 87, 14, 317, 402
-    78, 95, 88, 178, 87, 14, 317, 402,
-    // Nose (5 points): 1, 2, 5, 4, 6
-    1, 2, 5, 4, 6,
-    // Left eyebrow (5 points): 46, 53, 54, 55, 56
-    46, 53, 54, 55, 56,
-    // Right eyebrow (5 points): 285, 295, 296, 334, 293
-    285, 295, 296, 334, 293
-  ], []);
+  
   
   useEffect(() => {
     if (landmarks && isStreaming) {
@@ -214,7 +215,7 @@ const InterviewRoom: FC = () => {
         lastCollectionTimeRef.current = now;
       }
     }
-  }, [landmarks, isStreaming, KEY_LANDMARK_INDICES]);
+  }, [landmarks, isStreaming]);
 
   // ==================== DERIVED VALUES ====================
 
