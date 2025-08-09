@@ -206,11 +206,8 @@ const InterviewRoom: FC = () => {
         );
         
         const landmarkData: LandmarkItem = {
-          landmarkItem: {
-            landmarks: filteredLandmarks,
-            confidence: landmarks.confidence,
-            timestamp: landmarks.timestamp
-          },
+          landmarks: filteredLandmarks,
+          confidence: landmarks.confidence,
           timeStamp: now
         };
         landmarkBufferRef.current.push(landmarkData);

@@ -149,13 +149,18 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
 
   useEffect(() => {
     if (!videoRef.current || !isInitialized) return;
+    let frameId: number;
     const processVideoFrame = () => {
       if (processFrame) {
         processFrame(videoRef.current!);
-        requestAnimationFrame(processVideoFrame);
+        frameId =  requestAnimationFrame(processVideoFrame);
       }
     };
-    requestAnimationFrame(processVideoFrame);
+    frameId = requestAnimationFrame(processVideoFrame);
+    // cleanup function to cancel the animation frame
+    return () => {
+      cancelAnimationFrame(frameId);
+    }
   }, [isInitialized, processFrame]);
 
   /**

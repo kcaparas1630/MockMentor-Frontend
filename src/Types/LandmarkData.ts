@@ -1,13 +1,12 @@
+export interface SimpleLandmark {
+  x: number;
+  y: number;
+  z?: number;
+}
+
 export interface LandmarkItem {
-  landmarkItem: {
-    landmarks: Array<Array<{
-      x: number;
-      y: number;
-      z?: number;
-    }>>;
-    confidence: number;
-    timestamp: number;
-  };
+  landmarks: SimpleLandmark[][];
+  confidence: number;
   timeStamp: number;
 }
 

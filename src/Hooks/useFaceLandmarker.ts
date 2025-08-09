@@ -71,17 +71,29 @@ export const useFaceLandmarker = (
     }
   }, []);
 
+  // Refs for high-frequency updates to avoid excessive re-renders
+  const isProcessingRef = useRef(false);
+  const lastStateUpdateRef = useRef(0);
+  const STATE_UPDATE_THROTTLE = 100; // Update state every 100ms (10Hz) instead of 60Hz
+
   /**
    * Process a single video frame for face landmarks
    */
   const processFrame = useCallback((videoElement: HTMLVideoElement) => {
-    if (!faceLandmarkerRef.current || !enabled || isProcessing) return;
+    if (!faceLandmarkerRef.current || !enabled || isProcessingRef.current) return;
 
     try {
-      setIsProcessing(true);
+      isProcessingRef.current = true;
+      const now = performance.now();
+      
+      // Throttle state updates to reduce re-renders
+      const shouldUpdateState = now - lastStateUpdateRef.current >= STATE_UPDATE_THROTTLE;
+      if (shouldUpdateState) {
+        setIsProcessing(true);
+      }
       
       // Get current video timestamp in milliseconds
-      const timestamp = performance.now();
+      const timestamp = now;
       
       // Detect face landmarks for video
       const results = faceLandmarkerRef.current.detectForVideo(videoElement, timestamp);
@@ -101,18 +113,29 @@ export const useFaceLandmarker = (
           timestamp
         };
         
-        setLandmarks(processedLandmarks);
+        // Only update landmarks state at throttled rate
+        if (shouldUpdateState) {
+          setLandmarks(processedLandmarks);
+          lastStateUpdateRef.current = now;
+        }
       } else {
-        // No face detected
-        setLandmarks(null);
+        // No face detected - only update state if throttled
+        if (shouldUpdateState) {
+          setLandmarks(null);
+          lastStateUpdateRef.current = now;
+        }
       }
     } catch (err) {
       console.error("Frame processing failed:", err);
       setError(`Processing failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
-      setIsProcessing(false);
+      isProcessingRef.current = false;
+      // Only update processing state at throttled rate
+      if (performance.now() - lastStateUpdateRef.current >= STATE_UPDATE_THROTTLE) {
+        setIsProcessing(false);
+      }
     }
-  }, [enabled, isProcessing]);
+  }, [enabled]);
 
   /**
    * Clean up MediaPipe resources
