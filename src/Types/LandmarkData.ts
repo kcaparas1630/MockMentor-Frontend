@@ -4,7 +4,6 @@ export interface LandmarkItem {
       x: number;
       y: number;
       z?: number;
-      visibility?: number;
     }>>;
     confidence: number;
     timestamp: number;

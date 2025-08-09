@@ -6,7 +6,6 @@ export interface NormalizedLandmark {
   x: number; // Normalized x coordinate (0 to 1)
   y: number; // Normalized y coordinate (0 to 1)
   z?: number; // Optional z coordinate for 3D landmarks
-  visibility?: number; // Optional visibility score (0 to 1)
 }
 
 export interface FaceLandmarkData {
