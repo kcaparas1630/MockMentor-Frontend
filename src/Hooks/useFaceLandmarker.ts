@@ -46,17 +46,17 @@ export const useFaceLandmarker = (
     try {
       setError(null);
       
-      // Use CDN for wasm files (more reliable)
+      // Use CDN for wasm files (pinned to specific version to avoid breaking changes)
       const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22-rc.20250304/wasm"
       );
 
-      // TODO: Create FaceLandmarker instance with your model
+      // Create FaceLandmarker instance with model path resolved via build pipeline
       const faceLandmarker = await FaceLandmarker.createFromOptions(
         vision,
         {
           baseOptions: {
-            modelAssetPath: "/models/face_landmarker.task", 
+            modelAssetPath: `${import.meta.env.BASE_URL}models/face_landmarker.task`, 
           },
           runningMode: "VIDEO",
           numFaces: 1
@@ -130,10 +130,8 @@ export const useFaceLandmarker = (
       setError(`Processing failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       isProcessingRef.current = false;
-      // Only update processing state at throttled rate
-      if (performance.now() - lastStateUpdateRef.current >= STATE_UPDATE_THROTTLE) {
-        setIsProcessing(false);
-      }
+      // Always reset processing state to prevent UI getting stuck
+      setIsProcessing(false);
     }
   }, [enabled]);
 
