@@ -27,7 +27,7 @@
  * - Custom Hooks (useMediaDevicesContext, useWebSocketConnection, useDetectAudio)
  * - Styled Components
  */
-import { FC, useState, useEffect, useRef, useCallback } from "react";
+import { FC, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Route } from "@/routes/interview-room/$sessionId";
 import useMediaDevicesContext from "@/Hooks/useMediaDevicesContext";
 import VideoDisplay from "../VideoDisplay";
@@ -71,6 +71,8 @@ import formatDuration from "./Utils/FormatDuration";
 import { useNavigate } from "@tanstack/react-router";
 import SessionState from "@/Types/SessionState";
 import { AICoachMessageState } from "../AiCoach";
+import { useFaceLandmarker } from "@/Hooks/useFaceLandmarker";
+import { LandmarkItem } from "@/Types/LandmarkData";
 
 
 // Updated icon component using lucide-react
@@ -129,9 +131,9 @@ const InterviewRoom: FC = () => {
   // Track WebSocket messages for SessionTabs
   const [wsMessages, setWsMessages] = useState<WebSocketMessage[]>([]);
   const [wsTranscripts, setWsTranscripts] = useState<WebSocketMessage[]>([]);
+  // Landmark collection for behavioral analysis
+  const landmarkBufferRef = useRef<LandmarkItem[]>([]);
   const navigate = useNavigate();
-
-  
 
   // ==================== REFS ====================
 
@@ -162,6 +164,61 @@ const InterviewRoom: FC = () => {
   } = useMediaDevicesContext();
   const { startDetectingAudio, stopDetectingAudio } = useDetectAudio();
 
+  // Landmarks
+  const { landmarks, isInitialized, processFrame } = useFaceLandmarker(
+    streamRef.current,
+    videoEnabled
+  );
+
+  // Collect landmarks during speech periods (filtered key points only)
+  const lastCollectionTimeRef = useRef<number>(0);
+  const COLLECTION_INTERVAL_MS = 3000; // Collect every 3000ms for smooth behavioral analysis
+  
+  // Key landmark indices for behavioral analysis (eyes, mouth, nose, eyebrows)
+  const KEY_LANDMARK_INDICES = useMemo(() => [
+    // Left eye (6 points): 362, 382, 381, 380, 374, 373
+    362, 382, 381, 380, 374, 373,
+    // Right eye (6 points): 33, 7, 163, 144, 145, 153
+    33, 7, 163, 144, 145, 153,
+    // Mouth outer (12 points): 61, 84, 17, 314, 405, 320, 307, 375, 321, 308, 324, 318
+    61, 84, 17, 314, 405, 320, 307, 375, 321, 308, 324, 318,
+    // Mouth inner (8 points): 78, 95, 88, 178, 87, 14, 317, 402
+    78, 95, 88, 178, 87, 14, 317, 402,
+    // Nose (5 points): 1, 2, 5, 4, 6
+    1, 2, 5, 4, 6,
+    // Left eyebrow (5 points): 46, 53, 54, 55, 56
+    46, 53, 54, 55, 56,
+    // Right eyebrow (5 points): 285, 295, 296, 334, 293
+    285, 295, 296, 334, 293
+  ], []);
+  
+  useEffect(() => {
+    if (landmarks && isStreaming) {
+      const now = Date.now();
+      if (now - lastCollectionTimeRef.current >= COLLECTION_INTERVAL_MS) {
+        // Filter to only key landmarks for behavioral analysis and remove visibility data
+        const filteredLandmarks = landmarks.landmarks.map((face: Array<{x: number; y: number; z?: number}>) => 
+          KEY_LANDMARK_INDICES.map(index => face[index]).filter(Boolean).map(landmark => ({
+            x: landmark.x,
+            y: landmark.y,
+            z: landmark.z
+          }))
+        );
+        
+        const landmarkData: LandmarkItem = {
+          landmarkItem: {
+            landmarks: filteredLandmarks,
+            confidence: landmarks.confidence,
+            timestamp: landmarks.timestamp
+          },
+          timeStamp: now
+        };
+        landmarkBufferRef.current.push(landmarkData);
+        lastCollectionTimeRef.current = now;
+      }
+    }
+  }, [landmarks, isStreaming, KEY_LANDMARK_INDICES]);
+
   // ==================== DERIVED VALUES ====================
 
   /**
@@ -185,6 +242,7 @@ const InterviewRoom: FC = () => {
     setCurrentQuestionText(questionText);
     currentQuestionTextRef.current = questionText;
   }, []);
+
 
   // ==================== WEBSOCKET MESSAGE HANDLERS ====================
 
@@ -362,19 +420,34 @@ const InterviewRoom: FC = () => {
           streamingTimeoutRef.current = setTimeout(() => {
             if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
               try {
-                console.log("Sending audio end signal");
+                console.log("Sending audio end signal and behavioral analysis");
+                
                 // Set AI speaking to false and waiting for AI to true when audio_end is sent
                 setAICoachMessage(prev => ({
                   ...prev,
                   isAISpeaking: false,
                   isWaitingForAI: true
                 }));
+                
+                // Send audio end signal for text analysis first
                 mainSocket.send(
                   JSON.stringify({
                     type: "audio_end",
                     timeStamp: Date.now(),
                   })
                 );
+                
+                // Send landmarks for behavioral analysis after audio_end
+                if (landmarkBufferRef.current.length > 0) {
+                  mainSocket.send(
+                    JSON.stringify({
+                      type: "behavioral_analysis",
+                      landmarks: [...landmarkBufferRef.current],
+                      timeStamp: Date.now(),
+                    })
+                  );
+                  landmarkBufferRef.current = []; // Clear buffer after sending
+                }
               } catch (error) {
                 console.error("Error sending audio end signal:", error);
               }
@@ -596,6 +669,8 @@ const InterviewRoom: FC = () => {
                   videoEnabled={videoEnabled}
                   audioEnabled={audioEnabled}
                   stream={streamRef.current}
+                  isInitialized={isInitialized}
+                  processFrame={processFrame}
                 />
               </VideoDisplayContainer>
             </VideoWrapper>
