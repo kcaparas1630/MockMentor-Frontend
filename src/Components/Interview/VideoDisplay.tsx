@@ -128,8 +128,8 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   sessionState,
   AICoachMessage,
   currentQuestionText,
-  processFrame,
-  isInitialized,
+  processFrame = () => {},
+  isInitialized = false,
   onQuestionSpoken,
   onTranscriptionEnd,
 }) => {
@@ -151,16 +151,14 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
     if (!videoRef.current || !isInitialized) return;
     let frameId: number;
     const processVideoFrame = () => {
-      if (processFrame) {
-        processFrame(videoRef.current!);
-        frameId =  requestAnimationFrame(processVideoFrame);
-      }
+      processFrame(videoRef.current!);
+      frameId = requestAnimationFrame(processVideoFrame);
     };
     frameId = requestAnimationFrame(processVideoFrame);
     // cleanup function to cancel the animation frame
     return () => {
       cancelAnimationFrame(frameId);
-    }
+    };
   }, [isInitialized, processFrame]);
 
   /**
