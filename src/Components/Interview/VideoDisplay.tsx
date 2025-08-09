@@ -69,6 +69,8 @@ interface VideoDisplayProps {
   currentQuestionText?: string;
   sessionState?: SessionState;
   stream?: MediaStream | null;
+  processFrame?: (videoElement: HTMLVideoElement) => void;
+  isInitialized?: boolean;
   onTranscriptionEnd?: () => void;
   onToggleVideo?: () => void;
   onToggleAudio?: () => void;
@@ -83,24 +85,24 @@ interface VideoDisplayProps {
  * @returns {JSX.Element} The rendered video display with appropriate interface elements.
  * @example
  * // Usage for user video:
- * <VideoDisplay 
- *   name="User Name" 
- *   isUser={true} 
- *   stream={userStream} 
- *   videoEnabled={true} 
+ * <VideoDisplay
+ *   name="User Name"
+ *   isUser={true}
+ *   stream={userStream}
+ *   videoEnabled={true}
  * />
- * 
+ *
  * // Usage for AI coach:
- * <VideoDisplay 
- *   name="AI Coach" 
- *   isAICoach={true} 
+ * <VideoDisplay
+ *   name="AI Coach"
+ *   isAICoach={true}
  *   AICoachMessage="Hello, let's begin the interview"
  *   onQuestionSpoken={handleQuestionComplete}
  * />
  *
  * @throws {Error} May throw if video element fails to play stream.
  * @remarks
- * Side Effects: 
+ * Side Effects:
  * - Sets video element source when stream changes
  * - Triggers video playback
  * - Renders AI coach interface with speech synthesis
@@ -126,9 +128,10 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
   sessionState,
   AICoachMessage,
   currentQuestionText,
+  processFrame = () => {},
+  isInitialized = false,
   onQuestionSpoken,
-  onTranscriptionEnd
-
+  onTranscriptionEnd,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -143,6 +146,20 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
       videoRef.current.srcObject = null;
     }
   }, [stream, videoEnabled]);
+
+  useEffect(() => {
+    if (!videoRef.current || !isInitialized) return;
+    let frameId: number;
+    const processVideoFrame = () => {
+      processFrame(videoRef.current!);
+      frameId = requestAnimationFrame(processVideoFrame);
+    };
+    frameId = requestAnimationFrame(processVideoFrame);
+    // cleanup function to cancel the animation frame
+    return () => {
+      cancelAnimationFrame(frameId);
+    };
+  }, [isInitialized, processFrame]);
 
   /**
    * Generates initials from a participant name for avatar display.
@@ -232,7 +249,9 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
       {/* Required indicators for user video */}
       {isUser && (
         <RequiredIndicatorsContainer>
-          {videoEnabled ? <Video size={12} /> : (
+          {videoEnabled ? (
+            <Video size={12} />
+          ) : (
             <DisabledIconWrapper>
               <Video size={12} />
               <DisabledIcon>
@@ -240,7 +259,9 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
               </DisabledIcon>
             </DisabledIconWrapper>
           )}
-          {audioEnabled ? <Mic size={12} /> : (
+          {audioEnabled ? (
+            <Mic size={12} />
+          ) : (
             <DisabledIconWrapper>
               <Mic size={12} />
               <DisabledIcon>
@@ -248,9 +269,7 @@ const VideoDisplay: FC<VideoDisplayProps> = ({
               </DisabledIcon>
             </DisabledIconWrapper>
           )}
-          <RequiredLabel>
-            Required
-          </RequiredLabel>
+          <RequiredLabel>Required</RequiredLabel>
         </RequiredIndicatorsContainer>
       )}
     </VideoDisplayWrapper>
