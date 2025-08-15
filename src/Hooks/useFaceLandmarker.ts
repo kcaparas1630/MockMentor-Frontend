@@ -14,12 +14,145 @@ export interface FaceLandmarkData {
   timestamp: number;
 }
 
+// Compressed emotion features to send to server (much smaller payload)
+export interface CompressedEmotionFeatures {
+  // Core emotion indicators (0-100 for easier transmission)
+  smile: number;           // 0-100: smile intensity
+  eyeOpen: number;         // 0-100: eye openness
+  browRaise: number;       // 0-100: eyebrow raise
+  mouthOpen: number;       // 0-100: mouth openness
+  tension: number;         // 0-100: facial tension
+  symmetry: number;        // 0-100: facial symmetry
+  confidence: number;      // 0-100: MediaPipe confidence
+  
+  // Metadata
+  timestamp: number;
+  frameId: string;
+}
+
+export interface ProcessingStats {
+  featuresExtracted: number;
+  featuresSent: number;
+  avgLatency: number;
+}
+
+// MediaPipe landmark indices
+const LANDMARKS = {
+  MOUTH_LEFT: 61,
+  MOUTH_RIGHT: 291,
+  MOUTH_TOP: 13,
+  MOUTH_BOTTOM: 14,
+  UPPER_LIP_TOP: 12,
+  LEFT_EYE_TOP: 159,
+  LEFT_EYE_BOTTOM: 145,
+  LEFT_EYE_LEFT: 33,
+  LEFT_EYE_RIGHT: 133,
+  RIGHT_EYE_TOP: 386,
+  RIGHT_EYE_BOTTOM: 374,
+  RIGHT_EYE_LEFT: 362,
+  RIGHT_EYE_RIGHT: 263,
+  LEFT_EYEBROW_OUTER: 70,
+  LEFT_EYEBROW_INNER: 63,
+  RIGHT_EYEBROW_OUTER: 299,
+  RIGHT_EYEBROW_INNER: 293,
+  NOSE_BRIDGE: 6,
+} as const;
+
+/**
+ * Extract compressed features from landmarks (runs on client)
+ */
+const extractCompressedFeatures = (
+  landmarks: NormalizedLandmark[], 
+  confidence: number,
+  timestamp: number
+): CompressedEmotionFeatures => {
+  try {
+    // Helper function for distance calculation
+    const distance = (p1: NormalizedLandmark, p2: NormalizedLandmark): number => {
+      return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    };
+
+    // Mouth analysis
+    const mouthLeft = landmarks[LANDMARKS.MOUTH_LEFT];
+    const mouthRight = landmarks[LANDMARKS.MOUTH_RIGHT];
+    const mouthTop = landmarks[LANDMARKS.MOUTH_TOP];
+    const mouthBottom = landmarks[LANDMARKS.MOUTH_BOTTOM];
+    const upperLip = landmarks[LANDMARKS.UPPER_LIP_TOP];
+    
+    const mouthWidth = distance(mouthLeft, mouthRight);
+    const mouthHeight = distance(mouthTop, mouthBottom);
+    const mouthCenter = { x: (mouthLeft.x + mouthRight.x) / 2, y: (mouthLeft.y + mouthRight.y) / 2 };
+    
+    // Convert to 0-100 scale
+    const smile = Math.max(0, Math.min(100, (upperLip.y - mouthCenter.y) * 1000));
+    const mouthOpen = Math.max(0, Math.min(100, (mouthHeight / mouthWidth) * 500));
+    
+    // Eye analysis
+    const leftEyeHeight = distance(landmarks[LANDMARKS.LEFT_EYE_TOP], landmarks[LANDMARKS.LEFT_EYE_BOTTOM]);
+    const leftEyeWidth = distance(landmarks[LANDMARKS.LEFT_EYE_LEFT], landmarks[LANDMARKS.LEFT_EYE_RIGHT]);
+    const rightEyeHeight = distance(landmarks[LANDMARKS.RIGHT_EYE_TOP], landmarks[LANDMARKS.RIGHT_EYE_BOTTOM]);
+    const rightEyeWidth = distance(landmarks[LANDMARKS.RIGHT_EYE_LEFT], landmarks[LANDMARKS.RIGHT_EYE_RIGHT]);
+    
+    const avgEAR = ((leftEyeHeight / leftEyeWidth) + (rightEyeHeight / rightEyeWidth)) / 2;
+    const eyeOpen = Math.max(0, Math.min(100, avgEAR * 500));
+    
+    // Eyebrow analysis
+    const leftBrow = (landmarks[LANDMARKS.LEFT_EYEBROW_OUTER].y + landmarks[LANDMARKS.LEFT_EYEBROW_INNER].y) / 2;
+    const rightBrow = (landmarks[LANDMARKS.RIGHT_EYEBROW_OUTER].y + landmarks[LANDMARKS.RIGHT_EYEBROW_INNER].y) / 2;
+    const noseBridge = landmarks[LANDMARKS.NOSE_BRIDGE].y;
+    const browHeight = noseBridge - ((leftBrow + rightBrow) / 2);
+    const browRaise = Math.max(0, Math.min(100, browHeight * 800));
+    
+    // Facial tension (simplified)
+    const yPositions = landmarks.slice(0, 50).map(lm => lm.y); // Sample subset for performance
+    const meanY = yPositions.reduce((a, b) => a + b, 0) / yPositions.length;
+    const variance = yPositions.reduce((sum, y) => sum + Math.pow(y - meanY, 2), 0) / yPositions.length;
+    const tension = Math.max(0, Math.min(100, variance * 2000));
+    
+    // Simple symmetry check
+    const leftMouthY = mouthLeft.y;
+    const rightMouthY = mouthRight.y;
+    const mouthSymmetry = 1 - Math.abs(leftMouthY - rightMouthY);
+    const symmetry = Math.max(0, Math.min(100, mouthSymmetry * 100));
+    
+    return {
+      smile: Math.round(smile),
+      eyeOpen: Math.round(eyeOpen),
+      browRaise: Math.round(browRaise),
+      mouthOpen: Math.round(mouthOpen),
+      tension: Math.round(tension),
+      symmetry: Math.round(symmetry),
+      confidence: Math.round(confidence * 100),
+      timestamp,
+      frameId: `frame_${timestamp}_${Math.random().toString(36).substr(2, 9)}`
+    };
+    
+  } catch (error) {
+    console.error('Feature extraction error:', error);
+    // Return neutral features on error
+    return {
+      smile: 0,
+      eyeOpen: 50,
+      browRaise: 0,
+      mouthOpen: 0,
+      tension: 50,
+      symmetry: 50,
+      confidence: 0,
+      timestamp,
+      frameId: `error_${timestamp}`
+    };
+  }
+};
+
 export interface UseFaceLandmarkerReturn {
   // State
   isInitialized: boolean;
   isProcessing: boolean;
   error: string | null;
   landmarks: FaceLandmarkData | null;
+  
+  // Emotion features
+  processEmotionFeatures: (socket: WebSocket | null, isSpeaking: boolean) => void;
   
   // Actions
   initialize: () => Promise<void>;
@@ -36,6 +169,10 @@ export const useFaceLandmarker = (
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [landmarks, setLandmarks] = useState<FaceLandmarkData | null>(null);
+  
+  // Refs for emotion processing
+  const lastSentTimeRef = useRef<number>(0);
+  const latencyTrackerRef = useRef<Map<string, number>>(new Map());
 
   /**
    * Initialize MediaPipe FaceLandmarker
@@ -136,6 +273,50 @@ export const useFaceLandmarker = (
   }, [enabled]);
 
   /**
+   * Process landmarks and send compressed emotion features to server
+   */
+  const processEmotionFeatures = useCallback((socket: WebSocket | null, isSpeaking: boolean) => {
+    if (!landmarks || !landmarks.landmarks || landmarks.landmarks.length === 0) {
+      return;
+    }
+    
+    try {
+      // Extract compressed features (this runs on client)
+      const features = extractCompressedFeatures(
+        landmarks.landmarks[0],
+        landmarks.confidence,
+        landmarks.timestamp
+      );
+ 
+      
+      // Only send when user is speaking and throttle to max 5 fps
+      const now = Date.now();
+      if (!isSpeaking || now - lastSentTimeRef.current < 200) { // 200ms = 5fps
+        return;
+      }
+      
+      // Send to server only if connected
+      if (socket?.readyState === WebSocket.OPEN) {
+        const payload = JSON.stringify({
+          type: 'emotion_features',
+          data: features
+        });
+        
+        // Track for latency measurement
+        latencyTrackerRef.current.set(features.frameId, now);
+        
+        socket.send(payload);
+        lastSentTimeRef.current = now;
+        
+      }
+      
+    } catch (err) {
+      console.error('Failed to process emotion features:', err);
+      setError('Emotion processing failed');
+    }
+  }, [landmarks]);
+
+  /**
    * Clean up MediaPipe resources
    */
   const cleanup = useCallback(() => {
@@ -143,6 +324,8 @@ export const useFaceLandmarker = (
       faceLandmarkerRef.current.close();
       faceLandmarkerRef.current = null;
     }
+    // Clear emotion processing data
+    latencyTrackerRef.current.clear();
     setIsInitialized(false);
     setLandmarks(null);
     setError(null);
@@ -167,6 +350,7 @@ export const useFaceLandmarker = (
     isProcessing,
     error,
     landmarks,
+    processEmotionFeatures,
     initialize,
     processFrame,
     cleanup
