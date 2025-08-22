@@ -181,8 +181,8 @@ const InterviewRoom: FC = () => {
   } = useMediaDevicesContext();
   const { startDetectingAudio, stopDetectingAudio } = useDetectAudio();
 
-  // Landmarks
-  const { landmarks, isInitialized, processFrame } = useFaceLandmarker(
+  // Landmarks with emotion processing
+  const { landmarks, isInitialized, processFrame, processEmotionFeatures } = useFaceLandmarker(
     streamRef.current,
     videoEnabled
   );
@@ -418,7 +418,7 @@ const InterviewRoom: FC = () => {
           streamingTimeoutRef.current = setTimeout(() => {
             if (mainSocket && mainSocket.readyState === WebSocket.OPEN) {
               try {
-                console.log("Sending audio end signal and behavioral analysis");
+                console.log("Sending audio end signal and emotion analysis");
                 
                 // Set AI speaking to false and waiting for AI to true when audio_end is sent
                 setAICoachMessage(prev => ({
@@ -435,17 +435,6 @@ const InterviewRoom: FC = () => {
                   })
                 );
                 
-                // Send landmarks for behavioral analysis after audio_end
-                if (landmarkBufferRef.current.length > 0) {
-                  mainSocket.send(
-                    JSON.stringify({
-                      type: "behavioral_analysis",
-                      landmarks: [...landmarkBufferRef.current],
-                      timeStamp: Date.now(),
-                    })
-                  );
-                  landmarkBufferRef.current = []; // Clear buffer after sending
-                }
               } catch (error) {
                 console.error("Error sending audio end signal:", error);
               }
@@ -470,6 +459,9 @@ const InterviewRoom: FC = () => {
                 isSpeaking: isSpeaking,
               })
             );
+            
+            // Process emotion features when user is speaking
+            processEmotionFeatures(mainSocket, isSpeaking);
           } catch (error) {
             console.error("Error sending audio chunk:", error);
           }
@@ -487,6 +479,7 @@ const InterviewRoom: FC = () => {
     streamRef,
     startDetectingAudio,
     stopDetectingAudio,
+    processEmotionFeatures,
   ]);
 
   const handleAISpeechEnd = useCallback(() => {
@@ -532,7 +525,7 @@ const InterviewRoom: FC = () => {
       
       timer = setTimeout(() => {
         handleInterviewStart();
-      }, 5000); // Changed to 5 seconds as per user request
+      }, 2000); // Changed to 2 seconds as per user request
     }
     // cleanup
     return () => {
