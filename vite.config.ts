@@ -14,16 +14,18 @@ export default defineConfig({
         enabled: true
       },
       workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [{
           urlPattern: ({ url }) => {
             return url.toString().startsWith('/api');
           },
-          handler: "CacheFirst" as const,
+          handler: "NetworkFirst" as const,
           options: {
             cacheName: 'api-cache',
             expiration: {
               maxEntries: 10,
-              maxAgeSeconds: 60 * 60 * 24 * 365 // 365 DAYS
+              maxAgeSeconds: 60 * 60 * 24 * 7 // 7 DAYS
             },
             cacheableResponse: {
               statuses: [0, 200]
