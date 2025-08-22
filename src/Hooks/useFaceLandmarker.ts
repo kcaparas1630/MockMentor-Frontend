@@ -78,6 +78,11 @@ const extractCompressedFeatures = (
     const mouthTop = landmarks[LANDMARKS.MOUTH_TOP];
     const mouthBottom = landmarks[LANDMARKS.MOUTH_BOTTOM];
     const upperLip = landmarks[LANDMARKS.UPPER_LIP_TOP];
+
+    // Validate all required landmarks exists
+    if (!mouthLeft || !mouthRight || !mouthTop || !mouthBottom || !upperLip) {
+      throw new Error("Missing required mouth landmarks");
+    }
     
     const mouthWidth = distance(mouthLeft, mouthRight);
     const mouthHeight = distance(mouthTop, mouthBottom);
@@ -305,7 +310,12 @@ export const useFaceLandmarker = (
         // Track for latency measurement
         latencyTrackerRef.current.set(features.frameId, now);
         
-        socket.send(payload);
+        try {
+          socket.send(payload);
+        } catch (sendError) {
+          console.error('Failed to send emotion features:', sendError);
+          latencyTrackerRef.current.delete(features.frameId);
+        }
         lastSentTimeRef.current = now;
         
       }
