@@ -18,7 +18,7 @@ export default defineConfig({
         clientsClaim: true,
         runtimeCaching: [{
           urlPattern: ({ url }) => {
-            return url.toString().startsWith('/api');
+            return url.pathname.startsWith('/api')
           },
           handler: "NetworkFirst" as const,
           options: {
