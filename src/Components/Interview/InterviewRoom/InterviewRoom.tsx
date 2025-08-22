@@ -525,7 +525,7 @@ const InterviewRoom: FC = () => {
       
       timer = setTimeout(() => {
         handleInterviewStart();
-      }, 5000); // Changed to 5 seconds as per user request
+      }, 2000); // Changed to 2 seconds as per user request
     }
     // cleanup
     return () => {
